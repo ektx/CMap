@@ -290,10 +290,11 @@ function mapAreaChart (options) {
         // 动画速度
         var speed = options.speed || 500;
         var sendMesLineW = 20;
-        var averageX=(endX - roadlef) / speed;
-        var averageY=(endY - roadtop) / speed;
+        var averageX = (endX - roadlef) / speed;
+        var averageY = (endY - roadtop) / speed;
         var averX=averageX/(Math.sqrt(averageX*averageX + averageY*averageY));  
         var averY=averageY/(Math.sqrt(averageX*averageX + averageY*averageY)); 
+
 
         // 绘制引导线
         drawLine({
