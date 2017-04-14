@@ -5,9 +5,12 @@
 
 function mapAreaChart (options) {
 
-    var ele = document.getElementById(options.id)
+    var ele = document.getElementById(options.id);
+    var canvasW = ele.width;
+    var canvasH = ele.height;
     var ctx = ele.getContext("2d");
     var index = -1;
+    var inAreaCtx;
 
     var drawLine = function(_options) {
 
@@ -33,6 +36,8 @@ function mapAreaChart (options) {
 
         // 设置透明度
         ctx.globalAlpha= _options.alpha || 1;
+
+        ctx.globalCompositeOperation = _options.globalCompositeOperation || 'source-over';
 
         // 设置一组极点
         var xStart = xEnd = yStart = yEnd = 0;
@@ -84,10 +89,14 @@ function mapAreaChart (options) {
             }
             ctx.stroke();
 
-            if( ctx.isPointInPath(currentX,currentY) && _options.index > -1){
-                index = _options.index;
+            if( ctx.isPointInPath(currentX, currentY) && _options.index > -1){
+
+                if (_options.index !== index) {
+                    index = _options.index;
+                }
                 ctx.fillStyle = _options.hoveColor;
-            }
+
+            } 
 
             ctx.fill();
             ctx.closePath();
@@ -169,21 +178,26 @@ function mapAreaChart (options) {
         ctx.restore();
     }
 
-    var drawCity = function(options) {
-        for (var i = 0, l = options.city.length; i < l; i++) {
-            options.line = options.city[i].map;
-            options.index = i;
-            options.type = options.city[i].type || false;
+    var drawCity = function(_options) {
+        for (var i = 0, l = _options.city.length; i < l; i++) {
+            _options.line = _options.city[i].map;
+            _options.index = i;
+            _options.type = _options.city[i].type || false;
+            _options.globalCompositeOperation = 'destination-over';
 
-            pointCenter = drawLine( options )
+            pointCenter = drawLine( _options )
             
-            if (cityPointArr.length !== options.city.length * options.citySize)
-                getRandomPoint(options.citySize, pointCenter, options.cityColor, pointCenter.path)
+            if (cityPointArr.length !== _options.city.length * _options.citySize) {
+
+                options.city.data[i].position = pointCenter;
+
+                getRandomPoint(_options.citySize, pointCenter, _options.cityColor, pointCenter.path)
+            }
 
             drawCityName(
                 pointCenter.xCenter, 
                 pointCenter.yCenter, 
-                options.city[i].name, 
+                _options.city[i].name, 
                 pointCenter.width
             );
 
@@ -191,11 +205,12 @@ function mapAreaChart (options) {
                 path: [
                     pointCenter.xCenter,
                     pointCenter.yCenter,
-                    options.msg.center.x,
-                    options.msg.center.y
+                    _options.msg.center.x,
+                    _options.msg.center.y
                 ],
-                direction: options.msg.direction,
-                speed: options.msg.speed
+                direction: _options.msg.direction,
+                speed: _options.msg.speed,
+                unique: _options.msg.unique
             })
         }
 
@@ -225,18 +240,31 @@ function mapAreaChart (options) {
     var txt=options.data;//定义地图乡镇街道名称
  
     //地图鼠标移上去的事件
-    var currentX, currentY;
+    var currentX = currentY = -1;
     ele.addEventListener("mousemove", function(event){
         currentX=event.offsetX;
         currentY=event.offsetY;
 
-        if (options.callback && options.callback.mousemove) options.callback.mousemove(index, options.city.data[index]);
+        // 在地图区域内
+        if (inAreaCtx) {
+            // 返回用户 数据索引 城市信息
+            if (options.callback && options.callback.mousemove) options.callback.mousemove(index, options.city.data[index]);
+        } 
+        // 在地图外
+        else {
+            // 返回用户 -1
+            if (options.callback && options.callback.mousemove) options.callback.mousemove( -1 );
+        }
 
     });
 
     ele.addEventListener('click', function(e) {
+        // 在地图区域内
+        if (inAreaCtx) {
 
-        if (options.callback && options.callback.click) options.callback.click( index , options.city.data[index] );
+            if (options.callback && options.callback.click && index > -1) 
+                options.callback.click( index , options.city.data[index] );
+        }
     })
 
 
@@ -252,6 +280,7 @@ function mapAreaChart (options) {
             @end 结束
     */
     var reportRoad = function(options){ 
+        
         var roadlef = options.path[0];
         var roadtop = options.path[1];
         var endX = options.path[2];
@@ -338,7 +367,7 @@ function mapAreaChart (options) {
     var repaint=function(){
         var repaintInter=setInterval(function(){
             
-            ctx.clearRect(0,0,712,352);
+            ctx.clearRect(0,0, canvasW, canvasH);
 
             // 地图边框
             drawLine({
@@ -346,6 +375,13 @@ function mapAreaChart (options) {
                     strokeStyle: options.cityArea.stroke.color,
                     line: options.cityArea.data
                 });
+            
+            // 在地图区域内
+            if (ctx.isPointInPath(currentX, currentY)) {
+                inAreaCtx = true;
+            } else {
+                inAreaCtx = false;
+            }
 
             drawCity({
                 city: options.city.data,
