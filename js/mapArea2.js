@@ -10,7 +10,8 @@ function mapAreaChart (options) {
     var canvasH = ele.height;
     var ctx = ele.getContext("2d");
     var index = -1;
-    var inAreaCtx;
+    // 是否在区域中
+    var inAreaCtx = false;
 
     var drawLine = function(_options) {
 
@@ -201,18 +202,17 @@ function mapAreaChart (options) {
                 pointCenter.width
             );
 
-            if (_options.msg)
-                reportRoad({
-                    path: [
-                        pointCenter.xCenter,
-                        pointCenter.yCenter,
-                        _options.msg.center.x,
-                        _options.msg.center.y
-                    ],
-                    direction: _options.msg.direction,
-                    speed: _options.msg.speed,
-                    unique: _options.msg.unique
-                })
+            reportRoad({
+                path: [
+                    pointCenter.xCenter,
+                    pointCenter.yCenter,
+                    _options.msg.center.x,
+                    _options.msg.center.y
+                ],
+                direction: _options.msg.direction,
+                speed: _options.msg.speed,
+                unique: _options.msg.unique
+            })
         }
 
         if (cityPointArr.length > 0) {
@@ -370,6 +370,11 @@ function mapAreaChart (options) {
             
             ctx.clearRect(0,0, canvasW, canvasH);
 
+            if (!options.cityArea) {
+                console.warn('你需要一个地区边框');
+                return;
+            }
+
             // 地图边框
             drawLine({
                     width: options.cityArea.width,
@@ -400,8 +405,7 @@ function mapAreaChart (options) {
             } );
 
             // 绘制星星
-            if (options.star)
-                drawLine(options.star)
+            drawLine(options.star)
             
         }, 16);
     }
