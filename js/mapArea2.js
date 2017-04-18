@@ -116,16 +116,58 @@ MapAreaChart.prototype = {
 
 	},
 
-	drawPoint: function( obj ) {
 
-		// console.log(typeof obj.point )
+	getRandomPoint: function( _obj ) {
+		let result = [];
+		let _self = this;
 
-		if ( obj.pointArr.length == 0) {
-			console.log('1')
-			this.getRandomPoint( obj )
+		let getRandomVal = function(colorArr) {
+			return colorArr[parseInt(colorArr.length * Math.random())]
 		}
 
-		this.ctx = this.setCtxState(  );
+		for (let i = 0; i < _obj.point.size; i ++) {
+
+			let x = y = 0;
+
+			do {
+                x = _obj.x[0] + _obj.width * Math.random();
+                y = _obj.y[0] + _obj.height * Math.random();
+            } while (!_self.ctx.isPointInPath(x, y));
+
+            result.push({
+            	x: x,
+                y: y,
+                r: getRandomVal( _obj.point.r ),
+                color: getRandomVal( _obj.point.color )
+            })
+		}
+        _obj.pointArr = result;
+	},
+
+	drawPoint: function( obj ) {
+
+		let pointLength = obj.pointArr.length;
+
+		if ( pointLength == 0) {
+			this.getRandomPoint( obj );
+
+			pointLength = obj.point.size;
+		}
+
+		for (let i = 0; i < pointLength; i++) {
+
+			let _thisPoint = obj.pointArr[i];
+
+			this.ctx = this.setCtxState( {
+				fillStyle: _thisPoint.color
+			} );
+
+	        this.ctx.arc(_thisPoint.x, _thisPoint.y, _thisPoint.r, 0, 2*Math.PI, false);
+
+	        this.ctx.fill();
+			this.ctx.closePath();
+		}
+        this.ctx.restore();
 	},
 
 	animate: function() {
@@ -185,32 +227,6 @@ MapAreaChart.prototype = {
             x: [xStart, xEnd],
             y: [yStart, yEnd]
 		}
-	},
-
-	getRandomPoint: function( _obj ) {
-		let result = [];
-		let _self = this;
-
-		let getColor = function(colorArr) {
-			return colorArr[parseInt(colorArr.length * Math.random())]
-		}
-
-		for (let i = 0; i < _obj.point.size; i ++) {
-
-			let x = y = 0;
-
-			do {
-                x = _obj.x[0] + _obj.width * Math.random();
-                y = _obj.y[0] + _obj.height * Math.random();
-            } while (!_self.ctx.isPointInPath(x, y));
-
-            result.push({
-            	x: x,
-                y: y,
-                color: getColor( _obj.point.color )
-            })
-		}
-        _obj.pointArr = result;
 	},
 
 	event: function() {
