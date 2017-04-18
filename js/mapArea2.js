@@ -19,7 +19,6 @@ function MapAreaChart(obj) {
 
 }
 
-MapAreaChart.prototype.drawLine = 
 
 // 绘制边界
 MapAreaChart.prototype.drawCityArea = function() {
@@ -76,7 +75,7 @@ MapAreaChart.prototype = {
 
 	drawLine: function(_options) {
 
-		let ctx = this.setCtxState( _options.style );
+		this.setCtxState( _options.style );
 
 		var path = '';
 
@@ -85,36 +84,48 @@ MapAreaChart.prototype = {
 
 			path = new Path2D(_options.line);
 
-			if( ctx.isPointInPath(path, currentX, currentY) && _options.index > -1){
+			if( this.ctx.isPointInPath(path, currentX, currentY) && _options.index > -1){
 				index = _options.index;
-				ctx.fillStyle = _options.hoveColor;
+				this.ctx.fillStyle = _options.hoveColor;
 			}
 
-			ctx.stroke(path);
-			ctx.fill( path )
+			this.ctx.stroke(path);
+			this.ctx.fill( path )
 
 		} else {
 	        for (let i = 0, l = _options.line.length; i < l; i+=2) {
 				let x = _options.line[i];
                 let y = _options.line[i+1];
 	            if (i === 0) {
-	                ctx.moveTo(x, y);
+	                this.ctx.moveTo(x, y);
 	            } else {
-	                ctx.lineTo(x, y);
+	                this.ctx.lineTo(x, y);
 	            }
 			}
 
-			if( ctx.isPointInPath( this.currentX, this.currentY)){
-                ctx.fillStyle = 'rgba(255, 0, 0, .5)';
+			if( this.ctx.isPointInPath( this.currentX, this.currentY)){
+                this.ctx.fillStyle = 'rgba(255, 0, 0, .5)';
             }
 
-			ctx.stroke();
-			ctx.fill();
+			this.ctx.stroke();
+			this.ctx.fill();
 		}
 
-        ctx.closePath();
-		ctx.restore();
+        this.ctx.closePath();
+		this.ctx.restore();
 
+	},
+
+	drawPoint: function( obj ) {
+
+		// console.log(typeof obj.point )
+
+		if ( obj.pointArr.length == 0) {
+			console.log('1')
+			this.getRandomPoint( obj )
+		}
+
+		this.ctx = this.setCtxState(  );
 	},
 
 	animate: function() {
@@ -129,6 +140,8 @@ MapAreaChart.prototype = {
 					line: n.data,
 					style: n.style
 				})
+
+				_self.drawPoint( n )
 			})
 
 			requestAnimationFrame(go);
@@ -138,6 +151,7 @@ MapAreaChart.prototype = {
 
 	},
 
+	// 计算属性
 	computedData: function(data) {
 		let width = height = xStart = yStart = xEnd = yEnd = 0;
 
@@ -173,41 +187,35 @@ MapAreaChart.prototype = {
 		}
 	},
 
-	init: function() {
-
+	getRandomPoint: function( _obj ) {
+		let result = [];
 		let _self = this;
 
-		let Area = function(obj, computedData, cityInfo) {
-			let hasX = 'x' in computedData;
-
-			this.name = obj.name;
-			this.data = obj.map;
-
-			this.width = obj.w || computedData.width;
-			this.height = obj.h || computedData.height;
-			this.x = hasX ? computedData.x : [obj.x, obj.x + obj.w];
-			this.y = hasX ? computedData.y : [obj.y, obj.y + obj.h];
-			this.xCenter = hasX ? computedData.xCenter : obj.x + obj.w /2;
-			this.yCenter = hasX ? computedData.yCenter : obj.y + obj.h /2;
-
-			this.point = cityInfo.point;
-			this.style = cityInfo.style;
-		};
-
-		for (let i = 0, l = this.options.city.data.length; i < l; i++) {
-			let _data = this.options.city.data[i];
-			let _computedData = {};
-
-			// 如果没有宽高
-			if (!_data.w && !_data.h) {
-				// 计算宽高
-				_computedData = this.computedData( _data.map )
-			}
-
-			this.areas[i] = new Area( _data, _computedData, this.options.city )
+		let getColor = function(colorArr) {
+			return colorArr[parseInt(colorArr.length * Math.random())]
 		}
 
-		this.animate();
+		for (let i = 0; i < _obj.point.size; i ++) {
+
+			let x = y = 0;
+
+			do {
+                x = _obj.x[0] + _obj.width * Math.random();
+                y = _obj.y[0] + _obj.height * Math.random();
+            } while (!_self.ctx.isPointInPath(x, y));
+
+            result.push({
+            	x: x,
+                y: y,
+                color: getColor( _obj.point.color )
+            })
+		}
+        _obj.pointArr = result;
+	},
+
+	event: function() {
+
+		let _self = this;
 
 	    //地图鼠标移上去的事件
 		this.ele.addEventListener("mousemove", function(event){
@@ -229,6 +237,7 @@ MapAreaChart.prototype = {
 
 		});
 
+		// 地图上点击事件
 		this.ele.addEventListener('click', function(e) {
 		    // 在地图区域内
 		    // if (this.inAreaCtx) {
@@ -237,6 +246,50 @@ MapAreaChart.prototype = {
 		    //         options.callback.click( index , options.city.data[index] );
 		    // }
 		})
+	},
 
+	setArea: function() {
+
+		let _self = this;
+
+		let Area = function(obj, computedData, cityInfo) {
+			let hasX = 'x' in computedData;
+
+			this.name = obj.name;
+			this.data = obj.map;
+
+			this.width = obj.w || computedData.width;
+			this.height = obj.h || computedData.height;
+			this.x = hasX ? computedData.x : [obj.x, obj.x + obj.w];
+			this.y = hasX ? computedData.y : [obj.y, obj.y + obj.h];
+			this.xCenter = hasX ? computedData.xCenter : obj.x + obj.w /2;
+			this.yCenter = hasX ? computedData.yCenter : obj.y + obj.h /2;
+
+			this.point = cityInfo.point;
+			this.pointArr = [];
+			this.style = cityInfo.style;
+		};
+
+		for (let i = 0, l = this.options.city.data.length; i < l; i++) {
+			let _data = this.options.city.data[i];
+			let _computedData = {};
+
+			// 如果没有宽高
+			if (!_data.w && !_data.h) {
+				// 计算宽高
+				_computedData = this.computedData( _data.map )
+			}
+
+			this.areas[i] = new Area( _data, _computedData, this.options.city )
+		}
+	},
+
+	init: function() {
+
+		this.setArea();
+
+		this.animate();
+
+		this.event();
 	}
 }
