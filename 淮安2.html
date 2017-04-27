@@ -167,32 +167,48 @@ $(function(){
                     r: [2, 3],
                     color: ['#fff', '#f00'],
                 },
+                cityName: {
+                    normal: {
+                        fillStyle: '#fff',
+                        font: "10px Microsoft Yahei"
+                    },
+                    hover: {
+                        fillStyle: 'red',
+                        font: "15px Microsoft Yahei"
+                    }
+                },
                 style: {
                     lineWidth: 1,
                     strokeStyle: '#243e6a',
                     fillStyle: 'rgba(0, 0, 0, .4)',
-                    hoveColor: 'rgba(255, 0, 0, .4)'
+                    hoveColor: 'rgba(255, 250, 0, .4)'
                 }
             },
             cityArea: {
                 data: araeData,
-                width: 6,
-                stroke: {
-                    color: '#538df7'
+                style: {
+                    lineWidth: 3,
+                    strokeStyle: '#538df7'
                 }
             },
             star: {
-                width: 1,
-                strokeStyle: '#ff0',
-                fillStyle: '#ff0',
+                style: {
+                    lineWidth: 1,
+                    strokeStyle: '#ff0',
+                    fillStyle: '#ff0',
+                },
                 line: [165,140,169,149,177,151,171,157,172,166,165,161,157,166,159,158,153,151, 160,149, 165, 140]
             },
             message: {
                 direction: 'both',
                 speed: 2000,
                 center: {
-                    x: 260,
-                    y: 260
+                    x: 300,
+                    y: 280
+                },
+                line: {
+                    lineWidth: 1,
+                    strokeStyle: 'rgba(83, 141, 247, .4)'
                 }
             },
             callback: {

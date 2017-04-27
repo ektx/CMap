@@ -2,8 +2,10 @@
 function MapAreaChart(obj) {
 	this.options = obj;
 	this.cityArr = obj.city;
+	this.cityArea = obj.cityArea;
 	this.message = obj.message;
 	this.callback = obj.callback;
+	this.star = obj.star || {};
 
 	this.areas = [];
 
@@ -15,6 +17,7 @@ function MapAreaChart(obj) {
 	this.currentX = -1;
 	this.currentY = -1;
 
+	// 当前索引
 	this.inAreaCtx = -1;
 
 }
@@ -38,10 +41,8 @@ MapAreaChart.prototype = {
 
 	setCtxState: function(styleOption) {
 
-		let ctx = this.ctx;
-
-		ctx.save();
-		ctx.beginPath();
+		this.ctx.save();
+		this.ctx.beginPath();
 		// ctx.imageSmoothingEnabled = true;
 		// 属性设置或返回线条末端线帽的样式。
 		// 可用属性有:
@@ -66,10 +67,8 @@ MapAreaChart.prototype = {
 		// ctx.globalCompositeOperation = styleOption.globalCompositeOperation || 'source-over';
 
 		for ( let i in styleOption) {
-			ctx[i] = styleOption[i]
+			this.ctx[i] = styleOption[i]
 		}
-
-		return ctx;
 
 	},
 
@@ -104,7 +103,8 @@ MapAreaChart.prototype = {
 			}
 
 			if( this.ctx.isPointInPath( this.currentX, this.currentY)){
-                this.ctx.fillStyle = 'rgba(255, 0, 0, .5)';
+                this.ctx.fillStyle = _options.style.hoveColor;
+                this.inAreaCtx = _options.index;
             }
 
 			this.ctx.stroke();
@@ -158,7 +158,7 @@ MapAreaChart.prototype = {
 
 			let _thisPoint = obj.pointArr[i];
 
-			this.ctx = this.setCtxState( {
+			this.setCtxState( {
 				fillStyle: _thisPoint.color
 			} );
 
@@ -166,8 +166,62 @@ MapAreaChart.prototype = {
 
 	        this.ctx.fill();
 			this.ctx.closePath();
+
+			// 点上线
+			this.drawMessage( _thisPoint )
 		}
         this.ctx.restore();
+	},
+
+	drawMessage: function( _point ) {
+
+		let style = this.message.line;
+
+		style.globalCompositeOperation = 'destination-over';
+
+		this.drawLine({
+			line: [_point.x, _point.y, this.message.center.x, this.message.center.y],
+			style: style
+		})
+
+	},
+
+	drawCityName: function( _opt, index ) {
+
+		if( this.inAreaCtx == index ){
+			this.setCtxState( _opt.cityName.hover );
+        } else {
+			this.setCtxState( _opt.cityName.normal );
+        }
+
+		this.ctx.textAlign = 'center';
+
+		this.ctx.fillText(_opt.name, _opt.xCenter, _opt.yCenter, _opt.width);
+        
+        this.ctx.restore();
+
+	},
+
+	drawCityArea: function( _opt ) {
+
+		let style = this.cityArea.style;
+
+		style.fillStyle = 'transparent';
+		style.globalCompositeOperation = 'source-over';
+
+		this.drawLine({
+			line: this.cityArea.data,
+			style: style
+		})
+	},
+
+	drawStar: function( _opt ) {
+		
+		this.drawLine({
+			line: _opt.line,
+			style: _opt.style
+		})
+
 	},
 
 	animate: function() {
@@ -177,14 +231,25 @@ MapAreaChart.prototype = {
 
 			_self.ctx.clearRect(0, 0, _self.ctxW, _self.ctxH);
 
-			_self.areas.forEach(function(n) {
+			
+			_self.drawCityArea();
+
+			_self.areas.forEach(function(n, index) {
+
+				let __style = n.style;
+				__style.globalCompositeOperation = 'destination-over';
 				_self.drawLine({
 					line: n.data,
-					style: n.style
+					style: __style,
+					index: index
 				})
 
-				_self.drawPoint( n )
+				_self.drawPoint( n );
+
+				_self.drawCityName( n, index )
 			})
+
+			_self.drawStar( _self.star );
 
 			requestAnimationFrame(go);
 		}
@@ -284,6 +349,7 @@ MapAreaChart.prototype = {
 			this.point = cityInfo.point;
 			this.pointArr = [];
 			this.style = cityInfo.style;
+			this.cityName = cityInfo.cityName;
 		};
 
 		for (let i = 0, l = this.options.city.data.length; i < l; i++) {
