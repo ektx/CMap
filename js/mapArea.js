@@ -1,6 +1,5 @@
 /*
-    
-
+    v.0.1.0     
 */
 
 function mapAreaChart (options) {
@@ -254,7 +253,6 @@ function mapAreaChart (options) {
     ele.addEventListener("mousemove", function(event){
         currentX=event.offsetX;
         currentY=event.offsetY;
-
         // 在地图区域内
         if (inAreaCtx) {
             // 返回用户 数据索引 城市信息
@@ -386,12 +384,24 @@ function mapAreaChart (options) {
                     strokeStyle: options.cityArea.stroke.color,
                     line: options.cityArea.data
                 });
-            
-            // 在地图区域内
-            if (ctx.isPointInPath(currentX, currentY)) {
-                inAreaCtx = true;
+
+            if ( typeof options.cityArea.data == 'string' ) {
+                
+                var path = new Path2D( options.cityArea.data );
+
+                // 在地图区域内
+                if (ctx.isPointInPath(path, currentX, currentY)) {
+                    inAreaCtx = true;
+                } else {
+                    inAreaCtx = false;
+                }
             } else {
-                inAreaCtx = false;
+                // 在地图区域内
+                if (ctx.isPointInPath(currentX, currentY)) {
+                    inAreaCtx = true;
+                } else {
+                    inAreaCtx = false;
+                }
             }
 
             drawCity({
