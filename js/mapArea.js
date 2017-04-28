@@ -11,6 +11,7 @@ function mapAreaChart (options) {
     var ctx = ele.getContext("2d");
     var index = -1;
     var inAreaCtx;
+    var getPointTime = 0;
 
     var drawLine = function(_options) {
 
@@ -45,22 +46,26 @@ function mapAreaChart (options) {
         var path = '';
 
         if (typeof _options.line == "string") {
-            var _city = _options.city[_options.index];
 
             path = new Path2D(_options.line);
 
-            width = _city.w;
-            height = _city.h;
+            if (_options.city) {
 
-            xStart = _city.x;
-            yStart = _city.y;
+                var _city = _options.city[_options.index];
 
-            xEnd = _city.x + _city.w;
-            yEnd = _city.y + _city.h;
+                width = _city.w;
+                height = _city.h;
 
-            if( ctx.isPointInPath(path, currentX, currentY) && _options.index > -1){
-                index = _options.index;
-                ctx.fillStyle = _options.hoveColor;
+                xStart = _city.x;
+                yStart = _city.y;
+
+                xEnd = _city.x + _city.w;
+                yEnd = _city.y + _city.h;
+
+                if( ctx.isPointInPath(path, currentX, currentY) && _options.index > -1){
+                    index = _options.index;
+                    ctx.fillStyle = _options.hoveColor;
+                }
             }
 
             ctx.stroke(path);
@@ -131,6 +136,8 @@ function mapAreaChart (options) {
     var cityPointArr = [];
     var getRandomPoint = function(size, areaInfo, colorArr, path) {
 
+        var getPointTime = 0;
+
         for (var i = 0; i < size; i++) {
 
             var x = y = 0;
@@ -139,13 +146,15 @@ function mapAreaChart (options) {
                 do {
                     var x = areaInfo.xStart + areaInfo.width * Math.random();
                     var y = areaInfo.yStart + areaInfo.height * Math.random();
-                } while ( !ctx.isPointInPath(path, x, y) )
+                    getPointTime++;
+                } while ( !ctx.isPointInPath(path, x, y) && getPointTime < 10 + size )
                 
             } else {
                 do {
                     var x = areaInfo.xStart + areaInfo.width * Math.random();
                     var y = areaInfo.yStart + areaInfo.height * Math.random();
-                } while (!ctx.isPointInPath(x, y))
+                    getPointTime++;
+                } while (!ctx.isPointInPath(x, y) && getPointTime < 10 + size)
             }
 
             cityPointArr.push({
