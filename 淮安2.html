@@ -5,7 +5,9 @@
         <title></title>
         <style type="text/css">
             *{margin: 0;padding: 0;}
-            #myCanvas{background:#040714;}
+            body {
+                background:#040714; 
+            }
             .tip{display:none;height: 124px;border: 2px solid #3fabc8;border-radius: 4px;padding:0 8px;position: absolute;
                 margin: -130px -25px;
             }
@@ -163,9 +165,10 @@ $(function(){
             city: {
                 data: citysArr,
                 point: {
-                    size: 10,
+                    size: 5, 
+                    message: 'all', // 点上信息, all 都有, auto 随机
                     r: [2, 3],
-                    color: ['#fff', '#f00'],
+                    color: ['#fff', '#4fff5f'],
                 },
                 cityName: {
                     normal: {
@@ -200,8 +203,17 @@ $(function(){
                 line: [165,140,169,149,177,151,171,157,172,166,165,161,157,166,159,158,153,151, 160,149, 165, 140]
             },
             message: {
-                direction: 'both',
-                speed: 2000,
+                direction: 'get', // 流向 [send|get]
+                willback: true,    // 是否返回
+                backColor: '#f90', // 返回时颜色
+                speed: 200, // 速度
+                light: {
+                    length: 15, // 信息条的长度比
+                    style: {
+                        lineWidth: 2, // 信息条的宽
+                        strokeStyle: '#408cff' // 信息条的颜色
+                    }
+                },
                 center: {
                     x: 300,
                     y: 280

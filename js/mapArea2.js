@@ -130,8 +130,8 @@ MapAreaChart.prototype = {
 			let x = y = 0;
 
 			do {
-                x = _obj.x[0] + _obj.width * Math.random();
-                y = _obj.y[0] + _obj.height * Math.random();
+                x = parseFloat((_obj.x[0] + _obj.width * Math.random()).toFixed(2));
+                y = parseFloat((_obj.y[0] + _obj.height * Math.random()).toFixed(2));
             } while (!_self.ctx.isPointInPath(x, y));
 
             result.push({
@@ -166,11 +166,12 @@ MapAreaChart.prototype = {
 
 	        this.ctx.fill();
 			this.ctx.closePath();
+	        this.ctx.restore();
 
 			// 点上线
-			this.drawMessage( _thisPoint )
+			this.drawMessage( _thisPoint );
+
 		}
-        this.ctx.restore();
 	},
 
 	drawMessage: function( _point ) {
@@ -182,7 +183,107 @@ MapAreaChart.prototype = {
 		this.drawLine({
 			line: [_point.x, _point.y, this.message.center.x, this.message.center.y],
 			style: style
-		})
+		});
+
+		if (!_point.lineLength) {
+
+			_point.lineLength = parseFloat(Math.sqrt(Math.pow(_point.x, 2) + Math.pow(_point.y, 2)).toFixed(2));
+			_point.width = this.message.center.x - _point.x;
+			_point.height = this.message.center.y - _point.y;
+			_point.xScale = _point.width / _point.lineLength;
+			_point.yScale = _point.height / _point.lineLength;
+			
+			let speedRandom = Math.random() + .02;
+			let _x = _point.x;
+			let _xspeed = _point.width / this.message.speed * speedRandom;
+			let _y = _point.y;
+			let _yspeed = _point.height / this.message.speed * speedRandom;
+			let cosA =  _point.height / _point.lineLength;
+			let sinA = _point.width / _point.lineLength;
+			
+			if (this.message.direction == 'get') {
+				_x = this.message.center.x;
+				_y = this.message.center.y;
+				_xspeed = 0 - _xspeed;
+				_yspeed = 0 - _yspeed;
+			}
+
+			_point.light = {
+				x: _x, // 原点 x
+				y: _y, // 原点 y
+				xs: _xspeed,
+				ys: _yspeed,
+				cos: cosA,
+				sin: sinA,
+				color: this.message.light.style.strokeStyle,
+				bcolor: this.message.backColor || this.message.light.style.strokeStyle,
+				t: 0
+			}
+		}
+
+
+		let xStart = _point.light.x + _point.light.xs * _point.light.t;
+		let yStart = _point.light.y + _point.light.ys * _point.light.t;
+
+		let xEnd = xStart + this.message.light.length * _point.light.sin;
+		let yEnd = yStart + this.message.light.length * _point.light.cos;
+
+		if ( Math.abs(xStart - _point.light.x) > Math.abs(_point.width)) {
+			_point.light.t = 0;
+
+			if ( this.message.willback ) {
+				// 切换方向
+				if (_point.light.x === _point.x) {
+					_point.light.x = this.message.center.x;
+					_point.light.y = this.message.center.y;
+					_point.light.xs = 0 - _point.light.xs;
+					_point.light.ys = 0 - _point.light.ys;
+				} 
+				else if (_point.light.x === this.message.center.x) {
+					_point.light.x = _point.x;
+					_point.light.y = _point.y;
+					_point.light.xs = 0 - _point.light.xs;
+					_point.light.ys = 0 - _point.light.ys;
+				}
+
+				// 切换颜色
+				if (this.message.backColor) {
+					let _color = _point.light.color;
+					_point.light.color = _point.light.bcolor;
+					_point.light.bcolor = _color;
+				}
+
+			}
+		}
+
+		// 流入效果
+		if (_point.light.x === _point.x) {
+			if (Math.abs(xEnd - _point.light.x) > Math.abs(_point.width)) {
+				xEnd = this.message.center.x;
+				yEnd = this.message.center.y;
+			}
+		} 
+		else if (_point.light.x === this.message.center.x) {
+			if (Math.abs(xEnd - _point.x) > Math.abs(_point.width)) {
+				xEnd = _point.light.x;
+				yEnd = _point.light.y;
+			}
+		}
+
+		this.message.light.style.globalCompositeOperation = 'source-over';
+		this.message.light.style.strokeStyle = _point.light.color;
+
+		_point.light.t++;
+
+		this.drawLine({
+			line: [
+				xStart, 
+				yStart, 
+				xEnd, 
+				yEnd, 
+			],
+			style: this.message.light.style
+		}) 
 
 	},
 
@@ -252,6 +353,7 @@ MapAreaChart.prototype = {
 			_self.drawStar( _self.star );
 
 			requestAnimationFrame(go);
+			// setTimeout(go, 2000);
 		}
 
 		go()
