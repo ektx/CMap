@@ -1,4 +1,11 @@
-
+/*
+	mapArea
+	地图信息流向图
+	-----------------------------------
+	@version: 0.2.0
+	@author: ektx
+	@date: 2017-1-8
+*/
 function MapAreaChart(obj) {
 	this.options = obj;
 	this.cityArr = obj.city;
