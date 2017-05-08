@@ -5,8 +5,8 @@ function MapAreaChart(obj) {
 	this.cityArea = obj.cityArea;
 	this.message = obj.message;
 	this.callback = obj.callback;
-	this.star = obj.star || {};
 
+	// 数据整理后的地图区域信息
 	this.areas = [];
 
 	this.ele = document.querySelector( obj.el );
@@ -14,6 +14,7 @@ function MapAreaChart(obj) {
 	this.ctxW = 0;
 	this.ctxH = 0;
 
+	// 鼠标移动位置
 	this.currentX = -1;
 	this.currentY = -1;
 
@@ -280,15 +281,6 @@ MapAreaChart.prototype = {
 		})
 	},
 
-	drawStar: function( _opt ) {
-		
-		this.drawLine({
-			line: _opt.line,
-			style: _opt.style
-		})
-
-	},
-
 	animate: function() {
 		let _self = this;
 
@@ -313,8 +305,6 @@ MapAreaChart.prototype = {
 
 				_self.drawCityName( n, index )
 			})
-
-			_self.drawStar( _self.star );
 
 			requestAnimationFrame(go);
 			// setTimeout(go, 200);
