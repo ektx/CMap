@@ -9,10 +9,10 @@ function MapAreaChart(obj) {
 
 	this.areas = [];
 
-	this.ele = document.querySelector(obj.el);
-	this.ctx = this.ele.getContext('2d');
-	this.ctxW = this.ele.width;
-	this.ctxH = this.ele.height;
+	this.ele = document.querySelector( obj.el );
+	this.ctx = '';
+	this.ctxW = 0;
+	this.ctxH = 0;
 
 	this.currentX = -1;
 	this.currentY = -1;
@@ -22,50 +22,14 @@ function MapAreaChart(obj) {
 
 }
 
-
-// 绘制边界
-MapAreaChart.prototype.drawCityArea = function() {
-	
-	this.drawCityArea( this.options.cityArea )
-
-}
-
-MapAreaChart.prototype.drawCity = function() {
-	
-	// 绘制边界
-	this.drawCityArea( this.options.cityArea )
-
-}
-
 MapAreaChart.prototype = {
 
 	setCtxState: function(styleOption) {
 
 		this.ctx.save();
 		this.ctx.beginPath();
-		// ctx.imageSmoothingEnabled = true;
-		// 属性设置或返回线条末端线帽的样式。
-		// 可用属性有:
-		// butt     默认。向线条的每个末端添加平直的边缘。
-		// round    向线条的每个末端添加圆形线帽。
-		// square   向线条的每个末端添加正方形线帽。
-		// ctx.lineCap 	= styleOption.lineCap || 'butt';
-		// 线宽
-		// ctx.lineWidth 	= styleOption.lineWidth || 1;
-		// 投影颜色
-		// ctx.shadowColor = styleOption.shadowColor || 'transparent' ;
-		// 投影大小
-		// ctx.shadowBlur  = styleOption.shadowBlur || 0;
-		// 边框颜色
-		// ctx.strokeStyle = styleOption.strokeStyle || '#f90';
-
-		// ctx.fillStyle 	= styleOption.fillStyle || 'transparent';
-
-		// 设置透明度
-		// ctx.globalAlpha	= styleOption.alpha || 1;
-
-		// ctx.globalCompositeOperation = styleOption.globalCompositeOperation || 'source-over';
-
+	
+		// canvas 属性请查阅 canvas 相关书籍
 		for ( let i in styleOption) {
 			this.ctx[i] = styleOption[i]
 		}
@@ -353,7 +317,7 @@ MapAreaChart.prototype = {
 			_self.drawStar( _self.star );
 
 			requestAnimationFrame(go);
-			// setTimeout(go, 2000);
+			// setTimeout(go, 200);
 		}
 
 		go()
@@ -405,29 +369,27 @@ MapAreaChart.prototype = {
 		    _self.currentX = event.offsetX;
 		    _self.currentY = event.offsetY;
 
-		    // console.log(_self.currentX, _self.currentY)
-
 		    // 在地图区域内
-		    // if (this.inAreaCtx) {
-		    //     // 返回用户 数据索引 城市信息
-		    //     if (options.callback && options.callback.mousemove) options.callback.mousemove(index, options.city.data[index]);
-		    // } 
-		    // // 在地图外
-		    // else {
-		    //     // 返回用户 -1
-		    //     if (options.callback && options.callback.mousemove) options.callback.mousemove( -1 );
-		    // }
+		    if (_self.inAreaCtx > -1) {
+		        // 返回用户 数据索引 城市信息
+		        if (_self.callback && _self.callback.mousemove) _self.callback.mousemove( _self.inAreaCtx, _self.areas[_self.inAreaCtx] );
+		    } 
+		    // 在地图外
+		    else {
+		        // 返回用户 -1
+		        if (_self.callback && _self.callback.mousemove) _self.callback.mousemove( -1 );
+		    }
 
 		});
 
 		// 地图上点击事件
 		this.ele.addEventListener('click', function(e) {
 		    // 在地图区域内
-		    // if (this.inAreaCtx) {
+		    if (_self.inAreaCtx > -1) {
 
-		    //     if (options.callback && options.callback.click && index > -1) 
-		    //         options.callback.click( index , options.city.data[index] );
-		    // }
+		        if (_self.callback && _self.callback.click) 
+		            _self.callback.click( _self.inAreaCtx , _self.areas[_self.inAreaCtx] );
+		    }
 		})
 	},
 
@@ -468,7 +430,20 @@ MapAreaChart.prototype = {
 		}
 	},
 
+	createCanvas: function() {
+
+		canvas = document.createElement('canvas');
+		canvas.width = this.ctxW = parseFloat( this.ele.style.width || window.getComputedStyle(this.ele, null).width );
+		canvas.height = this.ctxH = parseFloat( this.ele.style.height || window.getComputedStyle(this.ele, null).height );
+
+		this.ele.appendChild( canvas );
+		this.ctx = canvas.getContext('2d');
+
+	},
+
 	init: function() {
+
+		this.createCanvas();
 
 		this.setArea();
 
