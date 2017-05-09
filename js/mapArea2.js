@@ -2,7 +2,7 @@
 	mapArea
 	地图信息流向图
 	-----------------------------------
-	@version: 0.2.0
+	@version: 0.2.1
 	@author: ektx
 	@date: 2017-1-8
 */
@@ -51,11 +51,11 @@ MapAreaChart.prototype = {
 		var path = '';
 
 		if (typeof _options.line == "string") {
-			var _city = _options.city[_options.index];
+			var _city = _options.line[_options.index];
 
 			path = new Path2D(_options.line);
 
-			if( this.ctx.isPointInPath(path, currentX, currentY) && _options.index > -1){
+			if( this.ctx.isPointInPath(path, this.currentX, this.currentY) && _options.index > -1){
 				index = _options.index;
 				this.ctx.fillStyle = _options.hoveColor;
 			}
@@ -101,10 +101,18 @@ MapAreaChart.prototype = {
 
 			let x = y = 0;
 
-			do {
-                x = parseFloat((_obj.x[0] + _obj.width * Math.random()).toFixed(2));
-                y = parseFloat((_obj.y[0] + _obj.height * Math.random()).toFixed(2));
-            } while (!_self.ctx.isPointInPath(x, y));
+			if (typeof _obj.data === 'string') {
+
+				do {
+	                x = parseFloat((_obj.x[0] + _obj.width * Math.random()).toFixed(2));
+	                y = parseFloat((_obj.y[0] + _obj.height * Math.random()).toFixed(2));
+	            } while (!_self.ctx.isPointInPath(new Path2D(_obj.data), x, y));
+			} else {
+				do {
+	                x = parseFloat((_obj.x[0] + _obj.width * Math.random()).toFixed(2));
+	                y = parseFloat((_obj.y[0] + _obj.height * Math.random()).toFixed(2));
+	            } while (!_self.ctx.isPointInPath(x, y));
+			}
 
             result.push({
             	x: x,
@@ -269,7 +277,7 @@ MapAreaChart.prototype = {
 
 		this.ctx.textAlign = 'center';
 
-		this.ctx.fillText(_opt.name, _opt.xCenter, _opt.yCenter, _opt.width);
+		this.ctx.fillText(_opt.name, _opt.xCenter, _opt.yCenter);
         
         this.ctx.restore();
 
@@ -323,6 +331,11 @@ MapAreaChart.prototype = {
 
 	// 计算属性
 	computedData: function(data) {
+
+		if (!data) {
+			console.log('Not data value!')
+			return
+		}
 		let width = height = xStart = yStart = xEnd = yEnd = 0;
 
 		for (let i = 0, l = data.length; i < l; i+=2) {
@@ -396,6 +409,11 @@ MapAreaChart.prototype = {
 
 		let Area = function(obj, computedData, cityInfo) {
 			let hasX = 'x' in computedData;
+
+			if (!obj.name) {
+				console.warn('Don\'t have name!\n' );
+				return;
+			}
 
 			this.name = obj.name;
 			this.data = obj.map;
