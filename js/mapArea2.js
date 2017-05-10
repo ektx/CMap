@@ -2,7 +2,7 @@
 	mapArea
 	地图信息流向图
 	-----------------------------------
-	@version: 0.2.1
+	@version: 0.2.2
 	@author: ektx
 	@date: 2017-1-8
 */
@@ -56,8 +56,8 @@ MapAreaChart.prototype = {
 			path = new Path2D(_options.line);
 
 			if( this.ctx.isPointInPath(path, this.currentX, this.currentY) && _options.index > -1){
-				index = _options.index;
-				this.ctx.fillStyle = _options.hoveColor;
+				this.ctx.fillStyle = _options.style.hoveColor;
+                this.inAreaCtx = _options.index;
 			}
 
 			this.ctx.stroke(path);
@@ -290,10 +290,13 @@ MapAreaChart.prototype = {
 		style.fillStyle = 'transparent';
 		style.globalCompositeOperation = 'source-over';
 
-		this.drawLine({
-			line: this.cityArea.data,
-			style: style
-		})
+		for (let i = 0, l = this.cityArea.data.length; i < l; i++) {
+			this.drawLine({
+				line: this.cityArea.data[i],
+				style: style
+			})
+			
+		}
 	},
 
 	animate: function() {
@@ -322,7 +325,6 @@ MapAreaChart.prototype = {
 			})
 
 			requestAnimationFrame(go);
-			// setTimeout(go, 200);
 		}
 
 		go()
