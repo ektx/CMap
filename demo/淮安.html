@@ -23,7 +23,7 @@
         <div id="city-information-network"></div>
 
     </body>
-    <script src="../../js/mapArea2.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../js/mapArea.js"></script>
     <script>
     
     window.addEventListener('DOMContentLoaded', function() {
@@ -154,7 +154,7 @@
                 data: citysArr,
                 point: {
                     size: 5, 
-                    message: 'all', // 点上信息, all 都有, auto 随机
+                    message: 'auto', // 点上信息, all 都有, auto 随机
                     r: [2, 3],
                     color: ['#fff', '#4fff5f'],
                 },
@@ -183,9 +183,7 @@
                 }
             },
             message: {
-                direction: 'get', // 流向 [send|get]
-                willback: true,    // 是否返回
-                backColor: '#f90', // 返回时颜色
+                direction: 'send', // 流向 [send|get]
                 speed: 200, // 速度
                 light: {
                     length: 15, // 信息条的长度比
