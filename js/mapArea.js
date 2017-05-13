@@ -60,33 +60,33 @@ MapAreaChart.prototype = {
 
 			if( this.ctx.isPointInPath(path, this.currentX, this.currentY) ){
 				this.ctx.fillStyle = _options.style.hoveColor;
-                this.inAreaCtx = _options.index;
+				this.inAreaCtx = _options.index;
 			} 
 
 			this.ctx.stroke( path );
 			this.ctx.fill( path )
 
 		} else {
-	        for (let i = 0, l = _options.line.length; i < l; i+=2) {
+			for (let i = 0, l = _options.line.length; i < l; i+=2) {
 				let x = _options.line[i];
-                let y = _options.line[i+1];
-	            if (i === 0) {
-	                this.ctx.moveTo(x, y);
-	            } else {
-	                this.ctx.lineTo(x, y);
-	            }
+				let y = _options.line[i+1];
+				if (i === 0) {
+					this.ctx.moveTo(x, y);
+				} else {
+					this.ctx.lineTo(x, y);
+				}
 			}
 
 			if( this.ctx.isPointInPath( this.currentX, this.currentY)){
-                this.ctx.fillStyle = _options.style.hoveColor;
-                this.inAreaCtx = _options.index;
-            }
+				this.ctx.fillStyle = _options.style.hoveColor;
+				this.inAreaCtx = _options.index;
+			}
 
 			this.ctx.stroke();
 			this.ctx.fill();
 		}
 
-        this.ctx.closePath();
+		this.ctx.closePath();
 		this.ctx.restore();
 
 	},
@@ -100,31 +100,44 @@ MapAreaChart.prototype = {
 			return colorArr[parseInt(colorArr.length * Math.random())]
 		}
 
-		for (let i = 0; i < _obj.point.size; i ++) {
+		// 取多个点时,我们随机生成
+		if (_obj.point.size > 1) {
+			
+			for (let i = 0; i < _obj.point.size; i ++) {
 
-			let x = y = 0;
+				let x = y = 0;
 
-			if (typeof _obj.data === 'string') {
+				if (typeof _obj.data === 'string') {
 
-				do {
-	                x = parseFloat((_obj.x[0] + _obj.width * Math.random()).toFixed(2));
-	                y = parseFloat((_obj.y[0] + _obj.height * Math.random()).toFixed(2));
-	            } while (!_self.ctx.isPointInPath(new Path2D(_obj.data), x, y));
-			} else {
-				do {
-	                x = parseFloat((_obj.x[0] + _obj.width * Math.random()).toFixed(2));
-	                y = parseFloat((_obj.y[0] + _obj.height * Math.random()).toFixed(2));
-	            } while (!_self.ctx.isPointInPath(x, y));
+					do {
+						x = parseFloat((_obj.x[0] + _obj.width * Math.random()).toFixed(2));
+						y = parseFloat((_obj.y[0] + _obj.height * Math.random()).toFixed(2));
+					} while (!_self.ctx.isPointInPath(new Path2D(_obj.data), x, y));
+				} else {
+					do {
+						x = parseFloat((_obj.x[0] + _obj.width * Math.random()).toFixed(2));
+						y = parseFloat((_obj.y[0] + _obj.height * Math.random()).toFixed(2));
+					} while (!_self.ctx.isPointInPath(x, y));
+				}
+
+				result.push({
+					x: x,
+					y: y,
+					r: getRandomVal( _obj.point.r ),
+					color: getRandomVal( _obj.point.color )
+				})
 			}
-
-            result.push({
-            	x: x,
-                y: y,
-                r: getRandomVal( _obj.point.r ),
-                color: getRandomVal( _obj.point.color )
-            })
+		} 
+		// 只取一个点时,用中心点
+		else {
+			result.push({
+				x: _obj.xCenter,
+				y: _obj.yCenter,
+				r: getRandomVal( _obj.point.r ),
+				color: getRandomVal( _obj.point.color )
+			})
 		}
-        _obj.pointArr = result;
+		_obj.pointArr = result;
 	},
 
 	drawPoint: function( obj ) {
@@ -167,12 +180,12 @@ MapAreaChart.prototype = {
 				fillStyle: _thisPoint.color
 			} );
 
-	        this.ctx.arc(_thisPoint.x, _thisPoint.y, _thisPoint.r, 0, 2*Math.PI, false);
+			this.ctx.arc(_thisPoint.x, _thisPoint.y, _thisPoint.r, 0, 2*Math.PI, false);
 
 
-	        this.ctx.fill();
+			this.ctx.fill();
 			this.ctx.closePath();
-	        this.ctx.restore();
+			this.ctx.restore();
 
 			if (obj.point.pop) this.drawPointPop(_thisPoint);
 
@@ -323,18 +336,27 @@ MapAreaChart.prototype = {
 	},
 
 	drawCityName: function( _opt, index ) {
+		// x 偏移
+		let translateX = 0;
+		// y 偏移
+		let translateY = 0;
 
 		if( this.inAreaCtx == index ){
 			this.setCtxState( _opt.cityName.hover );
-        } else {
+		} else {
 			this.setCtxState( _opt.cityName.normal );
-        }
+		}
 
-		this.ctx.textAlign = 'center';
+		this.ctx.textAlign = _opt.cityName.align || 'center';
 
-		this.ctx.fillText(_opt.name, _opt.xCenter, _opt.yCenter);
-        
-        this.ctx.restore();
+		if (_opt.cityName.move) {
+			translateX = _opt.cityName.move.x ? _opt.cityName.move.x : 0;
+			translateY = _opt.cityName.move.y ? _opt.cityName.move.y : 0;
+		}
+
+		this.ctx.fillText(_opt.name, _opt.xCenter + translateX, _opt.yCenter + translateY);
+		
+		this.ctx.restore();
 
 	},
 
@@ -425,11 +447,11 @@ MapAreaChart.prototype = {
 
 		return {
 			width: width,
-            height: height,
-            xCenter: xStart + width / 2,
-            yCenter: yStart + height / 2,
-            x: [xStart, xEnd],
-            y: [yStart, yEnd]
+			height: height,
+			xCenter: xStart + width / 2,
+			yCenter: yStart + height / 2,
+			x: [xStart, xEnd],
+			y: [yStart, yEnd]
 		}
 	},
 
@@ -437,34 +459,34 @@ MapAreaChart.prototype = {
 
 		let _self = this;
 
-	    //地图鼠标移上去的事件
+		//地图鼠标移上去的事件
 		this.ele.addEventListener("mousemove", function(event){
-		    _self.currentX = event.offsetX;
-		    _self.currentY = event.offsetY;
+			_self.currentX = event.offsetX;
+			_self.currentY = event.offsetY;
 
-		    // 在地图区域内
-		    if (_self.inAreaCtx > -1) {
-		        // 返回用户 数据索引 城市信息
-		        if (_self.callback && _self.callback.mousemove) _self.callback.mousemove( _self.inAreaCtx, _self.areas[_self.inAreaCtx] );
-		    } 
-		    // 在地图外
-		    else {
-		        // 返回用户 -1
-		        if (_self.callback && _self.callback.mousemove) {
-		        	_self.callback.mousemove( -1 );
-		        }
-		    }
+			// 在地图区域内
+			if (_self.inAreaCtx > -1) {
+				// 返回用户 数据索引 城市信息
+				if (_self.callback && _self.callback.mousemove) _self.callback.mousemove( _self.inAreaCtx, _self.areas[_self.inAreaCtx] );
+			} 
+			// 在地图外
+			else {
+				// 返回用户 -1
+				if (_self.callback && _self.callback.mousemove) {
+					_self.callback.mousemove( -1 );
+				}
+			}
 
 		});
 
 		// 地图上点击事件
 		this.ele.addEventListener('click', function(e) {
-		    // 在地图区域内
-		    if (_self.inAreaCtx > -1) {
+			// 在地图区域内
+			if (_self.inAreaCtx > -1) {
 
-		        if (_self.callback && _self.callback.click) 
-		            _self.callback.click( _self.inAreaCtx , _self.areas[_self.inAreaCtx] );
-		    }
+				if (_self.callback && _self.callback.click) 
+					_self.callback.click( _self.inAreaCtx , _self.areas[_self.inAreaCtx] );
+			}
 		})
 	},
 
