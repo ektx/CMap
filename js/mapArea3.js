@@ -48,6 +48,9 @@ MapAreaChart.prototype = {
 
 		this.setCtxState( _options.style );
 
+		// 没有数据不绘制
+		if (_options.line.length === 0) return;
+
 		var path = '';
 
 		if (typeof _options.line == "string") {
@@ -127,6 +130,18 @@ MapAreaChart.prototype = {
 	drawPoint: function( obj ) {
 
 		let pointLength = obj.pointArr.length;
+
+		// 没有地图点数据不绘制
+		if (obj.data.length === 0) {
+			let _meg = '发现没有地图坐标点的城市:' + obj.name;
+			
+			if (!obj.warn.drawPoint) {
+				obj.warn.drawPoint = _meg;
+				console.warn( _meg )
+			}
+
+			return;	
+		}
 
 		if ( pointLength == 0) {
 			this.getRandomPoint( obj );
@@ -324,7 +339,7 @@ MapAreaChart.prototype = {
 				_self.drawCityName( n, index )
 			})
 
-			requestAnimationFrame(go);
+			requestAnimationFrame( go );
 		}
 
 		go()
@@ -332,13 +347,16 @@ MapAreaChart.prototype = {
 	},
 
 	// 计算属性
-	computedData: function(data) {
+	computedData: function( data ) {
 
 		if (!data) {
-			console.log('Not data value!')
+			console.warn("Don't find any Data")
 			return
 		}
+
 		let width = height = xStart = yStart = xEnd = yEnd = 0;
+		let xArr = [];
+		let yArr = [];
 
 		for (let i = 0, l = data.length; i < l; i+=2) {
 			let x = data[i];
@@ -347,16 +365,17 @@ MapAreaChart.prototype = {
 			if (i === 0) {
 				xStart = xEnd = x;
 				yStart = yEnd = y;
-				
-			} else {
-				xStart = x < xStart ? x : xStart;
-				xEnd   = x > xEnd ? x : xEnd;
-
-				yStart = y < yStart ? y : yStart;
-				yEnd   = y > yEnd   ? y : yEnd;
-
 			}
+
+			xArr.push(x);
+			yArr.push(y);
 		}
+
+		xStart = Math.min.apply({}, xArr);
+		xEnd = Math.max.apply({}, xArr);
+
+		yStart = Math.min.apply({}, yArr);
+		yEnd = Math.max.apply({}, yArr);
 
 		// 输出宽高
 		width = xEnd - xStart;
@@ -413,12 +432,12 @@ MapAreaChart.prototype = {
 			let hasX = 'x' in computedData;
 
 			if (!obj.name) {
-				console.warn('Don\'t have name!\n' );
+				console.warn("Don't have name!\n" );
 				return;
 			}
 
 			this.name = obj.name;
-			this.data = obj.map;
+			this.data = obj.map || [];
 
 			this.width = obj.w || computedData.width;
 			this.height = obj.h || computedData.height;
@@ -431,6 +450,7 @@ MapAreaChart.prototype = {
 			this.pointArr = [];
 			this.style = cityInfo.style;
 			this.cityName = cityInfo.cityName;
+			this.warn = {};  // 保存错误信息
 		};
 
 		for (let i = 0, l = this.options.city.data.length; i < l; i++) {
@@ -439,8 +459,13 @@ MapAreaChart.prototype = {
 
 			// 如果没有宽高
 			if (!_data.w && !_data.h) {
-				// 计算宽高
-				_computedData = this.computedData( _data.map )
+				if (_data.map) {
+					// 计算宽高
+					_computedData = this.computedData( _data.map )
+				} else {
+					console.warn('This city or area not have data:' + _data.name);
+					return;
+				}
 			}
 
 			this.areas[i] = new Area( _data, _computedData, this.options.city )
