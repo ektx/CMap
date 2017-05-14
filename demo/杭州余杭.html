@@ -30,7 +30,7 @@
 	<!-- 示例代码 -->
 	<script>
 	
-	window.addEventListener('DOMContentLoaded', function() {
+	// window.addEventListener('DOMContentLoaded', function() {
 
 		let myMap = new MapAreaChart({
 			el: '#city-information-network',
@@ -38,6 +38,7 @@
 				data: citysArr,
 				point: {
 					size: 1, 
+					notUseCenterPoint: true, //是否使用中心点,默认 true,只有size时可用
 					message: 'all', // 点上信息, all 都有, auto 随机
 					r: [3, 5],
 					pop: 3, // 加点动画
@@ -70,7 +71,7 @@
 				},
 				cityName: {
 					normal: {
-						fillStyle: '#fff',
+						fillStyle: 'transparent',
 						font: "10px Microsoft Yahei"
 					},
 					hover: {
@@ -154,7 +155,7 @@
 
 			return setData(data);
 		}
-	})
+	// })
 
 	</script>
 </html>

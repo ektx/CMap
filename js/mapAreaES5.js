@@ -38,7 +38,7 @@ MapAreaChart.prototype = {
 		this.ctx.beginPath();
 	
 		// canvas 属性请查阅 canvas 相关书籍
-		for ( let i in styleOption) {
+		for ( var i in styleOption) {
 			this.ctx[i] = styleOption[i]
 		}
 
@@ -67,9 +67,9 @@ MapAreaChart.prototype = {
 			this.ctx.fill( path )
 
 		} else {
-			for (let i = 0, l = _options.line.length; i < l; i+=2) {
-				let x = _options.line[i];
-				let y = _options.line[i+1];
+			for (var i = 0, l = _options.line.length; i < l; i+=2) {
+				var x = _options.line[i];
+				var y = _options.line[i+1];
 				if (i === 0) {
 					this.ctx.moveTo(x, y);
 				} else {
@@ -93,20 +93,20 @@ MapAreaChart.prototype = {
 
 
 	getRandomPoint: function( _obj ) {
-		let result = [];
-		let _self = this;
-		let _useCenterPoint = _obj.point.notUseCenterPoint ? false : true;
+		var result = [];
+		var _self = this;
+		var _useCenterPoint = _obj.point.notUseCenterPoint ? false : true;
 
-		let getRandomVal = function(colorArr) {
+		var getRandomVal = function(colorArr) {
 			return colorArr[parseInt(colorArr.length * Math.random())]
 		}
 
 		// 取多个点时,我们随机生成
 		if (_obj.point.size > 1 || !_useCenterPoint) {
 			
-			for (let i = 0; i < _obj.point.size; i ++) {
+			for (var i = 0; i < _obj.point.size; i ++) {
 
-				let x = y = 0;
+				var x = y = 0;
 
 				if (typeof _obj.data === 'string') {
 
@@ -143,11 +143,11 @@ MapAreaChart.prototype = {
 
 	drawPoint: function( obj ) {
 
-		let pointLength = obj.pointArr.length;
+		var pointLength = obj.pointArr.length;
 
 		// 没有地图点数据不绘制
 		if (obj.data.length === 0) {
-			let _meg = '发现没有地图坐标点的城市:' + obj.name;
+			var _meg = '发现没有地图坐标点的城市:' + obj.name;
 			
 			if (!obj.warn.drawPoint) {
 				obj.warn.drawPoint = _meg;
@@ -163,13 +163,13 @@ MapAreaChart.prototype = {
 			pointLength = obj.point.size;
 		}
 
-		for (let i = 0; i < pointLength; i++) {
+		for (var i = 0; i < pointLength; i++) {
 
-			let _thisPoint = obj.pointArr[i];
-			let _newColor = _newR = false;
+			var _thisPoint = obj.pointArr[i];
+			var _newColor = _newR = false;
 
 			if (obj.point.fun && typeof obj.point.fun === "function") {
-				let _r = obj.point.fun(_thisPoint, obj) || false;
+				var _r = obj.point.fun(_thisPoint, obj) || false;
 
 				if (_r) {
 					_thisPoint.r = _r.r;
@@ -198,13 +198,13 @@ MapAreaChart.prototype = {
 
 	drawPointPop: function( _point, _size ) {
 
-		let _self = this;
-		let _totalR = _point.r * 5;
-		let popR = [];
+		var _self = this;
+		var _totalR = _point.r * 5;
+		var popR = [];
 
 		_size++;
 
-		let popAnimateFun = function( r, speed ) {
+		var popAnimateFun = function( r, speed ) {
 			r += speed;
 			r = r >= _totalR ? 0  : r;
 
@@ -225,9 +225,9 @@ MapAreaChart.prototype = {
 		if (!_point.popAnimate) {
 			// 取波纹数
 			if (_size > 1) {
-				let _step = (_totalR + _point.r) / _size;
+				var _step = (_totalR + _point.r) / _size;
 
-				for (let i = 0; i < _size-1; i++) {
+				for (var i = 0; i < _size-1; i++) {
 					popR.push(i * _step)
 				}
 			} else {
@@ -239,7 +239,7 @@ MapAreaChart.prototype = {
 				RSpeed: _totalR / 200
 			}
 		} else {
-			for (let i = 0, l = _point.popAnimate.r.length; i < l; i++) {
+			for (var i = 0, l = _point.popAnimate.r.length; i < l; i++) {
 				_point.popAnimate.r[i] = popAnimateFun( _point.popAnimate.r[i], _point.popAnimate.RSpeed );
 			}
 		}
@@ -250,7 +250,7 @@ MapAreaChart.prototype = {
 
 		if (!this.message) return;
 
-		let style = this.message.line;
+		var style = this.message.line;
 
 		style.globalCompositeOperation = 'destination-over';
 
@@ -267,13 +267,13 @@ MapAreaChart.prototype = {
 			_point.xScale = _point.width / _point.lineLength;
 			_point.yScale = _point.height / _point.lineLength;
 			
-			let speedRandom = Math.random() + .02;
-			let _x = _point.x;
-			let _xspeed = _point.width / this.message.speed * speedRandom;
-			let _y = _point.y;
-			let _yspeed = _point.height / this.message.speed * speedRandom;
-			let cosA =  _point.height / _point.lineLength;
-			let sinA = _point.width / _point.lineLength;
+			var speedRandom = Math.random() + .02;
+			var _x = _point.x;
+			var _xspeed = _point.width / this.message.speed * speedRandom;
+			var _y = _point.y;
+			var _yspeed = _point.height / this.message.speed * speedRandom;
+			var cosA =  _point.height / _point.lineLength;
+			var sinA = _point.width / _point.lineLength;
 			
 			if (this.message.direction == 'get') {
 				_x = this.message.center.x;
@@ -296,11 +296,11 @@ MapAreaChart.prototype = {
 		}
 
 
-		let xStart = _point.light.x + _point.light.xs * _point.light.t;
-		let yStart = _point.light.y + _point.light.ys * _point.light.t;
+		var xStart = _point.light.x + _point.light.xs * _point.light.t;
+		var yStart = _point.light.y + _point.light.ys * _point.light.t;
 
-		let xEnd = xStart + this.message.light.length * _point.light.sin;
-		let yEnd = yStart + this.message.light.length * _point.light.cos;
+		var xEnd = xStart + this.message.light.length * _point.light.sin;
+		var yEnd = yStart + this.message.light.length * _point.light.cos;
 
 		if ( Math.abs(xStart - _point.light.x) > Math.abs(_point.width)) {
 			_point.light.t = 0;
@@ -322,7 +322,7 @@ MapAreaChart.prototype = {
 
 				// 切换颜色
 				if (this.message.backColor) {
-					let _color = _point.light.color;
+					var _color = _point.light.color;
 					_point.light.color = _point.light.bcolor;
 					_point.light.bcolor = _color;
 				}
@@ -363,9 +363,9 @@ MapAreaChart.prototype = {
 
 	drawCityName: function( _opt, index ) {
 		// x 偏移
-		let translateX = 0;
+		var translateX = 0;
 		// y 偏移
-		let translateY = 0;
+		var translateY = 0;
 		
 
 		if( this.inAreaCtx == index ){
@@ -393,14 +393,14 @@ MapAreaChart.prototype = {
 
 	drawCityArea: function( _opt ) {
 
-		let style = this.cityArea.style;
+		var style = this.cityArea.style;
 		// 重置
 		this.inAreaCtx = -1
 
 		style.fillStyle = 'transparent';
 		style.globalCompositeOperation = 'source-over';
 
-		for (let i = 0, l = this.cityArea.data.length; i < l; i++) {
+		for (var i = 0, l = this.cityArea.data.length; i < l; i++) {
 			this.drawLine({
 				line: this.cityArea.data[i],
 				style: style,
@@ -410,9 +410,9 @@ MapAreaChart.prototype = {
 	},
 
 	animate: function() {
-		let _self = this;
+		var _self = this;
 
-		let go = function() {
+		var go = function() {
 
 			_self.ctx.clearRect(0, 0, _self.ctxW, _self.ctxH);
 
@@ -421,7 +421,7 @@ MapAreaChart.prototype = {
 
 			_self.areas.forEach(function(n, index) {
 
-				let __style = n.style;
+				var __style = n.style;
 				__style.globalCompositeOperation = 'destination-over';
 				_self.drawLine({
 					line: n.data,
@@ -449,13 +449,13 @@ MapAreaChart.prototype = {
 			return
 		}
 
-		let width = height = xStart = yStart = xEnd = yEnd = 0;
-		let xArr = [];
-		let yArr = [];
+		var width = height = xStart = yStart = xEnd = yEnd = 0;
+		var xArr = [];
+		var yArr = [];
 
-		for (let i = 0, l = data.length; i < l; i+=2) {
-			let x = data[i];
-			let y = data[i+1];
+		for (var i = 0, l = data.length; i < l; i+=2) {
+			var x = data[i];
+			var y = data[i+1];
 
 			if (i === 0) {
 				xStart = xEnd = x;
@@ -488,7 +488,7 @@ MapAreaChart.prototype = {
 
 	event: function() {
 
-		let _self = this;
+		var _self = this;
 
 		//地图鼠标移上去的事件
 		this.ele.addEventListener("mousemove", function(event){
@@ -523,10 +523,10 @@ MapAreaChart.prototype = {
 
 	setArea: function() {
 
-		let _self = this;
+		var _self = this;
 
-		let Area = function(obj, computedData, cityInfo) {
-			let hasX = 'x' in computedData;
+		var Area = function(obj, computedData, cityInfo) {
+			var hasX = 'x' in computedData;
 
 			if (!obj.name) {
 				console.warn("Don't have name!\n" );
@@ -551,9 +551,9 @@ MapAreaChart.prototype = {
 			this.origin = obj
 		};
 
-		for (let i = 0, l = this.options.city.data.length; i < l; i++) {
-			let _data = this.options.city.data[i];
-			let _computedData = {};
+		for (var i = 0, l = this.options.city.data.length; i < l; i++) {
+			var _data = this.options.city.data[i];
+			var _computedData = {};
 
 			// 如果没有宽高
 			if (!_data.w && !_data.h) {
