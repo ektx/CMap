@@ -187,7 +187,7 @@ MapAreaChart.prototype = {
 			this.ctx.closePath();
 			this.ctx.restore();
 
-			if (obj.point.pop) this.drawPointPop(_thisPoint);
+			if (obj.point.pop) this.drawPointPop(_thisPoint, obj.point.pop);
 
 			// 点上线
 			this.drawMessage( _thisPoint );
@@ -195,29 +195,55 @@ MapAreaChart.prototype = {
 		}
 	},
 
-	drawPointPop: function( _point ) {
+	drawPointPop: function( _point, _size ) {
 
+		let _self = this;
 		let _totalR = _point.r * 5;
+		let popR = [];
+
+		_size++;
+
+		let popAnimateFun = function( r, speed ) {
+			r += speed;
+			r = r >= _totalR ? 0  : r;
+
+			if ( r < 0 ) return r;
+
+			_self.setCtxState({
+				strokeStyle: _point.color,
+				globalCompositeOperation: 'destination-over',
+				globalAlpha: 1-(r / _totalR)
+			});
+			_self.ctx.arc(_point.x, _point.y, r, 0, 2*Math.PI, false);
+			_self.ctx.stroke();
+			_self.ctx.closePath();
+			_self.ctx.restore();
+
+			return r;
+		}
 
 		if (!_point.popAnimate) {
+			// 取波纹数
+			if (_size > 1) {
+				let _step = (_totalR + _point.r) / _size;
+
+				for (let i = 0; i < _size-1; i++) {
+					popR.push(i * _step)
+				}
+			} else {
+				popR.push(_point.r)
+			}
+
 			_point.popAnimate = {
-				r : _point.r,
+				r : popR,
 				RSpeed: _totalR / 200
 			}
 		} else {
-			_point.popAnimate.r+= _point.popAnimate.RSpeed;
+			for (let i = 0, l = _point.popAnimate.r.length; i < l; i++) {
+				_point.popAnimate.r[i] = popAnimateFun( _point.popAnimate.r[i], _point.popAnimate.RSpeed );
+			}
 		}
 
-		if (_point.popAnimate.r > _totalR) _point.popAnimate.r = _point.r;
-
-		this.setCtxState({
-			strokeStyle: _point.color,
-			globalAlpha: 1-(_point.popAnimate.r / _totalR)
-		});
-		this.ctx.arc(_point.x, _point.y, _point.popAnimate.r, 0, 2*Math.PI, false);
-		this.ctx.stroke();
-		this.ctx.closePath();
-		this.ctx.restore();
 	},
 
 	drawMessage: function( _point ) {
@@ -340,10 +366,13 @@ MapAreaChart.prototype = {
 		let translateX = 0;
 		// y 偏移
 		let translateY = 0;
+		
 
 		if( this.inAreaCtx == index ){
+			_opt.cityName.hover.globalCompositeOperation = 'source-over';
 			this.setCtxState( _opt.cityName.hover );
 		} else {
+			_opt.cityName.normal.globalCompositeOperation = 'source-over';
 			this.setCtxState( _opt.cityName.normal );
 		}
 
@@ -353,6 +382,8 @@ MapAreaChart.prototype = {
 			translateX = _opt.cityName.move.x ? _opt.cityName.move.x : 0;
 			translateY = _opt.cityName.move.y ? _opt.cityName.move.y : 0;
 		}
+
+		// this.ctx.globalCompositeOperation = 'source-over',
 
 		this.ctx.fillText(_opt.name, _opt.xCenter + translateX, _opt.yCenter + translateY);
 		
@@ -517,6 +548,7 @@ MapAreaChart.prototype = {
 			this.style = cityInfo.style;
 			this.cityName = cityInfo.cityName;
 			this.warn = {};  // 保存错误信息
+			this.origin = obj
 		};
 
 		for (let i = 0, l = this.options.city.data.length; i < l; i++) {

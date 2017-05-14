@@ -30,16 +30,8 @@
 	<!-- 示例代码 -->
 	<script>
 	
-	// window.addEventListener('DOMContentLoaded', function() {
+	window.addEventListener('DOMContentLoaded', function() {
 
-		// 清洗区域
-		areaData = dataClear( areaData );
-
-		// 处理余杭数据
-		for (var i = 0, l = citysArr.length; i<l; i++) {
-			citysArr[i].map = dataClear( citysArr[i].map );
-		}
-	
 		let myMap = new MapAreaChart({
 			el: '#city-information-network',
 			city: {
@@ -47,16 +39,33 @@
 				point: {
 					size: 1, 
 					message: 'all', // 点上信息, all 都有, auto 随机
-					r: [2, 4],
-					pop: true, // 加点动画
+					r: [3, 5],
+					pop: 3, // 加点动画
 					color: ['#fff', '#4fff5f'],
 					fun: function(ponitInfo, areaInfo) {
 						// console.log(ponitInfo, areaInfo);
 
-						// return {
-						// 	color: '#09f',
-						// 	r: 2
-						// }
+						var color = '#fff';
+						var r = 6;
+						var data = areaInfo.origin.value;
+
+						switch (true) {
+							case data < 60:
+								color = '#09f';
+								r = 3;
+								break;
+
+							case data > 80:
+								color = '#4fff5f';
+								r = 10;
+								break;
+						}
+
+						// 重置半径与大小
+						return {
+							color: color,
+							r: r
+						}
 					}
 				},
 				cityName: {
@@ -70,7 +79,7 @@
 					},
 					// align: 'start', // 居中方式
 					move: {
-						y: -10
+						y: -15
 					}
 				},
 				style: {
@@ -97,31 +106,55 @@
 			}
 		})
 
+		// 获取地图最大与最小值
+		var computedData = myMap.computedData( areaData[0] );
+
+		var minX = computedData.x[0];
+		var minY = computedData.y[0];
+		// 地图宽度
+		var mapW = computedData.width * 1000;
+		// 地图高度
+		var mapH = computedData.height * 1000;
+		// 让地图居中 
+		// x 起点 = 地图的高度 + (canvas高度 - 地图的高度)/2
+		var drawX = mapH + (500 - mapH)/2;
+		// y 起点 = (canvas宽度 - 地图的宽度)/2
+		var drawY = (700 - mapW)/2;
+
+		// 清洗区域
+		areaData = dataClear( areaData );
+
+		// 处理余杭数据
+		for (var i = 0, l = citysArr.length; i<l; i++) {
+			citysArr[i].map = dataClear( citysArr[i].map );
+		}
+		
 		myMap.init()
 
-	// })
+		// 对于数据进行扩大
+		function dataClear(data) {
 
-	// 对于数据进行扩大
-	function dataClear(data) {
-
-		if (!(data instanceof Array)) {
-			console.log('data 要是数组');
-			return;
-		}
-
-		var setData = function( data ) {
-			for (let i = 0, l = data.length; i < l; i+=2) {
-				if (typeof data[i] == 'object') {
-					data[i] = setData( data[i] )
-				} else {
-					data[i] = (data[i] - 119.67716163) * 1000 + 3;
-					data[i+1] = (data[i+1] - 30.161921637) * 1000 + 3;
-				}
+			if (!(data instanceof Array)) {
+				console.log('data 要是数组');
+				return;
 			}
-			return data;
-		}
 
-		return setData(data);
-	}
+			var setData = function( data ) {
+				for (let i = 0, l = data.length; i < l; i+=2) {
+					if (typeof data[i] == 'object') {
+						data[i] = setData( data[i] )
+					} else {
+						data[i] = drawY + (data[i] - minX) * 1000 + 3;
+						// 地图居中显示
+						data[i+1] = drawX -(data[i+1] - minY) * 1000 + 3;
+					}
+				}
+				return data;
+			}
+
+			return setData(data);
+		}
+	})
+
 	</script>
 </html>
