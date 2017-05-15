@@ -95,7 +95,7 @@ MapAreaChart.prototype = {
 	getRandomPoint: function( _obj ) {
 		let result = [];
 		let _self = this;
-		let _useCenterPoint = _obj.point.notUseCenterPoint ? false : true;
+		let _useCenterPoint = _obj.point.notUseCentroidPoint ? false : true;
 
 		let getRandomVal = function(colorArr) {
 			return colorArr[parseInt(colorArr.length * Math.random())]
@@ -132,8 +132,8 @@ MapAreaChart.prototype = {
 		// 只取一个点时,用中心点
 		else {
 			result.push({
-				x: _obj.xCenter,
-				y: _obj.yCenter,
+				x: _obj.centroidX,
+				y: _obj.centroidY,
 				r: getRandomVal( _obj.point.r ),
 				color: getRandomVal( _obj.point.color )
 			})
@@ -383,8 +383,6 @@ MapAreaChart.prototype = {
 			translateY = _opt.cityName.move.y ? _opt.cityName.move.y : 0;
 		}
 
-		// this.ctx.globalCompositeOperation = 'source-over',
-
 		this.ctx.fillText(_opt.name, _opt.xCenter + translateX, _opt.yCenter + translateY);
 		
 		this.ctx.restore();
@@ -453,6 +451,8 @@ MapAreaChart.prototype = {
 		let xArr = [];
 		let yArr = [];
 
+		let centroid = this.getCentroid( data );
+
 		for (let i = 0, l = data.length; i < l; i+=2) {
 			let x = data[i];
 			let y = data[i+1];
@@ -481,9 +481,42 @@ MapAreaChart.prototype = {
 			height: height,
 			xCenter: xStart + width / 2,
 			yCenter: yStart + height / 2,
+			centroidX: centroid[0],
+			centroidY: centroid[1],
 			x: [xStart, xEnd],
 			y: [yStart, yEnd]
 		}
+	},
+
+	// 质点中心 代码参考网上
+	getCentroid: function( arr ) {
+		let twoTimesSignedArea = 0;
+	    let cxTimes6SignedArea = 0;
+	    let cyTimes6SignedArea = 0;
+
+	    let length = arr.length
+
+	    for ( let i = 0; i < arr.length; i+=2) {
+	        let _x = arr[i];
+	        let _y = arr[i+1];
+	        let __x = arr[i+2];
+	        let __y = arr[i+3];
+
+	        if (i + 3 > arr.length) {
+	        	__x = arr[0];
+	        	__y = arr[1];
+	        }
+
+	        let twoSA = _x * __y - __x * _y;
+
+	        twoTimesSignedArea += twoSA;
+	        cxTimes6SignedArea += (_x + __x) * twoSA;
+	        cyTimes6SignedArea += (_y + __y) * twoSA;
+	    }
+	    
+	    let sixSignedArea = 3 * twoTimesSignedArea;
+
+	    return [ cxTimes6SignedArea / sixSignedArea, cyTimes6SignedArea / sixSignedArea]; 
 	},
 
 	event: function() {
@@ -533,11 +566,15 @@ MapAreaChart.prototype = {
 				return;
 			}
 
-			this.name = obj.name;
+			this.centroidX = computedData.centroidX;
+			this.centroidY = computedData.centroidY;
+			this.cityName = cityInfo.cityName;
 			this.data = obj.map || [];
 
-			this.width = obj.w || computedData.width;
 			this.height = obj.h || computedData.height;
+			this.width = obj.w || computedData.width;
+			this.name = obj.name;
+			
 			this.x = hasX ? computedData.x : [obj.x, obj.x + obj.w];
 			this.y = hasX ? computedData.y : [obj.y, obj.y + obj.h];
 			this.xCenter = hasX ? computedData.xCenter : obj.x + obj.w /2;
@@ -546,7 +583,6 @@ MapAreaChart.prototype = {
 			this.point = cityInfo.point;
 			this.pointArr = [];
 			this.style = cityInfo.style;
-			this.cityName = cityInfo.cityName;
 			this.warn = {};  // 保存错误信息
 			this.origin = obj
 		};
