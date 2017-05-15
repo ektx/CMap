@@ -531,13 +531,13 @@ MapAreaChart.prototype = {
 			// 在地图区域内
 			if (_self.inAreaCtx > -1) {
 				// 返回用户 数据索引 城市信息
-				if (_self.callback && _self.callback.mousemove) _self.callback.mousemove( _self.inAreaCtx, _self.areas[_self.inAreaCtx] );
+				if (_self.callback && _self.callback.mousemove) _self.callback.mousemove( _self.inAreaCtx, _self.areas[_self.inAreaCtx], event );
 			} 
 			// 在地图外
 			else {
 				// 返回用户 -1
 				if (_self.callback && _self.callback.mousemove) {
-					_self.callback.mousemove( -1 );
+					_self.callback.mousemove( -1, event );
 				}
 			}
 
@@ -549,7 +549,7 @@ MapAreaChart.prototype = {
 			if (_self.inAreaCtx > -1) {
 
 				if (_self.callback && _self.callback.click) 
-					_self.callback.click( _self.inAreaCtx , _self.areas[_self.inAreaCtx] );
+					_self.callback.click( _self.inAreaCtx , _self.areas[_self.inAreaCtx], e );
 			}
 		})
 	},
