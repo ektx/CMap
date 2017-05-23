@@ -246,6 +246,8 @@ MapAreaChart.prototype = {
 
 	},
 
+	
+
 	drawMessage: function( _point ) {
 
 		if (!this.message) return;
@@ -599,6 +601,16 @@ MapAreaChart.prototype = {
 				} else {
 					console.warn('This city or area not have data:' + _data.name);
 					return;
+				}
+			} 
+			// 对 svg 的处理
+			else {
+				if (_data.map) {
+					// 计算宽高
+					_computedData = {
+						centroidX: _data.x + (_data.w / 2),
+						centroidY: _data.y + (_data.h / 2)
+					}
 				}
 			}
 
