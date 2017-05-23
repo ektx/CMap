@@ -371,8 +371,11 @@ MapAreaChart.prototype = {
 		
 
 		if( this.inAreaCtx == index ){
-			_opt.cityName.hover.globalCompositeOperation = 'source-over';
-			this.setCtxState( _opt.cityName.hover );
+			let _style = _opt.cityName.hover ? _opt.cityName.hover : _opt.cityName.normal;
+
+			_style.globalCompositeOperation = 'source-over';
+
+			this.setCtxState( _style );
 		} else {
 			_opt.cityName.normal.globalCompositeOperation = 'source-over';
 			this.setCtxState( _opt.cityName.normal );
