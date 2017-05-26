@@ -574,7 +574,7 @@ MapAreaChart.prototype = {
 			}
 
 			var minX = mapSizeInfo.x[0];
-			var minY = mapSizeInfo.y[0];
+			var minY = _self.cityArea.earthLine ? mapSizeInfo.y[1] : mapSizeInfo.y[0];
 			// 地图宽度
 			var mapW = mapSizeInfo.width * scale;
 			// 地图高度
@@ -593,7 +593,11 @@ MapAreaChart.prototype = {
 					} else {
 						data[i] = drawX + (data[i] - minX) * scale + 3;
 						// 地图居中显示
-						data[i+1] = drawY + (data[i+1] - minY) * scale + 3;
+						if (_self.cityArea.earthLine)
+							data[i+1] = drawY + (minY - data[i+1]) * scale + 3;
+						else 
+							data[i+1] = drawY + (data[i+1] - minY) * scale + 3;
+							
 					}
 				}
 				return data;

@@ -574,7 +574,8 @@ MapAreaChart.prototype = {
 			}
 
 			let minX = mapSizeInfo.x[0];
-			let minY = mapSizeInfo.y[0];
+			// y轴使用的是地球坐标还是平面坐标
+			let minY = _self.cityArea.earthLine ? mapSizeInfo.y[1] : mapSizeInfo.y[0];
 			// 地图宽度
 			let mapW = mapSizeInfo.width * scale;
 			// 地图高度
@@ -593,7 +594,11 @@ MapAreaChart.prototype = {
 					} else {
 						data[i] = drawX + (data[i] - minX) * scale + 3;
 						// 地图居中显示
-						data[i+1] = drawY + (data[i+1] - minY) * scale + 3;
+						if (_self.cityArea.earthLine)
+							data[i+1] = drawY + (minY - data[i+1]) * scale + 3;
+						else 
+							data[i+1] = drawY + (data[i+1] - minY) * scale + 3;
+							
 					}
 				}
 				return data;

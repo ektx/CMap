@@ -121,7 +121,7 @@ cityArea: {
 | ----- | ------------------ |
 | data  | 地图边界点集合            |
 | style | 样式,具体参考 canvas 的参数 |
-|       |                    |
+| earthLine | 使用地理坐标           |
 
 ## Message 迁徙信息配置
 
