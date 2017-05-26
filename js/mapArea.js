@@ -562,8 +562,6 @@ MapAreaChart.prototype = {
 	// 自动调整地图大小
 	autoSize: function() {
 
-		console.log( this.options.cityArea );
-
 		let _self = this;
 		let mapSizeInfo = '';
 		let minScale =  1;
@@ -571,8 +569,8 @@ MapAreaChart.prototype = {
 
 		let dataClear = function(data, scale, mapSizeInfo) {
 			if (!(data instanceof Array)) {
-				console.log('data 要是数组');
-				return;
+				console.log('data 要是数组或SVG无法放大!');
+				return data;
 			}
 
 			let minX = mapSizeInfo.x[0];
@@ -595,7 +593,7 @@ MapAreaChart.prototype = {
 					} else {
 						data[i] = drawX + (data[i] - minX) * scale + 3;
 						// 地图居中显示
-						data[i+1] = (data[i+1] - minY) * scale + 3;
+						data[i+1] = drawY + (data[i+1] - minY) * scale + 3;
 					}
 				}
 				return data;
@@ -615,11 +613,6 @@ MapAreaChart.prototype = {
 			mapSizeInfo = _self.computedData( _self.options.cityArea.data[0])
 		}
 
-		// if (mapSizeInfo.width > mapSizeInfo.height) {
-		// 	minScale = (_self.ctxW - cityArealineW) / mapSizeInfo.width;
-		// } else {
-		// 	minScale = (_self.ctxH - cityArealineW)/ mapSizeInfo.height
-		// }
 		minScale = Math.min((_self.ctxW - cityArealineW) / mapSizeInfo.width, (_self.ctxH - cityArealineW)/ mapSizeInfo.height);
 
 		if (minScale != 1) {
