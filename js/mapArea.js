@@ -559,6 +559,84 @@ MapAreaChart.prototype = {
 		})
 	},
 
+	// 自动调整地图大小
+	autoSize: function() {
+
+		console.log( this.options.cityArea );
+
+		let _self = this;
+		let mapSizeInfo = '';
+		let minScale =  1;
+		let cityArealineW = _self.cityArea.style.lineWidth * 2;
+
+		let dataClear = function(data, scale, mapSizeInfo) {
+			if (!(data instanceof Array)) {
+				console.log('data 要是数组');
+				return;
+			}
+
+			let minX = mapSizeInfo.x[0];
+			let minY = mapSizeInfo.y[0];
+			// 地图宽度
+			let mapW = mapSizeInfo.width * scale;
+			// 地图高度
+			let mapH = mapSizeInfo.height * scale;
+
+			// 让地图居中 
+			// y 起点 = (canvas宽度 - 地图的宽度)/2
+			let drawY = (_self.ctxH - mapH)/2;
+			// x 起点 = (canvas高度 - 地图的高度)/2
+			let drawX = (_self.ctxW - mapW)/2;
+
+			let setData = function( data ) {
+				for (let i = 0, l = data.length; i < l; i+=2) {
+					if (typeof data[i] == 'object') {
+						data[i] = setData( data[i] )
+					} else {
+						data[i] = drawX + (data[i] - minX) * scale + 3;
+						// 地图居中显示
+						data[i+1] = (data[i+1] - minY) * scale + 3;
+					}
+				}
+				return data;
+			}
+
+			return setData(data);
+		}
+
+		let dowithData = function(data, minScale) {
+			for (var i = 0, l = data.length; i < l; i++) {
+				data[i] = dataClear(data, minScale)
+			}
+		}
+
+		if (typeof this.options.cityArea.data == "object") {
+			// 目前只对一个进行大小处理
+			mapSizeInfo = _self.computedData( _self.options.cityArea.data[0])
+		}
+
+		// if (mapSizeInfo.width > mapSizeInfo.height) {
+		// 	minScale = (_self.ctxW - cityArealineW) / mapSizeInfo.width;
+		// } else {
+		// 	minScale = (_self.ctxH - cityArealineW)/ mapSizeInfo.height
+		// }
+		minScale = Math.min((_self.ctxW - cityArealineW) / mapSizeInfo.width, (_self.ctxH - cityArealineW)/ mapSizeInfo.height);
+
+		if (minScale != 1) {
+			// 对边界处理
+			for (var i = 0, l = _self.options.cityArea.data.length; i < l; i++) {
+				_self.options.cityArea.data[i] = dataClear(_self.options.cityArea.data[i], minScale, mapSizeInfo)
+			}
+
+			// 对边界处理
+			for (var i = 0, l = _self.options.city.data.length; i<l; i++) {
+				_self.options.city.data[i].map = dataClear(_self.options.city.data[i].map, minScale, mapSizeInfo)
+			}
+		}
+
+
+	},
+
 	setArea: function() {
 
 		let _self = this;
@@ -591,6 +669,8 @@ MapAreaChart.prototype = {
 			this.warn = {};  // 保存错误信息
 			this.origin = obj
 		};
+
+		this.autoSize()
 
 		for (let i = 0, l = this.options.city.data.length; i < l; i++) {
 			let _data = this.options.city.data[i];
