@@ -95,7 +95,7 @@ MapAreaChart.prototype = {
 	getRandomPoint: function( _obj ) {
 		let result = [];
 		let _self = this;
-		let _useCenterPoint = _obj.point.notUseCenterPoint ? false : true;
+		let _useCenterPoint = _obj.point.notUseCentroidPoint ? false : true;
 
 		let getRandomVal = function(colorArr) {
 			return colorArr[parseInt(colorArr.length * Math.random())]
@@ -132,8 +132,8 @@ MapAreaChart.prototype = {
 		// 只取一个点时,用中心点
 		else {
 			result.push({
-				x: _obj.xCenter,
-				y: _obj.yCenter,
+				x: _obj.centroidX,
+				y: _obj.centroidY,
 				r: getRandomVal( _obj.point.r ),
 				color: getRandomVal( _obj.point.color )
 			})
@@ -245,6 +245,8 @@ MapAreaChart.prototype = {
 		}
 
 	},
+
+	
 
 	drawMessage: function( _point ) {
 
@@ -369,8 +371,11 @@ MapAreaChart.prototype = {
 		
 
 		if( this.inAreaCtx == index ){
-			_opt.cityName.hover.globalCompositeOperation = 'source-over';
-			this.setCtxState( _opt.cityName.hover );
+			let _style = _opt.cityName.hover ? _opt.cityName.hover : _opt.cityName.normal;
+
+			_style.globalCompositeOperation = 'source-over';
+
+			this.setCtxState( _style );
 		} else {
 			_opt.cityName.normal.globalCompositeOperation = 'source-over';
 			this.setCtxState( _opt.cityName.normal );
@@ -382,8 +387,6 @@ MapAreaChart.prototype = {
 			translateX = _opt.cityName.move.x ? _opt.cityName.move.x : 0;
 			translateY = _opt.cityName.move.y ? _opt.cityName.move.y : 0;
 		}
-
-		// this.ctx.globalCompositeOperation = 'source-over',
 
 		this.ctx.fillText(_opt.name, _opt.xCenter + translateX, _opt.yCenter + translateY);
 		
@@ -453,6 +456,8 @@ MapAreaChart.prototype = {
 		let xArr = [];
 		let yArr = [];
 
+		let centroid = this.getCentroid( data );
+
 		for (let i = 0, l = data.length; i < l; i+=2) {
 			let x = data[i];
 			let y = data[i+1];
@@ -481,9 +486,42 @@ MapAreaChart.prototype = {
 			height: height,
 			xCenter: xStart + width / 2,
 			yCenter: yStart + height / 2,
+			centroidX: centroid[0],
+			centroidY: centroid[1],
 			x: [xStart, xEnd],
 			y: [yStart, yEnd]
 		}
+	},
+
+	// 质点中心 代码参考网上
+	getCentroid: function( arr ) {
+		let twoTimesSignedArea = 0;
+	    let cxTimes6SignedArea = 0;
+	    let cyTimes6SignedArea = 0;
+
+	    let length = arr.length
+
+	    for ( let i = 0; i < arr.length; i+=2) {
+	        let _x = arr[i];
+	        let _y = arr[i+1];
+	        let __x = arr[i+2];
+	        let __y = arr[i+3];
+
+	        if (i + 3 > arr.length) {
+	        	__x = arr[0];
+	        	__y = arr[1];
+	        }
+
+	        let twoSA = _x * __y - __x * _y;
+
+	        twoTimesSignedArea += twoSA;
+	        cxTimes6SignedArea += (_x + __x) * twoSA;
+	        cyTimes6SignedArea += (_y + __y) * twoSA;
+	    }
+	    
+	    let sixSignedArea = 3 * twoTimesSignedArea;
+
+	    return [ cxTimes6SignedArea / sixSignedArea, cyTimes6SignedArea / sixSignedArea]; 
 	},
 
 	event: function() {
@@ -498,13 +536,13 @@ MapAreaChart.prototype = {
 			// 在地图区域内
 			if (_self.inAreaCtx > -1) {
 				// 返回用户 数据索引 城市信息
-				if (_self.callback && _self.callback.mousemove) _self.callback.mousemove( _self.inAreaCtx, _self.areas[_self.inAreaCtx] );
+				if (_self.callback && _self.callback.mousemove) _self.callback.mousemove( _self.inAreaCtx, _self.areas[_self.inAreaCtx], event );
 			} 
 			// 在地图外
 			else {
 				// 返回用户 -1
 				if (_self.callback && _self.callback.mousemove) {
-					_self.callback.mousemove( -1 );
+					_self.callback.mousemove( -1, event );
 				}
 			}
 
@@ -516,9 +554,87 @@ MapAreaChart.prototype = {
 			if (_self.inAreaCtx > -1) {
 
 				if (_self.callback && _self.callback.click) 
-					_self.callback.click( _self.inAreaCtx , _self.areas[_self.inAreaCtx] );
+					_self.callback.click( _self.inAreaCtx , _self.areas[_self.inAreaCtx], e );
 			}
 		})
+	},
+
+	// 自动调整地图大小
+	autoSize: function() {
+
+		console.log( this.options.cityArea );
+
+		let _self = this;
+		let mapSizeInfo = '';
+		let minScale =  1;
+		let cityArealineW = _self.cityArea.style.lineWidth * 2;
+
+		let dataClear = function(data, scale, mapSizeInfo) {
+			if (!(data instanceof Array)) {
+				console.log('data 要是数组');
+				return;
+			}
+
+			let minX = mapSizeInfo.x[0];
+			let minY = mapSizeInfo.y[0];
+			// 地图宽度
+			let mapW = mapSizeInfo.width * scale;
+			// 地图高度
+			let mapH = mapSizeInfo.height * scale;
+
+			// 让地图居中 
+			// y 起点 = (canvas宽度 - 地图的宽度)/2
+			let drawY = (_self.ctxH - mapH)/2;
+			// x 起点 = (canvas高度 - 地图的高度)/2
+			let drawX = (_self.ctxW - mapW)/2;
+
+			let setData = function( data ) {
+				for (let i = 0, l = data.length; i < l; i+=2) {
+					if (typeof data[i] == 'object') {
+						data[i] = setData( data[i] )
+					} else {
+						data[i] = drawX + (data[i] - minX) * scale + 3;
+						// 地图居中显示
+						data[i+1] = (data[i+1] - minY) * scale + 3;
+					}
+				}
+				return data;
+			}
+
+			return setData(data);
+		}
+
+		let dowithData = function(data, minScale) {
+			for (var i = 0, l = data.length; i < l; i++) {
+				data[i] = dataClear(data, minScale)
+			}
+		}
+
+		if (typeof this.options.cityArea.data == "object") {
+			// 目前只对一个进行大小处理
+			mapSizeInfo = _self.computedData( _self.options.cityArea.data[0])
+		}
+
+		// if (mapSizeInfo.width > mapSizeInfo.height) {
+		// 	minScale = (_self.ctxW - cityArealineW) / mapSizeInfo.width;
+		// } else {
+		// 	minScale = (_self.ctxH - cityArealineW)/ mapSizeInfo.height
+		// }
+		minScale = Math.min((_self.ctxW - cityArealineW) / mapSizeInfo.width, (_self.ctxH - cityArealineW)/ mapSizeInfo.height);
+
+		if (minScale != 1) {
+			// 对边界处理
+			for (var i = 0, l = _self.options.cityArea.data.length; i < l; i++) {
+				_self.options.cityArea.data[i] = dataClear(_self.options.cityArea.data[i], minScale, mapSizeInfo)
+			}
+
+			// 对边界处理
+			for (var i = 0, l = _self.options.city.data.length; i<l; i++) {
+				_self.options.city.data[i].map = dataClear(_self.options.city.data[i].map, minScale, mapSizeInfo)
+			}
+		}
+
+
 	},
 
 	setArea: function() {
@@ -533,11 +649,15 @@ MapAreaChart.prototype = {
 				return;
 			}
 
-			this.name = obj.name;
+			this.centroidX = computedData.centroidX;
+			this.centroidY = computedData.centroidY;
+			this.cityName = cityInfo.cityName;
 			this.data = obj.map || [];
 
-			this.width = obj.w || computedData.width;
 			this.height = obj.h || computedData.height;
+			this.width = obj.w || computedData.width;
+			this.name = obj.name;
+			
 			this.x = hasX ? computedData.x : [obj.x, obj.x + obj.w];
 			this.y = hasX ? computedData.y : [obj.y, obj.y + obj.h];
 			this.xCenter = hasX ? computedData.xCenter : obj.x + obj.w /2;
@@ -546,10 +666,11 @@ MapAreaChart.prototype = {
 			this.point = cityInfo.point;
 			this.pointArr = [];
 			this.style = cityInfo.style;
-			this.cityName = cityInfo.cityName;
 			this.warn = {};  // 保存错误信息
 			this.origin = obj
 		};
+
+		this.autoSize()
 
 		for (let i = 0, l = this.options.city.data.length; i < l; i++) {
 			let _data = this.options.city.data[i];
@@ -563,6 +684,16 @@ MapAreaChart.prototype = {
 				} else {
 					console.warn('This city or area not have data:' + _data.name);
 					return;
+				}
+			} 
+			// 对 svg 的处理
+			else {
+				if (_data.map) {
+					// 计算宽高
+					_computedData = {
+						centroidX: _data.x + (_data.w / 2),
+						centroidY: _data.y + (_data.h / 2)
+					}
 				}
 			}
 
