@@ -246,6 +246,8 @@ MapAreaChart.prototype = {
 
 	},
 
+	
+
 	drawMessage: function( _point ) {
 
 		if (!this.message) return;
@@ -369,8 +371,11 @@ MapAreaChart.prototype = {
 		
 
 		if( this.inAreaCtx == index ){
-			_opt.cityName.hover.globalCompositeOperation = 'source-over';
-			this.setCtxState( _opt.cityName.hover );
+			var _style = _opt.cityName.hover ? _opt.cityName.hover : _opt.cityName.normal;
+
+			_style.globalCompositeOperation = 'source-over';
+
+			this.setCtxState( _style );
 		} else {
 			_opt.cityName.normal.globalCompositeOperation = 'source-over';
 			this.setCtxState( _opt.cityName.normal );
@@ -554,6 +559,81 @@ MapAreaChart.prototype = {
 		})
 	},
 
+	// 自动调整地图大小
+	autoSize: function() {
+
+		var _self = this;
+		var mapSizeInfo = '';
+		var minScale =  1;
+		var cityArealineW = _self.cityArea.style.lineWidth * 2;
+
+		var dataClear = function(data, scale, mapSizeInfo) {
+			if (!(data instanceof Array)) {
+				console.log('data 要是数组或SVG无法放大!');
+				return data;
+			}
+
+			var minX = mapSizeInfo.x[0];
+			var minY = _self.cityArea.earthLine ? mapSizeInfo.y[1] : mapSizeInfo.y[0];
+			// 地图宽度
+			var mapW = mapSizeInfo.width * scale;
+			// 地图高度
+			var mapH = mapSizeInfo.height * scale;
+
+			// 让地图居中 
+			// y 起点 = (canvas宽度 - 地图的宽度)/2
+			var drawY = (_self.ctxH - mapH)/2;
+			// x 起点 = (canvas高度 - 地图的高度)/2
+			var drawX = (_self.ctxW - mapW)/2;
+
+			var setData = function( data ) {
+				for (var i = 0, l = data.length; i < l; i+=2) {
+					if (typeof data[i] == 'object') {
+						data[i] = setData( data[i] )
+					} else {
+						data[i] = drawX + (data[i] - minX) * scale + 3;
+						// 地图居中显示
+						if (_self.cityArea.earthLine)
+							data[i+1] = drawY + (minY - data[i+1]) * scale + 3;
+						else 
+							data[i+1] = drawY + (data[i+1] - minY) * scale + 3;
+							
+					}
+				}
+				return data;
+			}
+
+			return setData(data);
+		}
+
+		var dowithData = function(data, minScale) {
+			for (var i = 0, l = data.length; i < l; i++) {
+				data[i] = dataClear(data, minScale)
+			}
+		}
+
+		if (typeof this.options.cityArea.data == "object") {
+			// 目前只对一个进行大小处理
+			mapSizeInfo = _self.computedData( _self.options.cityArea.data[0])
+		}
+
+		minScale = Math.min((_self.ctxW - cityArealineW) / mapSizeInfo.width, (_self.ctxH - cityArealineW)/ mapSizeInfo.height);
+
+		if (minScale != 1) {
+			// 对边界处理
+			for (var i = 0, l = _self.options.cityArea.data.length; i < l; i++) {
+				_self.options.cityArea.data[i] = dataClear(_self.options.cityArea.data[i], minScale, mapSizeInfo)
+			}
+
+			// 对边界处理
+			for (var i = 0, l = _self.options.city.data.length; i<l; i++) {
+				_self.options.city.data[i].map = dataClear(_self.options.city.data[i].map, minScale, mapSizeInfo)
+			}
+		}
+
+
+	},
+
 	setArea: function() {
 
 		var _self = this;
@@ -587,6 +667,8 @@ MapAreaChart.prototype = {
 			this.origin = obj
 		};
 
+		this.autoSize()
+
 		for (var i = 0, l = this.options.city.data.length; i < l; i++) {
 			var _data = this.options.city.data[i];
 			var _computedData = {};
@@ -599,6 +681,16 @@ MapAreaChart.prototype = {
 				} else {
 					console.warn('This city or area not have data:' + _data.name);
 					return;
+				}
+			} 
+			// 对 svg 的处理
+			else {
+				if (_data.map) {
+					// 计算宽高
+					_computedData = {
+						centroidX: _data.x + (_data.w / 2),
+						centroidY: _data.y + (_data.h / 2)
+					}
 				}
 			}
 
