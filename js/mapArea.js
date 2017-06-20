@@ -2,37 +2,38 @@
 	mapArea
 	地图信息流向图
 	-----------------------------------
-	@version: 0.3.0
+	@version: 0.4.0
 	@author: ektx
 	@date: 2017-5-13
 */
-function MapAreaChart(obj) {
-	this.options = obj;
-	this.cityArr = obj.city;
-	this.cityArea = obj.cityArea;
-	this.message = obj.message;
-	this.callback = obj.callback;
+class MapAreaChart {
 
-	// 数据整理后的地图区域信息
-	this.areas = [];
+	constructor(obj) {
 
-	this.ele = document.querySelector( obj.el );
-	this.ctx = '';
-	this.ctxW = 0;
-	this.ctxH = 0;
+		this.options = obj;
+		this.cityArr = obj.city;
+		this.cityArea = obj.cityArea;
+		this.message = obj.message;
+		this.callback = obj.callback;
 
-	// 鼠标移动位置
-	this.currentX = -1;
-	this.currentY = -1;
+		// 数据整理后的地图区域信息
+		this.areas = [];
 
-	// 当前索引
-	this.inAreaCtx = -1;
+		this.ele = document.querySelector( obj.el );
+		this.ctx = '';
+		this.ctxW = 0;
+		this.ctxH = 0;
 
-}
+		// 鼠标移动位置
+		this.currentX = -1;
+		this.currentY = -1;
 
-MapAreaChart.prototype = {
+		// 当前索引
+		this.inAreaCtx = -1;
+	}
 
-	setCtxState: function(styleOption) {
+
+	setCtxState(styleOption) {
 
 		this.ctx.save();
 		this.ctx.beginPath();
@@ -42,9 +43,9 @@ MapAreaChart.prototype = {
 			this.ctx[i] = styleOption[i]
 		}
 
-	},
+	}
 
-	drawLine: function(_options) {
+	drawLine(_options) {
 
 		this.setCtxState( _options.style );
 
@@ -89,10 +90,10 @@ MapAreaChart.prototype = {
 		this.ctx.closePath();
 		this.ctx.restore();
 
-	},
+	}
 
 
-	getRandomPoint: function( _obj ) {
+	getRandomPoint( _obj ) {
 		let result = [];
 		let _self = this;
 		let _useCenterPoint = _obj.point.notUseCentroidPoint ? false : true;
@@ -106,7 +107,8 @@ MapAreaChart.prototype = {
 			
 			for (let i = 0; i < _obj.point.size; i ++) {
 
-				let x = y = 0;
+				let x = 0;
+				let y = 0;
 
 				if (typeof _obj.data === 'string') {
 
@@ -139,9 +141,9 @@ MapAreaChart.prototype = {
 			})
 		}
 		_obj.pointArr = result;
-	},
+	}
 
-	drawPoint: function( obj ) {
+	drawPoint( obj ) {
 
 		let pointLength = obj.pointArr.length;
 
@@ -166,7 +168,8 @@ MapAreaChart.prototype = {
 		for (let i = 0; i < pointLength; i++) {
 
 			let _thisPoint = obj.pointArr[i];
-			let _newColor = _newR = false;
+			let _newColor = false;
+			let _newR = false;
 
 			if (obj.point.fun && typeof obj.point.fun === "function") {
 				let _r = obj.point.fun(_thisPoint, obj) || false;
@@ -194,9 +197,9 @@ MapAreaChart.prototype = {
 			this.drawMessage( _thisPoint );
 
 		}
-	},
+	}
 
-	drawPointPop: function( _point, _size ) {
+	drawPointPop( _point, _size ) {
 
 		let _self = this;
 		let _totalR = _point.r * 5;
@@ -244,11 +247,10 @@ MapAreaChart.prototype = {
 			}
 		}
 
-	},
+	}
 
 	
-
-	drawMessage: function( _point ) {
+	drawMessage( _point ) {
 
 		if (!this.message) return;
 
@@ -361,9 +363,9 @@ MapAreaChart.prototype = {
 			style: this.message.light.style
 		}) 
 
-	},
+	}
 
-	drawCityName: function( _opt, index ) {
+	drawCityName( _opt, index ) {
 		// x 偏移
 		let translateX = 0;
 		// y 偏移
@@ -392,9 +394,9 @@ MapAreaChart.prototype = {
 		
 		this.ctx.restore();
 
-	},
+	}
 
-	drawCityArea: function( _opt ) {
+	drawCityArea( _opt ) {
 
 		let style = this.cityArea.style;
 		// 重置
@@ -410,9 +412,9 @@ MapAreaChart.prototype = {
 				_area: true
 			})
 		}
-	},
+	}
 
-	animate: function() {
+	animate() {
 		let _self = this;
 
 		let go = function() {
@@ -442,17 +444,22 @@ MapAreaChart.prototype = {
 
 		go()
 
-	},
+	}
 
 	// 计算属性
-	computedData: function( data ) {
+	computedData( data ) {
 
 		if (!data) {
 			console.warn("Don't find any Data")
 			return
 		}
 
-		let width = height = xStart = yStart = xEnd = yEnd = 0;
+		let width = 0;
+		let height = 0;
+		let xStart = 0;
+		let yStart = 0;
+		let xEnd = 0;
+		let yEnd = 0;
 		let xArr = [];
 		let yArr = [];
 
@@ -491,10 +498,10 @@ MapAreaChart.prototype = {
 			x: [xStart, xEnd],
 			y: [yStart, yEnd]
 		}
-	},
+	}
 
 	// 质点中心 代码参考网上
-	getCentroid: function( arr ) {
+	getCentroid( arr ) {
 		let twoTimesSignedArea = 0;
 	    let cxTimes6SignedArea = 0;
 	    let cyTimes6SignedArea = 0;
@@ -522,9 +529,9 @@ MapAreaChart.prototype = {
 	    let sixSignedArea = 3 * twoTimesSignedArea;
 
 	    return [ cxTimes6SignedArea / sixSignedArea, cyTimes6SignedArea / sixSignedArea]; 
-	},
+	}
 
-	event: function() {
+	event() {
 
 		let _self = this;
 
@@ -557,10 +564,10 @@ MapAreaChart.prototype = {
 					_self.callback.click( _self.inAreaCtx , _self.areas[_self.inAreaCtx], e );
 			}
 		})
-	},
+	}
 
 	// 自动调整地图大小
-	autoSize: function() {
+	autoSize() {
 
 		let _self = this;
 		let mapSizeInfo = '';
@@ -633,9 +640,9 @@ MapAreaChart.prototype = {
 		}
 
 
-	},
+	}
 
-	setArea: function() {
+	setArea() {
 
 		let _self = this;
 
@@ -697,20 +704,20 @@ MapAreaChart.prototype = {
 
 			this.areas[i] = new Area( _data, _computedData, this.options.city )
 		}
-	},
+	}
 
-	createCanvas: function() {
+	createCanvas () {
 
-		canvas = document.createElement('canvas');
+		let canvas = document.createElement('canvas');
 		canvas.width = this.ctxW = parseFloat( this.ele.style.width || window.getComputedStyle(this.ele, null).width );
 		canvas.height = this.ctxH = parseFloat( this.ele.style.height || window.getComputedStyle(this.ele, null).height );
 
 		this.ele.appendChild( canvas );
 		this.ctx = canvas.getContext('2d');
 
-	},
+	}
 
-	init: function() {
+	init() {
 
 		this.createCanvas();
 
@@ -720,4 +727,6 @@ MapAreaChart.prototype = {
 
 		this.event();
 	}
+
 }
+
