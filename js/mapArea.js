@@ -2,7 +2,7 @@
 	mapArea
 	地图信息流向图
 	-----------------------------------
-	@version: 0.4.1
+	@version: 0.5.0
 	@author: ektx
 	@date: 2017-5-13
 */
@@ -30,6 +30,8 @@ class MapAreaChart {
 
 		// 当前索引
 		this.inAreaCtx = -1;
+		// 默认缩放
+		this.minScale = 1;
 	}
 
 
@@ -54,7 +56,7 @@ class MapAreaChart {
 
 		let path = '';
 
-		if (typeof _options.line == "string") {
+		if (typeof _options.line === 'string') {
 			let _city = _options.line[_options.index];
 
 			path = new Path2D(_options.line);
@@ -427,15 +429,33 @@ class MapAreaChart {
 				let n = _self.areas[i];
 				let __style = n.style;
 				__style.globalCompositeOperation = 'destination-over';
-				_self.drawLine({
-					line: n.data,
-					style: __style,
-					index: i
-				})
 
-				_self.drawPoint( n );
+				if (_self.minScale > 1 && /-/g.test(n.data.toString()) ) {
+					if (! ('drawLine' in n.warn)) {
 
-				_self.drawCityName( n, i )				
+						let warnMeg = 'SVG Path 数据在缩放情况下不绘制';
+						n.warn.drawLine = warnMeg;
+						console.warn( warnMeg );
+					}
+				
+				} else {
+
+					for (let x = 0, y = n.data.length; x < y; x++) {
+
+						_self.drawLine({
+							line: n.data[x],
+							style: __style,
+							index: i
+						})
+		
+						_self.drawPoint( n );
+
+						_self.drawCityName( n, i )				
+
+					}
+
+				}
+
 			}
 			
 			requestAnimationFrame( go );
@@ -445,22 +465,38 @@ class MapAreaChart {
 
 	}
 
-	// 计算属性
-	computedData( data ) {
+	claerMultiPolygon(data) {
 
-		if (!data) {
+	}
+
+	// 计算属性
+	computedData( dataArr ) {
+
+		if (!dataArr) {
 			console.warn("Don't find any Data")
 			return
 		}
 
-		let width = 0;
-		let height = 0;
-		let xStart = 0;
-		let yStart = 0;
-		let xEnd = 0;
-		let yEnd = 0;
-		let xArr = [];
-		let yArr = [];
+		// 验证数据合法,防止浏览器崩溃
+		if (typeof dataArr[0] !== 'object') {
+			console.warn('数据格式不正确,请参考示例文件或github!\n\rhttps://github.com/ektx/Canvas-Map')
+			return;
+		}
+
+		let data = [];
+
+		for (let i = 0, l = dataArr.length; i < l; i++) {
+			data = dataArr[i].length > data.length ? dataArr[i] : data;
+		}
+
+		let width = 0,
+			height = 0,
+			xStart = 0,
+			yStart = 0,
+			xEnd = 0,
+			yEnd = 0,
+			xArr = [],
+			yArr = [];
 
 		let centroid = this.getCentroid( data );
 
@@ -570,11 +606,10 @@ class MapAreaChart {
 
 		let _self = this;
 		let mapSizeInfo = '';
-		let minScale =  1;
 		let cityArealineW = _self.cityArea.style.lineWidth * 2;
 
 		let dataClear = function(data, scale, mapSizeInfo) {
-			if (!(data instanceof Array)) {
+			if ( /-/g.test( data.toString()) ) {
 				console.log('data 要是数组或SVG无法放大!');
 				return data;
 			}
@@ -613,28 +648,24 @@ class MapAreaChart {
 			return setData(data);
 		}
 
-		let dowithData = function(data, minScale) {
-			for (let i = 0, l = data.length; i < l; i++) {
-				data[i] = dataClear(data, minScale)
-			}
-		}
-
-		if (typeof this.options.cityArea.data == "object") {
+		if (this.options.cityArea.data.join('').match(/-/g)) {
+			return;
 			// 目前只对一个进行大小处理
-			mapSizeInfo = _self.computedData( _self.options.cityArea.data[0])
 		}
 
-		minScale = Math.min((_self.ctxW - cityArealineW) / mapSizeInfo.width, (_self.ctxH - cityArealineW)/ mapSizeInfo.height);
+		mapSizeInfo = _self.computedData( _self.options.cityArea.data)
 
-		if (minScale != 1) {
+		this.minScale = Math.min((_self.ctxW - cityArealineW) / mapSizeInfo.width, (_self.ctxH - cityArealineW)/ mapSizeInfo.height);
+
+		if (this.minScale != 1) {
 			// 对边界处理
 			for (let i = 0, l = _self.options.cityArea.data.length; i < l; i++) {
-				_self.options.cityArea.data[i] = dataClear(_self.options.cityArea.data[i], minScale, mapSizeInfo)
+				_self.options.cityArea.data[i] = dataClear(_self.options.cityArea.data[i], this.minScale, mapSizeInfo)
 			}
 
-			// 对边界处理
+			// 对下辖处理
 			for (let i = 0, l = _self.options.city.data.length; i<l; i++) {
-				_self.options.city.data[i].map = dataClear(_self.options.city.data[i].map, minScale, mapSizeInfo)
+				_self.options.city.data[i].map = dataClear(_self.options.city.data[i].map, this.minScale, mapSizeInfo);
 			}
 		}
 
@@ -680,24 +711,23 @@ class MapAreaChart {
 			let _data = this.options.city.data[i];
 			let _computedData = {};
 
-			// 如果没有宽高
-			if (!_data.w && !_data.h) {
-				if (_data.map) {
-					// 计算宽高
-					_computedData = this.computedData( _data.map )
-				} else {
-					console.warn('This city or area not have data:' + _data.name);
-					return;
-				}
-			} 
 			// 对 svg 的处理
-			else {
+			if ( /-/g.test(_data.map.toString()) ) {
 				if (_data.map) {
 					// 计算宽高
 					_computedData = {
 						centroidX: _data.x + (_data.w / 2),
 						centroidY: _data.y + (_data.h / 2)
 					}
+				}
+			} 
+			else {
+				if (_data.map) {
+					// 计算宽高
+					_computedData = this.computedData( _data.map )
+				} else {
+					console.warn('This city or area not have data:' + _data.name);
+					return;
 				}
 			}
 
