@@ -2,7 +2,7 @@
 	mapArea
 	地图信息流向图
 	-----------------------------------
-	@version: 0.4.0
+	@version: 0.4.1
 	@author: ektx
 	@date: 2017-5-13
 */
@@ -52,10 +52,10 @@ class MapAreaChart {
 		// 没有数据不绘制
 		if (_options.line.length === 0) return;
 
-		var path = '';
+		let path = '';
 
 		if (typeof _options.line == "string") {
-			var _city = _options.line[_options.index];
+			let _city = _options.line[_options.index];
 
 			path = new Path2D(_options.line);
 
@@ -98,9 +98,9 @@ class MapAreaChart {
 		let _self = this;
 		let _useCenterPoint = _obj.point.notUseCentroidPoint ? false : true;
 
-		let getRandomVal = function(colorArr) {
-			return colorArr[parseInt(colorArr.length * Math.random())]
-		}
+		let getRandomVal = (colorArr) => (
+			colorArr[parseInt(colorArr.length * Math.random())]
+		)
 
 		// 取多个点时,我们随机生成
 		if (_obj.point.size > 1 || !_useCenterPoint) {
@@ -420,25 +420,24 @@ class MapAreaChart {
 		let go = function() {
 
 			_self.ctx.clearRect(0, 0, _self.ctxW, _self.ctxH);
-
 			
 			_self.drawCityArea();
 
-			_self.areas.forEach(function(n, index) {
-
+			for (let i = 0, l = _self.areas.length; i < l; i++) {
+				let n = _self.areas[i];
 				let __style = n.style;
 				__style.globalCompositeOperation = 'destination-over';
 				_self.drawLine({
 					line: n.data,
 					style: __style,
-					index: index
+					index: i
 				})
 
 				_self.drawPoint( n );
 
-				_self.drawCityName( n, index )
-			})
-
+				_self.drawCityName( n, i )				
+			}
+			
 			requestAnimationFrame( go );
 		}
 
@@ -615,7 +614,7 @@ class MapAreaChart {
 		}
 
 		let dowithData = function(data, minScale) {
-			for (var i = 0, l = data.length; i < l; i++) {
+			for (let i = 0, l = data.length; i < l; i++) {
 				data[i] = dataClear(data, minScale)
 			}
 		}
@@ -629,12 +628,12 @@ class MapAreaChart {
 
 		if (minScale != 1) {
 			// 对边界处理
-			for (var i = 0, l = _self.options.cityArea.data.length; i < l; i++) {
+			for (let i = 0, l = _self.options.cityArea.data.length; i < l; i++) {
 				_self.options.cityArea.data[i] = dataClear(_self.options.cityArea.data[i], minScale, mapSizeInfo)
 			}
 
 			// 对边界处理
-			for (var i = 0, l = _self.options.city.data.length; i<l; i++) {
+			for (let i = 0, l = _self.options.city.data.length; i<l; i++) {
 				_self.options.city.data[i].map = dataClear(_self.options.city.data[i].map, minScale, mapSizeInfo)
 			}
 		}
