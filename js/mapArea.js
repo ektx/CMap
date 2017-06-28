@@ -39,9 +39,30 @@ class MapAreaChart {
 
 		this.ctx.save();
 		this.ctx.beginPath();
+
+		let DPI = window.devicePixelRatio;
 	
 		// canvas 属性请查阅 canvas 相关书籍
 		for ( let i in styleOption) {
+			if (DPI > 1) {
+
+				switch (i) {
+					case 'font':
+						if (!styleOption._font) {
+
+							styleOption._font = 1;
+
+							let strArr = styleOption[i].match(/([\d\.]+)(px|em)/);
+							let size = parseFloat(strArr[1]);
+							let unit = strArr[2];
+
+							styleOption.font = styleOption[i].replace(strArr[0], size* window.devicePixelRatio + unit);
+						}
+
+				}
+			}
+
+			// console.log(i)
 			this.ctx[i] = styleOption[i]
 		}
 
@@ -372,7 +393,6 @@ class MapAreaChart {
 		let translateX = 0;
 		// y 偏移
 		let translateY = 0;
-		
 
 		if( this.inAreaCtx == index ){
 			let _style = _opt.cityName.hover ? _opt.cityName.hover : _opt.cityName.normal;
@@ -382,6 +402,7 @@ class MapAreaChart {
 			this.setCtxState( _style );
 		} else {
 			_opt.cityName.normal.globalCompositeOperation = 'source-over';
+
 			this.setCtxState( _opt.cityName.normal );
 		}
 
@@ -572,8 +593,8 @@ class MapAreaChart {
 
 		//地图鼠标移上去的事件
 		this.ele.addEventListener("mousemove", function(event){
-			_self.currentX = event.offsetX;
-			_self.currentY = event.offsetY;
+			_self.currentX = event.offsetX * window.devicePixelRatio;
+			_self.currentY = event.offsetY * window.devicePixelRatio;
 
 			// 在地图区域内
 			if (_self.inAreaCtx > -1) {
@@ -609,6 +630,7 @@ class MapAreaChart {
 		let cityArealineW = _self.cityArea.style.lineWidth * 2;
 
 		let dataClear = function(data, scale, mapSizeInfo) {
+
 			if ( /-/g.test( data.toString()) ) {
 				console.log('data 要是数组或SVG无法放大!');
 				return data;
@@ -738,11 +760,20 @@ class MapAreaChart {
 	createCanvas () {
 
 		let canvas = document.createElement('canvas');
-		canvas.width = this.ctxW = parseFloat( this.ele.style.width || window.getComputedStyle(this.ele, null).width );
-		canvas.height = this.ctxH = parseFloat( this.ele.style.height || window.getComputedStyle(this.ele, null).height );
+		let boxW = parseFloat( this.ele.style.width || window.getComputedStyle(this.ele, null).width );
+		let boxH = parseFloat( this.ele.style.height || window.getComputedStyle(this.ele, null).height );
+
+		canvas.width = this.ctxW = boxW * window.devicePixelRatio;
+		canvas.height = this.ctxH = boxH * window.devicePixelRatio;
+
+		if (window.devicePixelRatio > 1) {
+			canvas.style.width = boxW + 'px';
+			canvas.style.height = boxH + 'px'
+		}
 
 		this.ele.appendChild( canvas );
 		this.ctx = canvas.getContext('2d');
+
 
 	}
 
