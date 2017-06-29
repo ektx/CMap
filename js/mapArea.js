@@ -480,14 +480,14 @@ class MapAreaChart {
 							style: __style,
 							index: i
 						})
-		
-						_self.drawPoint( n );
-
-						_self.drawCityName( n, i )				
 
 					}
 
 				}
+
+				_self.drawPoint( n );
+
+				_self.drawCityName( n, i )				
 
 			}
 			
@@ -499,6 +499,20 @@ class MapAreaChart {
 	}
 
 	claerMultiPolygon(data) {
+		let result = [];
+
+		if ( /MULTIPOLYGON/gi.test(data.toString()) ) {
+
+			let arr = data.match(/\(\(.+?\)\)/g);
+
+			for (let i = 0, l = arr.length; i < l; i++) {
+				result.push( arr[i].match(/[\d\.]+/g) )
+			}
+		} else {
+			result = data
+		}
+
+		return result
 
 	}
 
@@ -644,7 +658,7 @@ class MapAreaChart {
 		let dataClear = function(data, scale, mapSizeInfo) {
 
 			if ( /-/g.test( data.toString()) ) {
-				console.log('data 要是数组或SVG无法放大!');
+				console.warn('data 要是数组或SVG无法放大!');
 				return data;
 			}
 
@@ -682,12 +696,10 @@ class MapAreaChart {
 			return setData(data);
 		}
 
-		if (this.options.cityArea.data.join('').match(/-/g)) {
-			return;
-			// 目前只对一个进行大小处理
-		}
-
-		mapSizeInfo = _self.computedData( _self.options.cityArea.data)
+		// SVG 不进行数据的优化处理
+		if (/-/g.test( this.options.cityArea.data.toString() ) ) return;
+		_self.options.cityArea.data = _self.claerMultiPolygon(_self.options.cityArea.data)
+		mapSizeInfo = _self.computedData( _self.options.cityArea.data )
 
 		this.minScale = Math.min((_self.ctxW - cityArealineW) / mapSizeInfo.width, (_self.ctxH - cityArealineW)/ mapSizeInfo.height);
 
@@ -699,7 +711,11 @@ class MapAreaChart {
 
 			// 对下辖处理
 			for (let i = 0, l = _self.options.city.data.length; i<l; i++) {
-				_self.options.city.data[i].map = dataClear(_self.options.city.data[i].map, this.minScale, mapSizeInfo);
+				_self.options.city.data[i].map = dataClear(
+					_self.claerMultiPolygon(_self.options.city.data[i].map), 
+					this.minScale, 
+					mapSizeInfo
+				);
 			}
 		}
 
