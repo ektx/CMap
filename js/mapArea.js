@@ -32,6 +32,8 @@ class MapAreaChart {
 		this.inAreaCtx = -1;
 		// 默认缩放
 		this.minScale = 1;
+		// devicePixelRatio
+		this.DPI = window.devicePixelRatio;
 	}
 
 
@@ -40,11 +42,9 @@ class MapAreaChart {
 		this.ctx.save();
 		this.ctx.beginPath();
 
-		let DPI = window.devicePixelRatio;
-	
 		// canvas 属性请查阅 canvas 相关书籍
 		for ( let i in styleOption) {
-			if (DPI > 1) {
+			if (this.DPI > 1) {
 
 				switch (i) {
 					case 'font':
@@ -56,13 +56,12 @@ class MapAreaChart {
 							let size = parseFloat(strArr[1]);
 							let unit = strArr[2];
 
-							styleOption.font = styleOption[i].replace(strArr[0], size* window.devicePixelRatio + unit);
+							styleOption.font = styleOption[i].replace(strArr[0], size* this.DPI + unit);
 						}
 
 				}
 			}
 
-			// console.log(i)
 			this.ctx[i] = styleOption[i]
 		}
 
@@ -75,7 +74,7 @@ class MapAreaChart {
 		// 没有数据不绘制
 		if (_options.line.length === 0) return;
 
-		let path = '';
+		let path;
 
 		if (typeof _options.line === 'string') {
 			let _city = _options.line[_options.index];
@@ -278,19 +277,32 @@ class MapAreaChart {
 		if (!this.message) return;
 
 		let style = this.message.line;
+		let _centerX = this.message.center.x, 
+			_centerY = this.message.center.y;
 
 		style.globalCompositeOperation = 'destination-over';
 
+		if (this.DPI !== 1) {
+			if (!this.message.center._x) {
+				this.message.center._x = _centerX * this.DPI;
+				this.message.center._y = _centerY * this.DPI;
+			}
+
+			_centerX = this.message.center._x;
+			_centerY = this.message.center._y;
+		}
+
+		// 1.绘制轨道
 		this.drawLine({
-			line: [_point.x, _point.y, this.message.center.x, this.message.center.y],
+			line: [_point.x, _point.y, _centerX, _centerY],
 			style: style
 		});
 
 		if (!_point.lineLength) {
 
 			_point.lineLength = parseFloat(Math.sqrt(Math.pow(_point.x, 2) + Math.pow(_point.y, 2)).toFixed(2));
-			_point.width = this.message.center.x - _point.x;
-			_point.height = this.message.center.y - _point.y;
+			_point.width = _centerX - _point.x;
+			_point.height = _centerY - _point.y;
 			_point.xScale = _point.width / _point.lineLength;
 			_point.yScale = _point.height / _point.lineLength;
 			
@@ -303,8 +315,8 @@ class MapAreaChart {
 			let sinA = _point.width / _point.lineLength;
 			
 			if (this.message.direction == 'get') {
-				_x = this.message.center.x;
-				_y = this.message.center.y;
+				_x = _centerX;
+				_y = _centerY;
 				_xspeed = 0 - _xspeed;
 				_yspeed = 0 - _yspeed;
 			}
@@ -335,12 +347,12 @@ class MapAreaChart {
 			if ( this.message.willback ) {
 				// 切换方向
 				if (_point.light.x === _point.x) {
-					_point.light.x = this.message.center.x;
-					_point.light.y = this.message.center.y;
+					_point.light.x = _centerX;
+					_point.light.y = _centerY;
 					_point.light.xs = 0 - _point.light.xs;
 					_point.light.ys = 0 - _point.light.ys;
 				} 
-				else if (_point.light.x === this.message.center.x) {
+				else if (_point.light.x === _centerX) {
 					_point.light.x = _point.x;
 					_point.light.y = _point.y;
 					_point.light.xs = 0 - _point.light.xs;
@@ -360,11 +372,11 @@ class MapAreaChart {
 		// 流入效果
 		if (_point.light.x === _point.x) {
 			if (Math.abs(xEnd - _point.light.x) > Math.abs(_point.width)) {
-				xEnd = this.message.center.x;
-				yEnd = this.message.center.y;
+				xEnd = _centerX;
+				yEnd = _centerY;
 			}
 		} 
-		else if (_point.light.x === this.message.center.x) {
+		else if (_point.light.x === _centerX) {
 			if (Math.abs(xEnd - _point.x) > Math.abs(_point.width)) {
 				xEnd = _point.light.x;
 				yEnd = _point.light.y;
