@@ -27,6 +27,10 @@ class MapAreaChart {
 		// 鼠标移动位置
 		this.currentX = -1;
 		this.currentY = -1;
+		// y 起点
+		this.yStart = 0;
+		// x 起点
+		this.xStart = 0;
 
 		// 当前索引
 		this.inAreaCtx = -1;
@@ -34,6 +38,8 @@ class MapAreaChart {
 		this.minScale = 1;
 		// devicePixelRatio
 		this.DPI = window.devicePixelRatio;
+		// 是否缩放(可配置)
+		this.canScale = true;
 	}
 
 
@@ -282,10 +288,10 @@ class MapAreaChart {
 
 		style.globalCompositeOperation = 'destination-over';
 
-		if (this.DPI !== 1) {
+		if (this.canScale) {
 			if (!this.message.center._x) {
-				this.message.center._x = _centerX * this.DPI;
-				this.message.center._y = _centerY * this.DPI;
+				this.message.center._x = _centerX * this.minScale + this.xStart;
+				this.message.center._y = _centerY * this.minScale + this.yStart;
 			}
 
 			_centerX = this.message.center._x;
@@ -483,11 +489,11 @@ class MapAreaChart {
 
 					}
 
+					_self.drawPoint( n );
+
+					_self.drawCityName( n, i )				
+
 				}
-
-				_self.drawPoint( n );
-
-				_self.drawCityName( n, i )				
 
 			}
 			
@@ -516,7 +522,9 @@ class MapAreaChart {
 
 	}
 
-	// 计算属性
+	/* 
+		计算属性
+	*/
 	computedData( dataArr ) {
 
 		if (!dataArr) {
@@ -530,12 +538,6 @@ class MapAreaChart {
 			return;
 		}
 
-		let data = [];
-
-		for (let i = 0, l = dataArr.length; i < l; i++) {
-			data = dataArr[i].length > data.length ? dataArr[i] : data;
-		}
-
 		let width = 0,
 			height = 0,
 			xStart = 0,
@@ -544,6 +546,13 @@ class MapAreaChart {
 			yEnd = 0,
 			xArr = [],
 			yArr = [];
+		let data = [];
+
+		// for (let i = 0, l = dataArr.length; i < l; i++) {
+		// 	data = dataArr[i].length > data.length ? dataArr[i] : data;
+		// }
+
+		data = dataArr.join(',').split(',');
 
 		let centroid = this.getCentroid( data );
 
@@ -591,14 +600,15 @@ class MapAreaChart {
 	    let length = arr.length
 
 	    for ( let i = 0; i < arr.length; i+=2) {
-	        let _x = arr[i];
-	        let _y = arr[i+1];
-	        let __x = arr[i+2];
-	        let __y = arr[i+3];
+
+	        let _x = parseFloat(arr[i]);
+	        let _y = parseFloat(arr[i+1]);
+	        let __x = parseFloat(arr[i+2]);
+	        let __y = parseFloat(arr[i+3]);
 
 	        if (i + 3 > arr.length) {
-	        	__x = arr[0];
-	        	__y = arr[1];
+	        	__x = parseFloat(arr[0]);
+	        	__y = parseFloat(arr[1]);
 	        }
 
 	        let twoSA = _x * __y - __x * _y;
@@ -672,21 +682,21 @@ class MapAreaChart {
 
 			// 让地图居中 
 			// y 起点 = (canvas宽度 - 地图的宽度)/2
-			let drawY = (_self.ctxH - mapH)/2;
+			_self.yStart = (_self.ctxH - mapH)/2;
 			// x 起点 = (canvas高度 - 地图的高度)/2
-			let drawX = (_self.ctxW - mapW)/2;
+			_self.xStart = (_self.ctxW - mapW)/2;
 
 			let setData = function( data ) {
 				for (let i = 0, l = data.length; i < l; i+=2) {
 					if (typeof data[i] == 'object') {
 						data[i] = setData( data[i] )
 					} else {
-						data[i] = drawX + (data[i] - minX) * scale + 3;
+						data[i] = _self.xStart + (data[i] - minX) * scale + 3;
 						// 地图居中显示
 						if (_self.cityArea.earthLine)
-							data[i+1] = drawY + (minY - data[i+1]) * scale + 3;
+							data[i+1] = _self.yStart + (minY - data[i+1]) * scale + 3;
 						else 
-							data[i+1] = drawY + (data[i+1] - minY) * scale + 3;
+							data[i+1] = _self.yStart + (data[i+1] - minY) * scale + 3;
 							
 					}
 				}
@@ -698,12 +708,13 @@ class MapAreaChart {
 
 		// SVG 不进行数据的优化处理
 		if (/-/g.test( this.options.cityArea.data.toString() ) ) return;
+
 		_self.options.cityArea.data = _self.claerMultiPolygon(_self.options.cityArea.data)
 		mapSizeInfo = _self.computedData( _self.options.cityArea.data )
 
 		this.minScale = Math.min((_self.ctxW - cityArealineW) / mapSizeInfo.width, (_self.ctxH - cityArealineW)/ mapSizeInfo.height);
 
-		if (this.minScale != 1) {
+		if (this.minScale != 1 && this.canScale) {
 			// 对边界处理
 			for (let i = 0, l = _self.options.cityArea.data.length; i < l; i++) {
 				_self.options.cityArea.data[i] = dataClear(_self.options.cityArea.data[i], this.minScale, mapSizeInfo)

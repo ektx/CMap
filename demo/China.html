@@ -29,7 +29,7 @@
     <!-- 示例代码 -->
     <script>
     
-    window.addEventListener('DOMContentLoaded', function() {
+    // window.addEventListener('DOMContentLoaded', function() {
         //定义地图内部区域线条路径
         let citysArr = [
             {
@@ -251,7 +251,7 @@
                 [329,416,323,418,318,419,312,422,311,433,315,434,320,437,325,433,329,429,329,425,332,421, 329, 416 ]
             ];
     
-        let huian = new MapAreaChart({
+        let myMap = new MapAreaChart({
             el: '#city-information-network',
             city: {
                 data: citysArr,
@@ -299,8 +299,8 @@
                     }
                 },
                 center: {
-                    x: 630,
-                    y: 350
+                    x: 370,
+                    y: 170
                 },
                 line: {
                     lineWidth: 1,
@@ -317,8 +317,8 @@
             }
         })
 
-        huian.init()
+        myMap.init()
 
-    })
+    // })
     </script>
 </html>
