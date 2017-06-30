@@ -796,10 +796,10 @@ class MapAreaChart {
 		let boxW = parseFloat( this.ele.style.width || window.getComputedStyle(this.ele, null).width );
 		let boxH = parseFloat( this.ele.style.height || window.getComputedStyle(this.ele, null).height );
 
-		canvas.width = this.ctxW = boxW * window.devicePixelRatio;
-		canvas.height = this.ctxH = boxH * window.devicePixelRatio;
+		canvas.width = this.ctxW = boxW * this.DPI;
+		canvas.height = this.ctxH = boxH * this.DPI;
 
-		if (window.devicePixelRatio > 1) {
+		if (this.DPI > 1) {
 			canvas.style.width = boxW + 'px';
 			canvas.style.height = boxH + 'px'
 		}
