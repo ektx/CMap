@@ -548,10 +548,6 @@ class MapAreaChart {
 			yArr = [];
 		let data = [];
 
-		// for (let i = 0, l = dataArr.length; i < l; i++) {
-		// 	data = dataArr[i].length > data.length ? dataArr[i] : data;
-		// }
-
 		data = dataArr.join(',').split(',');
 
 		let centroid = this.getCentroid( data );
@@ -599,7 +595,7 @@ class MapAreaChart {
 
 	    let length = arr.length
 
-	    for ( let i = 0; i < arr.length; i+=2) {
+	    for ( let i = 0, l = arr.length; i < l; i+=2) {
 
 	        let _x = parseFloat(arr[i]);
 	        let _y = parseFloat(arr[i+1]);
@@ -665,20 +661,15 @@ class MapAreaChart {
 		let mapSizeInfo = '';
 		let cityArealineW = _self.cityArea.style.lineWidth * 2;
 
-		let dataClear = function(data, scale, mapSizeInfo) {
-
-			if ( /-/g.test( data.toString()) ) {
-				console.warn('data 要是数组或SVG无法放大!');
-				return data;
-			}
+		let dataClear = function( mapSizeInfo ) {
 
 			let minX = mapSizeInfo.x[0];
 			// y轴使用的是地球坐标还是平面坐标
 			let minY = _self.cityArea.earthLine ? mapSizeInfo.y[1] : mapSizeInfo.y[0];
 			// 地图宽度
-			let mapW = mapSizeInfo.width * scale;
+			let mapW = mapSizeInfo.width * _self.minScale;
 			// 地图高度
-			let mapH = mapSizeInfo.height * scale;
+			let mapH = mapSizeInfo.height * _self.minScale;
 
 			// 让地图居中 
 			// y 起点 = (canvas宽度 - 地图的宽度)/2
@@ -686,24 +677,42 @@ class MapAreaChart {
 			// x 起点 = (canvas高度 - 地图的高度)/2
 			_self.xStart = (_self.ctxW - mapW)/2;
 
-			let setData = function( data ) {
+			let setData = ( data ) => {
 				for (let i = 0, l = data.length; i < l; i+=2) {
 					if (typeof data[i] == 'object') {
 						data[i] = setData( data[i] )
 					} else {
-						data[i] = _self.xStart + (data[i] - minX) * scale + 3;
+						data[i] = _self.xStart + (data[i] - minX) * _self.minScale + 3;
 						// 地图居中显示
 						if (_self.cityArea.earthLine)
-							data[i+1] = _self.yStart + (minY - data[i+1]) * scale + 3;
+							data[i+1] = _self.yStart + (minY - data[i+1]) * _self.minScale + 3;
 						else 
-							data[i+1] = _self.yStart + (data[i+1] - minY) * scale + 3;
+							data[i+1] = _self.yStart + (data[i+1] - minY) * _self.minScale + 3;
 							
 					}
 				}
 				return data;
 			}
 
-			return setData(data);
+			let doWithArr = (data) => {
+				if ( /-/g.test( data.toString()) ) {
+					console.warn('data 要是数组或SVG无法放大!');
+					return data;
+				}
+
+				for (let i = 0, l = data.length; i < l; i++) {
+					data[i] = setData( data[i] )
+				}
+			}
+
+			// 对边界处理
+			doWithArr( _self.options.cityArea.data )
+
+			// 对下辖处理
+			for (let c = 0, d = _self.options.city.data.length; c < d; c++) {
+				_self.options.city.data[c].map = _self.claerMultiPolygon(_self.options.city.data[c].map)
+				doWithArr( _self.options.city.data[c].map )
+			}
 		}
 
 		// SVG 不进行数据的优化处理
@@ -712,24 +721,9 @@ class MapAreaChart {
 		_self.options.cityArea.data = _self.claerMultiPolygon(_self.options.cityArea.data)
 		mapSizeInfo = _self.computedData( _self.options.cityArea.data )
 
-		this.minScale = Math.min((_self.ctxW - cityArealineW) / mapSizeInfo.width, (_self.ctxH - cityArealineW)/ mapSizeInfo.height);
+		_self.minScale = Math.min((_self.ctxW - cityArealineW) / mapSizeInfo.width, (_self.ctxH - cityArealineW)/ mapSizeInfo.height);
 
-		if (this.minScale != 1 && this.canScale) {
-			// 对边界处理
-			for (let i = 0, l = _self.options.cityArea.data.length; i < l; i++) {
-				_self.options.cityArea.data[i] = dataClear(_self.options.cityArea.data[i], this.minScale, mapSizeInfo)
-			}
-
-			// 对下辖处理
-			for (let i = 0, l = _self.options.city.data.length; i<l; i++) {
-				_self.options.city.data[i].map = dataClear(
-					_self.claerMultiPolygon(_self.options.city.data[i].map), 
-					this.minScale, 
-					mapSizeInfo
-				);
-			}
-		}
-
+		dataClear( mapSizeInfo )
 
 	}
 
