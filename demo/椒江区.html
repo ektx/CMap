@@ -13,8 +13,8 @@
 			}
 
 			#city-information-network {
-				width: 700px;
-				height: 500px;
+				width: 100vw;
+				height: 100vh;
 			}
 		</style>
 	</head>
@@ -26,7 +26,7 @@
 
 	<!-- 组件代码 -->
 	<script src="../js/mapArea.js"></script>
-	<script src="yuhang.js"></script>
+	<script src="data/jiaojiangqu.js"></script>
 	<!-- 示例代码 -->
 	<script>
 	
@@ -41,7 +41,7 @@
 					// notUseCentroidPoint: true, //是否使用质量中心点,默认 true,只有size时可用
 					message: 'all', // 点上信息, all 都有, auto 随机
 					r: [3, 5],
-					pop: 3, // 加点动画
+					pop: 5, // 加点动画
 					color: ['#fff', '#4fff5f'],
 					fun: function(ponitInfo, areaInfo) {
 						// console.log(ponitInfo, areaInfo);
@@ -106,56 +106,10 @@
 				}
 			}
 		})
-
-		// 获取地图最大与最小值
-		var computedData = myMap.computedData( areaData[0] );
-
-		var minX = computedData.x[0];
-		var minY = computedData.y[0];
-		// 地图宽度
-		var mapW = computedData.width * 1000;
-		// 地图高度
-		var mapH = computedData.height * 1000;
-		// 让地图居中 
-		// x 起点 = 地图的高度 + (canvas高度 - 地图的高度)/2
-		var drawX = mapH + (500 - mapH)/2;
-		// y 起点 = (canvas宽度 - 地图的宽度)/2
-		var drawY = (700 - mapW)/2;
-
-		// 清洗区域
-		areaData = dataClear( areaData );
-
-		// 处理余杭数据
-		for (var i = 0, l = citysArr.length; i<l; i++) {
-			citysArr[i].map = dataClear( citysArr[i].map );
-		}
 		
 		myMap.init()
 
-		// 对于数据进行扩大
-		function dataClear(data) {
 
-			if (!(data instanceof Array)) {
-				console.log('data 要是数组');
-				return;
-			}
-
-			var setData = function( data ) {
-				for (let i = 0, l = data.length; i < l; i+=2) {
-					if (typeof data[i] == 'object') {
-						data[i] = setData( data[i] )
-					} else {
-						data[i] = drawY + (data[i] - minX) * 1000 + 3;
-						// 地图居中显示
-						data[i+1] = drawX -(data[i+1] - minY) * 1000 + 3;
-					}
-				}
-				return data;
-			}
-
-			return setData(data);
-		}
-	// })
 
 	</script>
 </html>

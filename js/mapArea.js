@@ -2,59 +2,88 @@
 	mapArea
 	地图信息流向图
 	-----------------------------------
-	@version: 0.3.0
+	@version: 0.5.0
 	@author: ektx
 	@date: 2017-5-13
 */
-function MapAreaChart(obj) {
-	this.options = obj;
-	this.cityArr = obj.city;
-	this.cityArea = obj.cityArea;
-	this.message = obj.message;
-	this.callback = obj.callback;
+class MapAreaChart {
 
-	// 数据整理后的地图区域信息
-	this.areas = [];
+	constructor(obj) {
 
-	this.ele = document.querySelector( obj.el );
-	this.ctx = '';
-	this.ctxW = 0;
-	this.ctxH = 0;
+		this.options = obj;
+		this.cityArr = obj.city;
+		this.cityArea = obj.cityArea;
+		this.message = obj.message;
+		this.callback = obj.callback;
 
-	// 鼠标移动位置
-	this.currentX = -1;
-	this.currentY = -1;
+		// 数据整理后的地图区域信息
+		this.areas = [];
 
-	// 当前索引
-	this.inAreaCtx = -1;
+		this.ele = document.querySelector( obj.el );
+		this.ctx = '';
+		this.ctxW = 0;
+		this.ctxH = 0;
 
-}
+		// 鼠标移动位置
+		this.currentX = -1;
+		this.currentY = -1;
+		// y 起点
+		this.yStart = 0;
+		// x 起点
+		this.xStart = 0;
 
-MapAreaChart.prototype = {
+		// 当前索引
+		this.inAreaCtx = -1;
+		// 默认缩放
+		this.minScale = 1;
+		// devicePixelRatio
+		this.DPI = window.devicePixelRatio;
+		// 是否缩放(可配置)
+		this.canScale = true;
+	}
 
-	setCtxState: function(styleOption) {
+
+	setCtxState(styleOption) {
 
 		this.ctx.save();
 		this.ctx.beginPath();
-	
+
 		// canvas 属性请查阅 canvas 相关书籍
 		for ( let i in styleOption) {
+			if (this.DPI > 1) {
+
+				switch (i) {
+					case 'font':
+						if (!styleOption._font) {
+
+							styleOption._font = 1;
+
+							let strArr = styleOption[i].match(/([\d\.]+)(px|em)/);
+							let size = parseFloat(strArr[1]);
+							let unit = strArr[2];
+
+							styleOption.font = styleOption[i].replace(strArr[0], size* this.DPI + unit);
+						}
+
+				}
+			}
+
 			this.ctx[i] = styleOption[i]
 		}
 
-	},
+	}
 
-	drawLine: function(_options) {
+	drawLine(_options) {
 
 		this.setCtxState( _options.style );
 
 		// 没有数据不绘制
 		if (_options.line.length === 0) return;
 
-		var path = '';
+		let path;
 
-		if (typeof _options.line == "string") {
-			var _city = _options.line[_options.index];
+		if (typeof _options.line === 'string') {
+			let _city = _options.line[_options.index];
 
 			path = new Path2D(_options.line);
 
@@ -89,24 +118,25 @@ MapAreaChart.prototype = {
 		this.ctx.closePath();
 		this.ctx.restore();
 
-	},
+	}
 
 
-	getRandomPoint: function( _obj ) {
+	getRandomPoint( _obj ) {
 		let result = [];
 		let _self = this;
 		let _useCenterPoint = _obj.point.notUseCentroidPoint ? false : true;
 
-		let getRandomVal = function(colorArr) {
-			return colorArr[parseInt(colorArr.length * Math.random())]
-		}
+		let getRandomVal = (colorArr) => (
+			colorArr[parseInt(colorArr.length * Math.random())]
+		)
 
 		// 取多个点时,我们随机生成
 		if (_obj.point.size > 1 || !_useCenterPoint) {
 			
 			for (let i = 0; i < _obj.point.size; i ++) {
 
-				let x = y = 0;
+				let x = 0;
+				let y = 0;
 
 				if (typeof _obj.data === 'string') {
 
@@ -139,9 +169,9 @@ MapAreaChart.prototype = {
 			})
 		}
 		_obj.pointArr = result;
-	},
+	}
 
-	drawPoint: function( obj ) {
+	drawPoint( obj ) {
 
 		let pointLength = obj.pointArr.length;
 
@@ -166,7 +196,8 @@ MapAreaChart.prototype = {
 		for (let i = 0; i < pointLength; i++) {
 
 			let _thisPoint = obj.pointArr[i];
-			let _newColor = _newR = false;
+			let _newColor = false;
+			let _newR = false;
 
 			if (obj.point.fun && typeof obj.point.fun === "function") {
 				let _r = obj.point.fun(_thisPoint, obj) || false;
@@ -194,9 +225,9 @@ MapAreaChart.prototype = {
 			this.drawMessage( _thisPoint );
 
 		}
-	},
+	}
 
-	drawPointPop: function( _point, _size ) {
+	drawPointPop( _point, _size ) {
 
 		let _self = this;
 		let _totalR = _point.r * 5;
@@ -244,28 +275,40 @@ MapAreaChart.prototype = {
 			}
 		}
 
-	},
+	}
 
 	
-
-	drawMessage: function( _point ) {
+	drawMessage( _point ) {
 
 		if (!this.message) return;
 
 		let style = this.message.line;
+		let _centerX = this.message.center.x, 
+			_centerY = this.message.center.y;
 
 		style.globalCompositeOperation = 'destination-over';
 
+		if (this.canScale) {
+			if (!this.message.center._x) {
+				this.message.center._x = _centerX * this.minScale + this.xStart;
+				this.message.center._y = _centerY * this.minScale + this.yStart;
+			}
+
+			_centerX = this.message.center._x;
+			_centerY = this.message.center._y;
+		}
+
+		// 1.绘制轨道
 		this.drawLine({
-			line: [_point.x, _point.y, this.message.center.x, this.message.center.y],
+			line: [_point.x, _point.y, _centerX, _centerY],
 			style: style
 		});
 
 		if (!_point.lineLength) {
 
 			_point.lineLength = parseFloat(Math.sqrt(Math.pow(_point.x, 2) + Math.pow(_point.y, 2)).toFixed(2));
-			_point.width = this.message.center.x - _point.x;
-			_point.height = this.message.center.y - _point.y;
+			_point.width = _centerX - _point.x;
+			_point.height = _centerY - _point.y;
 			_point.xScale = _point.width / _point.lineLength;
 			_point.yScale = _point.height / _point.lineLength;
 			
@@ -278,8 +321,8 @@ MapAreaChart.prototype = {
 			let sinA = _point.width / _point.lineLength;
 			
 			if (this.message.direction == 'get') {
-				_x = this.message.center.x;
-				_y = this.message.center.y;
+				_x = _centerX;
+				_y = _centerY;
 				_xspeed = 0 - _xspeed;
 				_yspeed = 0 - _yspeed;
 			}
@@ -310,12 +353,12 @@ MapAreaChart.prototype = {
 			if ( this.message.willback ) {
 				// 切换方向
 				if (_point.light.x === _point.x) {
-					_point.light.x = this.message.center.x;
-					_point.light.y = this.message.center.y;
+					_point.light.x = _centerX;
+					_point.light.y = _centerY;
 					_point.light.xs = 0 - _point.light.xs;
 					_point.light.ys = 0 - _point.light.ys;
 				} 
-				else if (_point.light.x === this.message.center.x) {
+				else if (_point.light.x === _centerX) {
 					_point.light.x = _point.x;
 					_point.light.y = _point.y;
 					_point.light.xs = 0 - _point.light.xs;
@@ -335,11 +378,11 @@ MapAreaChart.prototype = {
 		// 流入效果
 		if (_point.light.x === _point.x) {
 			if (Math.abs(xEnd - _point.light.x) > Math.abs(_point.width)) {
-				xEnd = this.message.center.x;
-				yEnd = this.message.center.y;
+				xEnd = _centerX;
+				yEnd = _centerY;
 			}
 		} 
-		else if (_point.light.x === this.message.center.x) {
+		else if (_point.light.x === _centerX) {
 			if (Math.abs(xEnd - _point.x) > Math.abs(_point.width)) {
 				xEnd = _point.light.x;
 				yEnd = _point.light.y;
@@ -361,14 +404,13 @@ MapAreaChart.prototype = {
 			style: this.message.light.style
 		}) 
 
-	},
+	}
 
-	drawCityName: function( _opt, index ) {
+	drawCityName( _opt, index ) {
 		// x 偏移
 		let translateX = 0;
 		// y 偏移
 		let translateY = 0;
-		
 
 		if( this.inAreaCtx == index ){
 			let _style = _opt.cityName.hover ? _opt.cityName.hover : _opt.cityName.normal;
@@ -378,6 +420,7 @@ MapAreaChart.prototype = {
 			this.setCtxState( _style );
 		} else {
 			_opt.cityName.normal.globalCompositeOperation = 'source-over';
+
 			this.setCtxState( _opt.cityName.normal );
 		}
 
@@ -392,9 +435,9 @@ MapAreaChart.prototype = {
 		
 		this.ctx.restore();
 
-	},
+	}
 
-	drawCityArea: function( _opt ) {
+	drawCityArea( _opt ) {
 
 		let style = this.cityArea.style;
 		// 重置
@@ -410,51 +453,102 @@ MapAreaChart.prototype = {
 				_area: true
 			})
 		}
-	},
+	}
 
-	animate: function() {
+	animate() {
 		let _self = this;
 
 		let go = function() {
 
 			_self.ctx.clearRect(0, 0, _self.ctxW, _self.ctxH);
-
 			
 			_self.drawCityArea();
 
-			_self.areas.forEach(function(n, index) {
-
+			for (let i = 0, l = _self.areas.length; i < l; i++) {
+				let n = _self.areas[i];
 				let __style = n.style;
 				__style.globalCompositeOperation = 'destination-over';
-				_self.drawLine({
-					line: n.data,
-					style: __style,
-					index: index
-				})
 
-				_self.drawPoint( n );
+				if (_self.minScale > 1 && /-/g.test(n.data.toString()) ) {
+					if (! ('drawLine' in n.warn)) {
 
-				_self.drawCityName( n, index )
-			})
+						let warnMeg = 'SVG Path 数据在缩放情况下不绘制';
+						n.warn.drawLine = warnMeg;
+						console.warn( warnMeg );
+					}
+				
+				} else {
 
+					for (let x = 0, y = n.data.length; x < y; x++) {
+
+						_self.drawLine({
+							line: n.data[x],
+							style: __style,
+							index: i
+						})
+
+					}
+
+					_self.drawPoint( n );
+
+					_self.drawCityName( n, i )				
+
+				}
+
+			}
+			
 			requestAnimationFrame( go );
 		}
 
 		go()
 
-	},
+	}
 
-	// 计算属性
-	computedData: function( data ) {
+	claerMultiPolygon(data) {
+		let result = [];
 
-		if (!data) {
+		if ( /MULTIPOLYGON/gi.test(data.toString()) ) {
+
+			let arr = data.match(/\(\(.+?\)\)/g);
+
+			for (let i = 0, l = arr.length; i < l; i++) {
+				result.push( arr[i].match(/[\d\.]+/g) )
+			}
+		} else {
+			result = data
+		}
+
+		return result
+
+	}
+
+	/* 
+		计算属性
+	*/
+	computedData( dataArr ) {
+
+		if (!dataArr) {
 			console.warn("Don't find any Data")
 			return
 		}
 
-		let width = height = xStart = yStart = xEnd = yEnd = 0;
-		let xArr = [];
-		let yArr = [];
+		// 验证数据合法,防止浏览器崩溃
+		if (typeof dataArr[0] !== 'object') {
+			console.warn('数据格式不正确,请参考示例文件或github!\n\rhttps://github.com/ektx/Canvas-Map')
+			return;
+		}
+
+		let width = 0,
+			height = 0,
+			xStart = 0,
+			yStart = 0,
+			xEnd = 0,
+			yEnd = 0,
+			xArr = [],
+			yArr = [];
+		let data = [];
+
+		data = dataArr.join(',').split(',');
 
 		let centroid = this.getCentroid( data );
 
@@ -491,25 +585,26 @@ MapAreaChart.prototype = {
 			x: [xStart, xEnd],
 			y: [yStart, yEnd]
 		}
-	},
+	}
 
 	// 质点中心 代码参考网上
-	getCentroid: function( arr ) {
+	getCentroid( arr ) {
 		let twoTimesSignedArea = 0;
 	    let cxTimes6SignedArea = 0;
 	    let cyTimes6SignedArea = 0;
 
 	    let length = arr.length
 
-	    for ( let i = 0; i < arr.length; i+=2) {
-	        let _x = arr[i];
-	        let _y = arr[i+1];
-	        let __x = arr[i+2];
-	        let __y = arr[i+3];
+	    for ( let i = 0, l = arr.length; i < l; i+=2) {
+
+	        let _x = parseFloat(arr[i]);
+	        let _y = parseFloat(arr[i+1]);
+	        let __x = parseFloat(arr[i+2]);
+	        let __y = parseFloat(arr[i+3]);
 
 	        if (i + 3 > arr.length) {
-	        	__x = arr[0];
-	        	__y = arr[1];
+	        	__x = parseFloat(arr[0]);
+	        	__y = parseFloat(arr[1]);
 	        }
 
 	        let twoSA = _x * __y - __x * _y;
@@ -522,16 +617,16 @@ MapAreaChart.prototype = {
 	    let sixSignedArea = 3 * twoTimesSignedArea;
 
 	    return [ cxTimes6SignedArea / sixSignedArea, cyTimes6SignedArea / sixSignedArea]; 
-	},
+	}
 
-	event: function() {
+	event() {
 
 		let _self = this;
 
 		//地图鼠标移上去的事件
 		this.ele.addEventListener("mousemove", function(event){
-			_self.currentX = event.offsetX;
-			_self.currentY = event.offsetY;
+			_self.currentX = event.offsetX * window.devicePixelRatio;
+			_self.currentY = event.offsetY * window.devicePixelRatio;
 
 			// 在地图区域内
 			if (_self.inAreaCtx > -1) {
@@ -557,85 +652,82 @@ MapAreaChart.prototype = {
 					_self.callback.click( _self.inAreaCtx , _self.areas[_self.inAreaCtx], e );
 			}
 		})
-	},
+	}
 
 	// 自动调整地图大小
-	autoSize: function() {
+	autoSize() {
 
 		let _self = this;
 		let mapSizeInfo = '';
-		let minScale =  1;
 		let cityArealineW = _self.cityArea.style.lineWidth * 2;
 
-		let dataClear = function(data, scale, mapSizeInfo) {
-			if (!(data instanceof Array)) {
-				console.log('data 要是数组或SVG无法放大!');
-				return data;
-			}
+		let dataClear = function( mapSizeInfo ) {
 
 			let minX = mapSizeInfo.x[0];
 			// y轴使用的是地球坐标还是平面坐标
 			let minY = _self.cityArea.earthLine ? mapSizeInfo.y[1] : mapSizeInfo.y[0];
 			// 地图宽度
-			let mapW = mapSizeInfo.width * scale;
+			let mapW = mapSizeInfo.width * _self.minScale;
 			// 地图高度
-			let mapH = mapSizeInfo.height * scale;
+			let mapH = mapSizeInfo.height * _self.minScale;
 
 			// 让地图居中 
 			// y 起点 = (canvas宽度 - 地图的宽度)/2
-			let drawY = (_self.ctxH - mapH)/2;
+			_self.yStart = (_self.ctxH - mapH)/2;
 			// x 起点 = (canvas高度 - 地图的高度)/2
-			let drawX = (_self.ctxW - mapW)/2;
+			_self.xStart = (_self.ctxW - mapW)/2;
 
-			let setData = function( data ) {
+			let setData = ( data ) => {
 				for (let i = 0, l = data.length; i < l; i+=2) {
 					if (typeof data[i] == 'object') {
 						data[i] = setData( data[i] )
 					} else {
-						data[i] = drawX + (data[i] - minX) * scale + 3;
+						data[i] = _self.xStart + (data[i] - minX) * _self.minScale + 3;
 						// 地图居中显示
 						if (_self.cityArea.earthLine)
-							data[i+1] = drawY + (minY - data[i+1]) * scale + 3;
+							data[i+1] = _self.yStart + (minY - data[i+1]) * _self.minScale + 3;
 						else 
-							data[i+1] = drawY + (data[i+1] - minY) * scale + 3;
+							data[i+1] = _self.yStart + (data[i+1] - minY) * _self.minScale + 3;
 							
 					}
 				}
 				return data;
 			}
 
-			return setData(data);
-		}
+			let doWithArr = (data) => {
+				if ( /-/g.test( data.toString()) ) {
+					console.warn('data 要是数组或SVG无法放大!');
+					return data;
+				}
 
-		let dowithData = function(data, minScale) {
-			for (var i = 0, l = data.length; i < l; i++) {
-				data[i] = dataClear(data, minScale)
-			}
-		}
-
-		if (typeof this.options.cityArea.data == "object") {
-			// 目前只对一个进行大小处理
-			mapSizeInfo = _self.computedData( _self.options.cityArea.data[0])
-		}
-
-		minScale = Math.min((_self.ctxW - cityArealineW) / mapSizeInfo.width, (_self.ctxH - cityArealineW)/ mapSizeInfo.height);
-
-		if (minScale != 1) {
-			// 对边界处理
-			for (var i = 0, l = _self.options.cityArea.data.length; i < l; i++) {
-				_self.options.cityArea.data[i] = dataClear(_self.options.cityArea.data[i], minScale, mapSizeInfo)
+				for (let i = 0, l = data.length; i < l; i++) {
+					data[i] = setData( data[i] )
+				}
 			}
 
 			// 对边界处理
-			for (var i = 0, l = _self.options.city.data.length; i<l; i++) {
-				_self.options.city.data[i].map = dataClear(_self.options.city.data[i].map, minScale, mapSizeInfo)
+			doWithArr( _self.options.cityArea.data )
+
+			// 对下辖处理
+			for (let c = 0, d = _self.options.city.data.length; c < d; c++) {
+				_self.options.city.data[c].map = _self.claerMultiPolygon(_self.options.city.data[c].map)
+				doWithArr( _self.options.city.data[c].map )
 			}
 		}
 
+		// SVG 不进行数据的优化处理
+		if (/-/g.test( this.options.cityArea.data.toString() ) ) return;
 
-	},
+		_self.options.cityArea.data = _self.claerMultiPolygon(_self.options.cityArea.data)
+		mapSizeInfo = _self.computedData( _self.options.cityArea.data )
 
-	setArea: function() {
+		_self.minScale = Math.min((_self.ctxW - cityArealineW) / mapSizeInfo.width, (_self.ctxH - cityArealineW)/ mapSizeInfo.height);
+
+		dataClear( mapSizeInfo )
+
+	}
+
+	setArea() {
 
 		let _self = this;
 
@@ -668,24 +760,14 @@ MapAreaChart.prototype = {
 			this.origin = obj
 		};
 
-		this.autoSize()
+		this.autoSize();
 
 		for (let i = 0, l = this.options.city.data.length; i < l; i++) {
 			let _data = this.options.city.data[i];
 			let _computedData = {};
 
-			// 如果没有宽高
-			if (!_data.w && !_data.h) {
-				if (_data.map) {
-					// 计算宽高
-					_computedData = this.computedData( _data.map )
-				} else {
-					console.warn('This city or area not have data:' + _data.name);
-					return;
-				}
-			} 
 			// 对 svg 的处理
-			else {
+			if ( /-/g.test(_data.map.toString()) ) {
 				if (_data.map) {
 					// 计算宽高
 					_computedData = {
@@ -693,24 +775,51 @@ MapAreaChart.prototype = {
 						centroidY: _data.y + (_data.h / 2)
 					}
 				}
+			} 
+			else {
+				if (_data.map) {
+					// 计算宽高
+					_computedData = this.computedData( _data.map )
+				} else {
+					console.warn('This city or area not have data:' + _data.name);
+					return;
+				}
 			}
 
 			this.areas[i] = new Area( _data, _computedData, this.options.city )
 		}
-	},
+	}
 
-	createCanvas: function() {
+	createCanvas () {
 
-		canvas = document.createElement('canvas');
-		canvas.width = this.ctxW = parseFloat( this.ele.style.width || window.getComputedStyle(this.ele, null).width );
-		canvas.height = this.ctxH = parseFloat( this.ele.style.height || window.getComputedStyle(this.ele, null).height );
+		let canvas = document.createElement('canvas');
+		let boxW = parseFloat( this.ele.style.width || window.getComputedStyle(this.ele, null).width );
+		let boxH = parseFloat( this.ele.style.height || window.getComputedStyle(this.ele, null).height );
+
+		canvas.width = this.ctxW = boxW * this.DPI;
+		canvas.height = this.ctxH = boxH * this.DPI;
+
+		if (this.DPI > 1) {
+			canvas.style.width = boxW + 'px';
+			canvas.style.height = boxH + 'px'
+		}
 
 		this.ele.appendChild( canvas );
 		this.ctx = canvas.getContext('2d');
 
-	},
+		window.requestAnimationFrame = (function() {
+			return window.requestAnimationFrame ||
+			window.webkitRequestAnimationFrame ||
+			window.mozRequestAnimationFrame ||
+			window.oRequestAnimationFrame ||
+			window.msRequestAnimationFrame ||
+			function (callback) {
+				return window.setTimeout(callback, 1000/60);
+			}
+		})();
+	}
 
-	init: function() {
+	init() {
 
 		this.createCanvas();
 
@@ -720,4 +829,6 @@ MapAreaChart.prototype = {
 
 		this.event();
 	}
+
 }
+
