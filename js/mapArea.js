@@ -760,7 +760,7 @@ class MapAreaChart {
 			this.origin = obj
 		};
 
-		this.autoSize()
+		this.autoSize();
 
 		for (let i = 0, l = this.options.city.data.length; i < l; i++) {
 			let _data = this.options.city.data[i];
@@ -807,7 +807,16 @@ class MapAreaChart {
 		this.ele.appendChild( canvas );
 		this.ctx = canvas.getContext('2d');
 
-
+		window.requestAnimationFrame = (function() {
+			return window.requestAnimationFrame ||
+			window.webkitRequestAnimationFrame ||
+			window.mozRequestAnimationFrame ||
+			window.oRequestAnimationFrame ||
+			window.msRequestAnimationFrame ||
+			function (callback) {
+				return window.setTimeout(callback, 1000/60);
+			}
+		})();
 	}
 
 	init() {
