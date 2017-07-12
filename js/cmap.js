@@ -1,12 +1,16 @@
 /*
-	mapArea
+	cmap
 	地图信息流向图
 	-----------------------------------
 	@version: 0.5.0
 	@author: ektx
 	@date: 2017-5-13
+
+	------------------------------------
+	API
+
 */
-class MapAreaChart {
+class CMap {
 
 	constructor(obj) {
 
@@ -286,8 +290,6 @@ class MapAreaChart {
 		let _centerX = this.message.center.x, 
 			_centerY = this.message.center.y;
 
-		style.globalCompositeOperation = 'destination-over';
-
 		if (this.canScale) {
 			if (!this.message.center._x) {
 				this.message.center._x = _centerX * this.minScale + this.xStart;
@@ -440,19 +442,39 @@ class MapAreaChart {
 	drawCityArea( _opt ) {
 
 		let style = this.cityArea.style;
+
+		let drawArea = (style, data) => {
+
+			for (let i = 0, l = data.length; i < l; i++) {
+				this.drawLine({
+					line: data[i],
+					style: style,
+					_area: true
+				})
+			}
+		}
 		// 重置
 		this.inAreaCtx = -1
 
-		style.fillStyle = 'transparent';
-		style.globalCompositeOperation = 'source-over';
+		drawArea({
+			fillStyle: style.shadowColor ||'transparent',
+			globalCompositeOperation: 'destination-over',
+			lineWidth: style.lineWidth,
+			strokeStyle: style.strokeStyle,
+			shadowBlur: style.shadowBlur,
+			shadowColor: style.shadowColor || 'transparent',
+			shadowOffsetX: style.shadowOffsetX || 0,
+			shadowOffsetY: style.shadowOffsetY || 0
+		}, this.cityArea.data)
 
-		for (let i = 0, l = this.cityArea.data.length; i < l; i++) {
-			this.drawLine({
-				line: this.cityArea.data[i],
-				style: style,
-				_area: true
-			})
-		}
+		drawArea({
+			fillStyle: 'transparent',
+			lineWidth: style.lineWidth,
+			strokeStyle: style.strokeStyle
+
+		}, this.cityArea.data)
+		
+
 	}
 
 	animate() {
@@ -461,8 +483,8 @@ class MapAreaChart {
 		let go = function() {
 
 			_self.ctx.clearRect(0, 0, _self.ctxW, _self.ctxH);
-			
-			_self.drawCityArea();
+
+			// _self.drawCityArea();
 
 			for (let i = 0, l = _self.areas.length; i < l; i++) {
 				let n = _self.areas[i];
@@ -496,6 +518,9 @@ class MapAreaChart {
 				}
 
 			}
+
+			_self.drawCityArea();
+
 			
 			requestAnimationFrame( go );
 		}
@@ -682,12 +707,12 @@ class MapAreaChart {
 					if (typeof data[i] == 'object') {
 						data[i] = setData( data[i] )
 					} else {
-						data[i] = _self.xStart + (data[i] - minX) * _self.minScale + 3;
+						data[i] = _self.xStart + (data[i] - minX) * _self.minScale;
 						// 地图居中显示
 						if (_self.cityArea.earthLine)
-							data[i+1] = _self.yStart + (minY - data[i+1]) * _self.minScale + 3;
+							data[i+1] = _self.yStart + (minY - data[i+1]) * _self.minScale;
 						else 
-							data[i+1] = _self.yStart + (data[i+1] - minY) * _self.minScale + 3;
+							data[i+1] = _self.yStart + (data[i+1] - minY) * _self.minScale;
 							
 					}
 				}
@@ -731,12 +756,12 @@ class MapAreaChart {
 
 		let _self = this;
 
-		let Area = function(obj, computedData, cityInfo) {
+		let Area = function(index, obj, computedData, cityInfo) {
 			let hasX = 'x' in computedData;
 
 			if (!obj.name) {
-				console.warn("Don't have name!\n" );
-				return;
+				obj.name = ''
+				console.warn("没有名称的下辖索引为:", index +1);
 			}
 
 			this.centroidX = computedData.centroidX;
@@ -760,7 +785,8 @@ class MapAreaChart {
 			this.origin = obj
 		};
 
-		this.autoSize();
+		if (this.canScale) 
+			this.autoSize();
 
 		for (let i = 0, l = this.options.city.data.length; i < l; i++) {
 			let _data = this.options.city.data[i];
@@ -786,7 +812,7 @@ class MapAreaChart {
 				}
 			}
 
-			this.areas[i] = new Area( _data, _computedData, this.options.city )
+			this.areas[i] = new Area(i, _data, _computedData, this.options.city )
 		}
 	}
 

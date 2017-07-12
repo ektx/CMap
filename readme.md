@@ -1,4 +1,4 @@
-# Canvas Map
+# CMap
 
 使用 canvas 绘制简单的地图功能
 
@@ -36,7 +36,7 @@
         }
     };
 
-    let myMap = new MamAreaChart(option);
+    let myMap = new CMap(option);
     myMap.init();
 </script>
 ```
@@ -48,6 +48,8 @@
 - el 地图存放Dom
 - city 地图中的各区块配置信息 
     - data 所有区块信息,具体格式可以查看demo示例
+        - name 下辖名称(非必填)
+        - map  下辖路径
     - point 每个区块的点的效果设置     
         - size `number` 区块出现的点数总和
         - message 指定点上信息生成方式
