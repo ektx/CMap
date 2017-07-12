@@ -47,10 +47,13 @@ class CMap {
 	}
 
 
-	setCtxState(styleOption) {
+	setCtxState(styleOption, ctx) {
 
-		this.ctx.save();
-		this.ctx.beginPath();
+		let isCtx = ctx ? 1: 0;
+		ctx = ctx || this.ctx;
+
+		ctx.save();
+		ctx.beginPath();
 
 		// canvas 属性请查阅 canvas 相关书籍
 		for ( let i in styleOption) {
@@ -72,14 +75,18 @@ class CMap {
 				}
 			}
 
-			this.ctx[i] = styleOption[i]
+			ctx[i] = styleOption[i]
 		}
+
+		if (isCtx)
+			return ctx;
 
 	}
 
-	drawLine(_options) {
+	drawLine(_options, ctx) {
 
-		this.setCtxState( _options.style );
+		ctx = ctx || this.ctx;
+		this.setCtxState( _options.style, ctx );
 
 		// 没有数据不绘制
 		if (_options.line.length === 0) return;
@@ -91,36 +98,38 @@ class CMap {
 
 			path = new Path2D(_options.line);
 
-			if( this.ctx.isPointInPath(path, this.currentX, this.currentY) ){
-				this.ctx.fillStyle = _options.style.hoveColor;
+			if( ctx.isPointInPath(path, this.currentX, this.currentY) ){
+				ctx.fillStyle = _options.style.hoveColor;
 				this.inAreaCtx = _options.index;
 			} 
 
-			this.ctx.stroke( path );
-			this.ctx.fill( path )
+			ctx.stroke( path );
+			ctx.fill( path )
 
 		} else {
 			for (let i = 0, l = _options.line.length; i < l; i+=2) {
 				let x = _options.line[i];
 				let y = _options.line[i+1];
 				if (i === 0) {
-					this.ctx.moveTo(x, y);
+					ctx.moveTo(x, y);
 				} else {
-					this.ctx.lineTo(x, y);
+					ctx.lineTo(x, y);
 				}
 			}
 
-			if( this.ctx.isPointInPath( this.currentX, this.currentY)){
-				this.ctx.fillStyle = _options.style.hoveColor;
+			if( ctx.isPointInPath( this.currentX, this.currentY)){
+				ctx.fillStyle = _options.style.hoveColor;
 				this.inAreaCtx = _options.index;
 			}
 
-			this.ctx.stroke();
-			this.ctx.fill();
+			ctx.stroke();
+			ctx.fill();
 		}
 
-		this.ctx.closePath();
-		this.ctx.restore();
+		ctx.closePath();
+		ctx.restore();
+
+		return ctx
 
 	}
 
@@ -477,6 +486,58 @@ class CMap {
 
 	}
 
+	cityAreaCanvas () {
+		let canvas = document.createElement('canvas');
+		canvas.width = this.ctxW;
+		canvas.height = this.ctxH;
+
+		let ctx = canvas.getContext('2d');
+
+		// ctx.fillStyle = "#ff0";
+		ctx.beginPath();
+		ctx.arc(100, 100, 50, 0, Math.PI*2, false);
+		ctx.closePath()
+		ctx.fill();
+
+
+		let style = this.cityArea.style;
+
+		let drawArea = (style, data) => {
+
+			for (let i = 0, l = data.length; i < l; i++) {
+				ctx =  this.drawLine({
+					line: data[i],
+					style: style,
+					_area: true
+				}, ctx)
+			}
+
+			return ctx;
+		}
+		// 重置
+		this.inAreaCtx = -1
+
+		ctx = drawArea({
+			fillStyle: style.shadowColor ||'transparent',
+			globalCompositeOperation: 'destination-over',
+			lineWidth: style.lineWidth,
+			strokeStyle: style.strokeStyle,
+			shadowBlur: style.shadowBlur,
+			shadowColor: style.shadowColor || 'transparent',
+			shadowOffsetX: style.shadowOffsetX || 0,
+			shadowOffsetY: style.shadowOffsetY || 0
+		}, this.cityArea.data)
+
+		ctx = drawArea({
+			fillStyle: 'transparent',
+			lineWidth: style.lineWidth,
+			strokeStyle: style.strokeStyle
+
+		}, this.cityArea.data)
+
+		return canvas
+	}
+
 	animate() {
 		let _self = this;
 
@@ -519,13 +580,15 @@ class CMap {
 
 			}
 
-			_self.drawCityArea();
+			// _self.drawCityArea();
 
 			
-			requestAnimationFrame( go );
+			// requestAnimationFrame( go );
 		}
 
 		go()
+
+		_self.ctx.drawImage(this.cityAreaCanvas(), 0,0)
 
 	}
 
