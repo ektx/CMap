@@ -539,6 +539,8 @@ class CMap {
 	}
 
 	cityMirror() {
+
+		let _self = this;
 		
 		if (!('city' in this.Mirror.ele)) {
 
@@ -547,11 +549,10 @@ class CMap {
 			this.Mirror.ele.city.height = this.ctxH;
 		}
 
-		// let canvas = document.createElement('canvas');
-		// canvas.width = this.ctxW;
-		// canvas.height = this.ctxH;
-
 		let ctx = this.Mirror.ele.city.getContext('2d');
+		
+		ctx.clearRect(0, 0, _self.ctxW, _self.ctxH);
+
 
 		ctx.fillStyle = `rgb(${~~(Math.random() * 255)}, ${~~(Math.random() * 255)},0)`;
 		ctx.beginPath();
@@ -560,40 +561,40 @@ class CMap {
 		ctx.fill();
 
 
-		// for (let i = 0, l = _self.areas.length; i < l; i++) {
-		// 	let n = _self.areas[i];
-		// 	let __style = n.style;
-		// 	__style.globalCompositeOperation = 'destination-over';
+		for (let i = 0, l = _self.areas.length; i < l; i++) {
+			let n = _self.areas[i];
+			let __style = n.style;
+			__style.globalCompositeOperation = 'destination-over';
 
-		// 	if (_self.minScale > 1 && /-/g.test(n.data.toString()) ) {
-		// 		if (! ('drawLine' in n.warn)) {
+			if (_self.minScale > 1 && /-/g.test(n.data.toString()) ) {
+				if (! ('drawLine' in n.warn)) {
 
-		// 			let warnMeg = 'SVG Path 数据在缩放情况下不绘制';
-		// 			n.warn.drawLine = warnMeg;
-		// 			console.warn( warnMeg );
-		// 		}
+					let warnMeg = 'SVG Path 数据在缩放情况下不绘制';
+					n.warn.drawLine = warnMeg;
+					console.warn( warnMeg );
+				}
 			
-		// 	} else {
+			} else {
 
-		// 		for (let x = 0, y = n.data.length; x < y; x++) {
+				for (let x = 0, y = n.data.length; x < y; x++) {
 
-		// 			_self.drawLine({
-		// 				line: n.data[x],
-		// 				style: __style,
-		// 				index: i
-		// 			})
+					ctx = _self.drawLine({
+						line: n.data[x],
+						style: __style,
+						index: i
+					}, ctx)
 
-		// 		}
+				}
 
-		// 		// _self.drawPoint( n );
+				// _self.drawPoint( n );
 
-		// 		// _self.drawCityName( n, i )				
+				// _self.drawCityName( n, i )				
 
-		// 	}
+			}
 
-		// }
+		}
 
-		// return canvas
+
 	}
 
 
@@ -603,9 +604,6 @@ class CMap {
 		_self.cityAreaCanvas();
 		_self.cityMirror();
 
-		// _self.Mirror = {
-		// 	cityMirror : _self.cityMirror()
-		// }
 
 		let go = function() {
 
@@ -620,7 +618,7 @@ class CMap {
 			_self.ctx.drawImage(_self.Mirror.ele.cityArea, 0,0)
 
 			// 下辖
-			// _self.ctx.drawImage(_self.Mirror.ele.city, 0,0)
+			_self.ctx.drawImage(_self.Mirror.ele.city, 0,0)
 
 			
 
@@ -761,12 +759,12 @@ class CMap {
 			_self.currentY = event.offsetY * window.devicePixelRatio;
 
 			// 减少绘制,提高性能
-			if (new Date() - mousemoveTime > 160) {
+			if (new Date() - mousemoveTime > 30) {
 				
 				mousemoveTime = new Date();
 
 				// 更新地图
-				// _self.cityAreaCanvas();
+				_self.cityMirror();
 			}
 
 			// 在地图区域内
