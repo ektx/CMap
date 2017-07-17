@@ -218,7 +218,7 @@ class CMap {
 		return result;
 	}
 
-	drawPoint(ctx, type) {
+	drawPoint() {
 		
 		// let ctx = this.createMirrorCanvas('points', this.ctxW, this.ctxH);
 
@@ -233,7 +233,7 @@ class CMap {
 
 			let _thisPoint = this.points[i];
 
-			if (type === 'point' && pointSet.fun && typeof pointSet.fun === "function") {
+			if ( pointSet.fun && typeof pointSet.fun === "function") {
 				let _r = pointSet.fun(i, _thisPoint) || false;
 
 				if (_r) {
@@ -245,25 +245,25 @@ class CMap {
 
 			for (let p = 0, pl = _thisPoint.length; p < pl; p++) {
 
-				if (type === 'line') {
 
-					this.drawMessage( _thisPoint[p], ctx )
-				} else {
+					// this.drawMessage( _thisPoint[p], ctx )
+					this.cityMessageLineMirror( _thisPoint[p], this.Mirror.canvas.cityMsgLine )
 
-					if (pointSet.pop) 
-						this.drawPointPop(_thisPoint[p], ctx);
+					this.cityPointMirror( _thisPoint[p], this.Mirror.canvas.points, pointSet )
 
-					this.drawArc({
-						fillStyle: _thisPoint[p].color
-					}, {
-						x: _thisPoint[p].x,
-						y: _thisPoint[p].y,
-						r: _thisPoint[p].r,
-						s: 0,
-						e: 2 * Math.PI,
-						d: false
-					}, ctx)
-				}
+					// if (pointSet.pop) 
+					// 	this.drawPointPop(_thisPoint[p], ctx);
+
+					// this.drawArc({
+					// 	fillStyle: _thisPoint[p].color
+					// }, {
+					// 	x: _thisPoint[p].x,
+					// 	y: _thisPoint[p].y,
+					// 	r: _thisPoint[p].r,
+					// 	s: 0,
+					// 	e: 2 * Math.PI,
+					// 	d: false
+					// }, ctx)
 
 			}
 
@@ -648,18 +648,35 @@ class CMap {
 
 	}
 
-	cityMessageLineMirror( point, index ) {
-		let ctx = this.createMirrorCanvas('cityMsgLine', this.ctxW, this.ctxH);
-		ctx.clearRect(0, 0, this.ctxW, this.ctxH);
+	cityMessageLineMirror( point, ctx ) {
+		if (this.clear && this.clear.line) {
+			ctx.clearRect(0, 0, this.ctxW, this.ctxH);
+			this.clear.line = false;
+		}
 
-		this.drawPoint(ctx, 'line')
+		this.drawMessage( point, ctx )
 	}
 
-	cityPointMirror() {
-		let ctx = this.createMirrorCanvas('points', this.ctxW, this.ctxH)
-		ctx.clearRect(0, 0, this.ctxW, this.ctxH);
+	cityPointMirror(point, ctx, pointSet) {
+		if (this.clear && this.clear.point) {
+			ctx.clearRect(0, 0, this.ctxW, this.ctxH);
+			this.clear.point = false;
+		}
 
-		this.drawPoint(ctx, 'point')
+		// this.drawPoint(ctx, 'point')
+		if (pointSet.pop) 
+			this.drawPointPop(point, ctx);
+
+		this.drawArc({
+			fillStyle: point.color
+		}, {
+			x: point.x,
+			y: point.y,
+			r: point.r,
+			s: 0,
+			e: 2 * Math.PI,
+			d: false
+		}, ctx)
 	}
 
 
@@ -673,6 +690,10 @@ class CMap {
 
 		_self.cityNameMirror();
 
+		this.createMirrorCanvas('cityMsgLine', this.ctxW, this.ctxH);
+		this.createMirrorCanvas('points', this.ctxW, this.ctxH);
+
+
 
 		let go = function() {
 
@@ -682,8 +703,9 @@ class CMap {
 			_self.inAreaCtx = -1
 
 			// _self.drawCityArea();
-			_self.cityMessageLineMirror()
-			_self.cityPointMirror()
+			// _self.cityMessageLineMirror()
+			// _self.cityPointMirror()
+			_self.drawPoint();
 
 			// 背景
 			_self.ctx.drawImage(_self.Mirror.ele.cityArea, 0,0)
@@ -692,7 +714,7 @@ class CMap {
 			_self.ctx.drawImage(_self.Mirror.ele.city, 0,0)
 
 			_self.ctx.drawImage(_self.Mirror.ele.cityMsgLine, 0,0)
-			
+
 			_self.ctx.drawImage(_self.Mirror.ele.points, 0,0)
 
 			_self.ctx.drawImage(_self.Mirror.ele.cityName, 0,0)
@@ -700,6 +722,11 @@ class CMap {
 			
 
 			// _self.drawCityArea();
+
+			_self.clear = {
+				line: true,
+				point: true
+			}
 
 					
 			requestAnimationFrame( go );
