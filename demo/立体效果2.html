@@ -23,7 +23,7 @@
         <div id="city-information-network"></div>
 
     </body>
-    <script src="../js/mapArea.js"></script>
+    <script src="../js/cmap2.js"></script>
     <script src="data/huaian.js"></script>
     <script>
     
@@ -31,7 +31,7 @@
         //定义地图内部区域线条路径
         
     
-        let myMap = new MapAreaChart({
+        let myMap = new CMap({
             el: '#city-information-network',
             city: {
                 data: citysArr,
@@ -40,6 +40,7 @@
                     message: 'auto', // 点上信息, all 都有, auto 随机
                     r: [2, 3],
                     pop: 3,
+                    popSpeed: 500,
                     color: ['#fff', '#4fff5f'],
                     fun: (index, ponits)=> {
                         // console.log(index, ponits)

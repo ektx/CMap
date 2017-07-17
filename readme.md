@@ -56,11 +56,12 @@
             - all           每个点都会有信息交互
             - auto       随机给点添加信息交互
         - r  `array`  指定点的半径大小,例如:半径为2-4 [2, 4]
-        - pop  `number`  点上扩展波纹个数,0为无
+        - pop    `number`  点上扩展波纹个数,0为无
+        - popSpeed `number` 波纹数度
         - color  `array`  点的颜色取值, 例如:color: ['#fff', 'rgba(0,0,0,)']
-        - fun     `function`  每个点的回调函数,默认返回值有以下(pointInfo, areaInfo) 值, 
-            - pointInfo 当前点的信息, 
-            - areaInfo  此点所在区块的信息
+        - fun    `function`  每个点的回调函数,默认返回值有以下(index, points) 值, 
+            - index   当前区域索引
+            - points  区域中所有点
     - cityName      区块的名称显示效果            
         - normal    定义文字显示效果,配置按Canvas对文字的配置规则 
         - hover     定义文字鼠标放上时显示效果,配置按Canvas对文字的配置规则
