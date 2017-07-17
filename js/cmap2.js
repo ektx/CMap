@@ -152,6 +152,18 @@ class CMap {
 
 	}
 
+	drawArc (style, options, ctx) {
+		ctx = this.setCtxState( style, ctx );
+
+		ctx.arc(options.x, options.y, options.r, options.s, options.e, options.d);
+
+		ctx.fill();
+		ctx.closePath();
+		ctx.restore();
+
+		return ctx;
+	}
+
 
 	getRandomPoint( ctx, index ) {
 		let result = [];
@@ -206,11 +218,11 @@ class CMap {
 		return result;
 	}
 
-	drawPoint() {
+	drawPoint(ctx, type) {
 		
-		let ctx = this.createMirrorCanvas('points', this.ctxW, this.ctxH);
+		// let ctx = this.createMirrorCanvas('points', this.ctxW, this.ctxH);
 
-		ctx.clearRect(0, 0, this.ctxW, this.ctxH);
+		// ctx.clearRect(0, 0, this.ctxW, this.ctxH);
 
 		let pointLength = this.points.length;
 		let pointSet = this.options.city.point;
@@ -220,10 +232,8 @@ class CMap {
 		for (let i = 0; i < pointLength; i++) {
 
 			let _thisPoint = this.points[i];
-			let _newColor = false;
-			let _newR = false;
 
-			if (pointSet.fun && typeof pointSet.fun === "function") {
+			if (type === 'point' && pointSet.fun && typeof pointSet.fun === "function") {
 				let _r = pointSet.fun(i, _thisPoint) || false;
 
 				if (_r) {
@@ -234,24 +244,33 @@ class CMap {
 
 
 			for (let p = 0, pl = _thisPoint.length; p < pl; p++) {
-				ctx = this.setCtxState( {
-					fillStyle: _thisPoint[p].color
-				}, ctx );
 
-				ctx.arc(_thisPoint[p].x, _thisPoint[p].y, _thisPoint[p].r, 0, 2*Math.PI, false);
-			
-				ctx.fill();
-				ctx.closePath();
-				ctx.restore();
+				if (type === 'line') {
 
-				// 点上线
-				this.drawMessage( _thisPoint[p], ctx );
+					this.drawMessage( _thisPoint[p], ctx )
+				} else {
 
-				if (pointSet.pop) this.drawPointPop(_thisPoint[p], ctx);
+					if (pointSet.pop) 
+						this.drawPointPop(_thisPoint[p], ctx);
+
+					this.drawArc({
+						fillStyle: _thisPoint[p].color
+					}, {
+						x: _thisPoint[p].x,
+						y: _thisPoint[p].y,
+						r: _thisPoint[p].r,
+						s: 0,
+						e: 2 * Math.PI,
+						d: false
+					}, ctx)
+				}
+
 			}
 
 		}
 	}
+
+
 
 	drawPointPop( _point, ctx ) {
 
@@ -418,7 +437,7 @@ class CMap {
 			}
 		}
 
-		this.message.light.style.globalCompositeOperation = 'source-over';
+		this.message.light.style.globalCompositeOperation = 'destination-over';
 		this.message.light.style.strokeStyle = _point.light.color;
 
 		_point.light.t++;
@@ -629,6 +648,20 @@ class CMap {
 
 	}
 
+	cityMessageLineMirror( point, index ) {
+		let ctx = this.createMirrorCanvas('cityMsgLine', this.ctxW, this.ctxH);
+		ctx.clearRect(0, 0, this.ctxW, this.ctxH);
+
+		this.drawPoint(ctx, 'line')
+	}
+
+	cityPointMirror() {
+		let ctx = this.createMirrorCanvas('points', this.ctxW, this.ctxH)
+		ctx.clearRect(0, 0, this.ctxW, this.ctxH);
+
+		this.drawPoint(ctx, 'point')
+	}
+
 
 	animate() {
 		let _self = this;
@@ -649,7 +682,8 @@ class CMap {
 			_self.inAreaCtx = -1
 
 			// _self.drawCityArea();
-			_self.drawPoint()
+			_self.cityMessageLineMirror()
+			_self.cityPointMirror()
 
 			// 背景
 			_self.ctx.drawImage(_self.Mirror.ele.cityArea, 0,0)
@@ -657,6 +691,8 @@ class CMap {
 			// 下辖
 			_self.ctx.drawImage(_self.Mirror.ele.city, 0,0)
 
+			_self.ctx.drawImage(_self.Mirror.ele.cityMsgLine, 0,0)
+			
 			_self.ctx.drawImage(_self.Mirror.ele.points, 0,0)
 
 			_self.ctx.drawImage(_self.Mirror.ele.cityName, 0,0)
@@ -665,7 +701,7 @@ class CMap {
 
 			// _self.drawCityArea();
 
-			
+					
 			requestAnimationFrame( go );
 		}
 
