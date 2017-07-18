@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<title></title>
+		<title>多区块示例</title>
 		<style type="text/css">
 			body, canvas, div {
 				margin: 0;
@@ -38,36 +38,10 @@
 				data: citysArr,
 				point: {
 					size: 1, 
-					// notUseCentroidPoint: true, //是否使用质量中心点,默认 true,只有size时可用
 					message: 'all', // 点上信息, all 都有, auto 随机
 					r: [3, 5],
 					pop: 5, // 加点动画
-					color: ['#fff', '#4fff5f'],
-					fun: function(ponitInfo, areaInfo) {
-						// console.log(ponitInfo, areaInfo);
-
-						var color = '#fff';
-						var r = 6;
-						var data = areaInfo.origin.value;
-
-						switch (true) {
-							case data < 60:
-								color = '#09f';
-								r = 3;
-								break;
-
-							case data > 80:
-								color = '#4fff5f';
-								r = 10;
-								break;
-						}
-
-						// 重置半径与大小
-						return {
-							color: color,
-							r: r
-						}
-					}
+					color: ['#fff', '#4fff5f']
 				},
 				cityName: {
 					normal: {

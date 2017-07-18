@@ -8,7 +8,7 @@
 
 	------------------------------------
 	API
-
+	https://github.com/ektx/canvas-map
 */
 class CMap {
 
@@ -44,13 +44,25 @@ class CMap {
 		this.DPI = window.devicePixelRatio;
 		// 是否缩放(可配置)
 		this.canScale = true;
+		// 存放所有的点的集合
+		this.points = [];
+		// 当前鼠标移入地区
+		this.hoverCityIndex = -2;
+
+		this.Mirror = {
+			ele : {},
+			canvas: {}
+		}
 	}
 
 
-	setCtxState(styleOption) {
+	setCtxState(styleOption, ctx) {
 
-		this.ctx.save();
-		this.ctx.beginPath();
+		let isCtx = ctx ? 1: 0;
+		ctx = ctx || this.ctx;
+
+		ctx.save();
+		ctx.beginPath();
 
 		// canvas 属性请查阅 canvas 相关书籍
 		for ( let i in styleOption) {
@@ -72,14 +84,21 @@ class CMap {
 				}
 			}
 
-			this.ctx[i] = styleOption[i]
+			ctx[i] = styleOption[i]
 		}
+
+		if (isCtx)
+			return ctx;
 
 	}
 
-	drawLine(_options) {
+	/*
+		@getPoint 是否需要取点
+	*/
+	drawLine(_options, ctx, getPoint) {
 
-		this.setCtxState( _options.style );
+		ctx = ctx || this.ctx;
+		this.setCtxState( _options.style, ctx );
 
 		// 没有数据不绘制
 		if (_options.line.length === 0) return;
@@ -91,53 +110,80 @@ class CMap {
 
 			path = new Path2D(_options.line);
 
-			if( this.ctx.isPointInPath(path, this.currentX, this.currentY) ){
-				this.ctx.fillStyle = _options.style.hoveColor;
+			if( ctx.isPointInPath(path, this.currentX, this.currentY) ){
+				ctx.fillStyle = _options.style.hoveColor;
 				this.inAreaCtx = _options.index;
 			} 
 
-			this.ctx.stroke( path );
-			this.ctx.fill( path )
+			// 取随机点
+			if (getPoint && !this.points[_options.index] ) {
+				this.points.push( this.getRandomPoint(ctx, _options.index) )
+			}
+
+			ctx.stroke( path );
+			ctx.fill( path )
 
 		} else {
 			for (let i = 0, l = _options.line.length; i < l; i+=2) {
 				let x = _options.line[i];
 				let y = _options.line[i+1];
 				if (i === 0) {
-					this.ctx.moveTo(x, y);
+					ctx.moveTo(x, y);
 				} else {
-					this.ctx.lineTo(x, y);
+					ctx.lineTo(x, y);
 				}
 			}
 
-			if( this.ctx.isPointInPath( this.currentX, this.currentY)){
-				this.ctx.fillStyle = _options.style.hoveColor;
+			if( ctx.isPointInPath( this.currentX, this.currentY)){
+				ctx.fillStyle = _options.style.hoveColor;
 				this.inAreaCtx = _options.index;
+
 			}
 
-			this.ctx.stroke();
-			this.ctx.fill();
+			// 取随机点
+			if (getPoint && !this.points[_options.index] ) {
+				this.points.push( this.getRandomPoint(ctx, _options.index) )
+			}
+
+			ctx.stroke();
+			ctx.fill();
 		}
 
-		this.ctx.closePath();
-		this.ctx.restore();
+		ctx.closePath();
+		ctx.restore();
+
+		return ctx
 
 	}
 
+	drawArc (style, options, ctx) {
+		ctx = this.setCtxState( style, ctx );
 
-	getRandomPoint( _obj ) {
+		ctx.arc(options.x, options.y, options.r, options.s, options.e, options.d);
+
+		ctx.fill();
+		ctx.closePath();
+		ctx.restore();
+
+		return ctx;
+	}
+
+
+	getRandomPoint( ctx, index ) {
 		let result = [];
-		let _self = this;
-		let _useCenterPoint = _obj.point.notUseCentroidPoint ? false : true;
+		let _self  = this;
+		let _obj   = _self.areas[index];
+		let _point = _obj.point;
+		// let _useCenterPoint = _obj.point.notUseCentroidPoint ? false : true;
 
 		let getRandomVal = (colorArr) => (
 			colorArr[parseInt(colorArr.length * Math.random())]
 		)
 
 		// 取多个点时,我们随机生成
-		if (_obj.point.size > 1 || !_useCenterPoint) {
+		if (_obj.point.size > 1) {
 			
-			for (let i = 0; i < _obj.point.size; i ++) {
+			for (let i = 0, l = _point.size; i < l; i ++) {
 
 				let x = 0;
 				let y = 0;
@@ -147,12 +193,12 @@ class CMap {
 					do {
 						x = parseFloat((_obj.x[0] + _obj.width * Math.random()).toFixed(2));
 						y = parseFloat((_obj.y[0] + _obj.height * Math.random()).toFixed(2));
-					} while (!_self.ctx.isPointInPath(new Path2D(_obj.data), x, y));
+					} while (!ctx.isPointInPath(new Path2D(_obj.data), x, y));
 				} else {
 					do {
 						x = parseFloat((_obj.x[0] + _obj.width * Math.random()).toFixed(2));
 						y = parseFloat((_obj.y[0] + _obj.height * Math.random()).toFixed(2));
-					} while (!_self.ctx.isPointInPath(x, y));
+					} while (!ctx.isPointInPath(x, y));
 				}
 
 				result.push({
@@ -172,70 +218,47 @@ class CMap {
 				color: getRandomVal( _obj.point.color )
 			})
 		}
-		_obj.pointArr = result;
+		
+		return result;
 	}
 
-	drawPoint( obj ) {
+	drawPoint() {
+		
+		let pointLength = this.points.length;
+		let pointSet = this.options.city.point;
 
-		let pointLength = obj.pointArr.length;
-
-		// 没有地图点数据不绘制
-		if (obj.data.length === 0) {
-			let _meg = '发现没有地图坐标点的城市:' + obj.name;
-			
-			if (!obj.warn.drawPoint) {
-				obj.warn.drawPoint = _meg;
-				console.warn( _meg )
-			}
-
-			return;	
-		}
-
-		if ( pointLength == 0) {
-			this.getRandomPoint( obj );
-
-			pointLength = obj.point.size;
-		}
+		if ( !pointLength ) return;
 
 		for (let i = 0; i < pointLength; i++) {
 
-			let _thisPoint = obj.pointArr[i];
-			let _newColor = false;
-			let _newR = false;
+			let _thisPoint = this.points[i];
 
-			if (obj.point.fun && typeof obj.point.fun === "function") {
-				let _r = obj.point.fun(_thisPoint, obj) || false;
-
-				if (_r) {
-					_thisPoint.r = _r.r;
-					_thisPoint.color = _r.color;			
-				}
+			if ( pointSet.fun && typeof pointSet.fun === "function") {
+				_thisPoint = pointSet.fun(i, _thisPoint) || _thisPoint;
 			}
 
-			this.setCtxState( {
-				fillStyle: _thisPoint.color
-			} );
 
-			this.ctx.arc(_thisPoint.x, _thisPoint.y, _thisPoint.r, 0, 2*Math.PI, false);
+			for (let p = 0, pl = _thisPoint.length; p < pl; p++) {
 
+				if (this.options.message) {
+					this.cityMessageLineMirror( _thisPoint[p], this.Mirror.canvas.cityMsgLine )
+				}
 
-			this.ctx.fill();
-			this.ctx.closePath();
-			this.ctx.restore();
+				this.cityPointMirror( _thisPoint[p], this.Mirror.canvas.points, pointSet )
 
-			if (obj.point.pop) this.drawPointPop(_thisPoint, obj.point.pop);
-
-			// 点上线
-			this.drawMessage( _thisPoint );
+			}
 
 		}
 	}
 
-	drawPointPop( _point, _size ) {
+
+
+	drawPointPop( _point, ctx ) {
 
 		let _self = this;
 		let _totalR = _point.r * 5;
 		let popR = [];
+		let _size = _self.options.city.point.pop;
 
 		_size++;
 
@@ -245,19 +268,23 @@ class CMap {
 
 			if ( r < 0 ) return r;
 
-			_self.setCtxState({
+			ctx = _self.setCtxState({
 				strokeStyle: _point.color,
 				globalAlpha: 1-(r / _totalR)
-			});
-			_self.ctx.arc(_point.x, _point.y, r, 0, 2*Math.PI, false);
-			_self.ctx.stroke();
-			_self.ctx.closePath();
-			_self.ctx.restore();
+			}, ctx);
+
+			ctx.arc(_point.x, _point.y, r, 0, 2*Math.PI, false);
+			ctx.stroke();
+			ctx.closePath();
+			ctx.restore();
 
 			return r;
 		}
 
 		if (!_point.popAnimate) {
+			
+			let _popSpeed = _self.options.city.point.popSpeed || 200;
+
 			// 取波纹数
 			if (_size > 1) {
 				let _step = (_totalR + _point.r) / _size;
@@ -271,7 +298,7 @@ class CMap {
 
 			_point.popAnimate = {
 				r : popR,
-				RSpeed: _totalR / 200
+				RSpeed: _totalR / _popSpeed
 			}
 		} else {
 			for (let i = 0, l = _point.popAnimate.r.length; i < l; i++) {
@@ -282,12 +309,12 @@ class CMap {
 	}
 
 	
-	drawMessage( _point ) {
+	drawMessage( _point, ctx ) {
 
 		if (!this.message) return;
 
-		let style = this.message.line;
-		let _centerX = this.message.center.x, 
+		let style = this.message.line,
+			_centerX = this.message.center.x, 
 			_centerY = this.message.center.y;
 
 		if (this.canScale) {
@@ -301,10 +328,10 @@ class CMap {
 		}
 
 		// 1.绘制轨道
-		this.drawLine({
+		ctx = this.drawLine({
 			line: [_point.x, _point.y, _centerX, _centerY],
 			style: style
-		});
+		}, ctx);
 
 		if (!_point.lineLength) {
 
@@ -391,12 +418,12 @@ class CMap {
 			}
 		}
 
-		this.message.light.style.globalCompositeOperation = 'source-over';
+		this.message.light.style.globalCompositeOperation = 'destination-over';
 		this.message.light.style.strokeStyle = _point.light.color;
 
 		_point.light.t++;
 
-		this.drawLine({
+		ctx = this.drawLine({
 			line: [
 				xStart, 
 				yStart, 
@@ -404,7 +431,7 @@ class CMap {
 				yEnd, 
 			],
 			style: this.message.light.style
-		}) 
+		}, ctx) 
 
 	}
 
@@ -439,93 +466,228 @@ class CMap {
 
 	}
 
-	drawCityArea( _opt ) {
+	cityNameMirror () {
+
+		if (this.inAreaCtx === this.hoverCityIndex) {
+			return;
+		}
+
+		let ctx = this.createMirrorCanvas('cityName', this.ctxW, this.ctxH)
+
+		ctx.clearRect(0, 0, this.ctxW, this.ctxH);
+
+		// x 偏移
+		let translateX = 0;
+		// y 偏移
+		let translateY = 0;
+
+		let cityName = this.options.city.cityName;
+
+
+		ctx.textAlign = cityName.align || 'center';
+
+		if (cityName.move) {
+			translateX = cityName.move.x ? cityName.move.x : 0;
+			translateY = cityName.move.y ? cityName.move.y : 0;
+		}
+
+		for (let i = 0,l = this.areas.length; i < l; i++) {
+
+			let _ = this.areas[i];
+
+			if( this.inAreaCtx == i ){
+				let _style = _.cityName.hover ? _.cityName.hover : _.cityName.normal;
+
+				_style.globalCompositeOperation = 'source-over';
+
+				ctx = this.setCtxState( _style, ctx );
+
+				this.hoverCityIndex = i;	
+
+			} else {
+				_.cityName.normal.globalCompositeOperation = 'source-over';
+
+				ctx = this.setCtxState( _.cityName.normal, ctx );
+			}
+
+			ctx.fillText(_.name, _.xCenter + translateX, _.yCenter + translateY);
+			
+			ctx.restore();	
+
+		}
+
+	}
+
+	createMirrorCanvas (mirrorName, width, height) {
+		
+		let _M = this.Mirror;
+		let ctx;
+		if (!(mirrorName in _M.ele)) {
+			_M.ele[mirrorName] = document.createElement('canvas');
+			_M.ele[mirrorName].width = width;
+			_M.ele[mirrorName].height = height;
+
+			ctx = _M.canvas[mirrorName] = _M.ele[mirrorName].getContext('2d')
+		} else {
+			ctx = _M.ele[mirrorName].getContext('2d')
+		}
+
+		return ctx;
+
+	}
+
+
+	cityAreaMirror () {
+
+		let ctx = this.createMirrorCanvas('cityArea', this.ctxW, this.ctxH)
 
 		let style = this.cityArea.style;
 
 		let drawArea = (style, data) => {
 
 			for (let i = 0, l = data.length; i < l; i++) {
-				this.drawLine({
+				ctx =  this.drawLine({
 					line: data[i],
 					style: style,
 					_area: true
-				})
+				}, ctx)
 			}
+
+			return ctx;
 		}
-		// 重置
-		this.inAreaCtx = -1
-
-		drawArea({
-			fillStyle: style.shadowColor ||'transparent',
-			globalCompositeOperation: 'destination-over',
-			lineWidth: style.lineWidth,
-			strokeStyle: style.strokeStyle,
-			shadowBlur: style.shadowBlur,
-			shadowColor: style.shadowColor || 'transparent',
-			shadowOffsetX: style.shadowOffsetX || 0,
-			shadowOffsetY: style.shadowOffsetY || 0
-		}, this.cityArea.data)
-
-		drawArea({
+		
+		ctx = drawArea({
 			fillStyle: 'transparent',
 			lineWidth: style.lineWidth,
 			strokeStyle: style.strokeStyle
 
 		}, this.cityArea.data)
-		
 
 	}
 
-	animate() {
+	cityMirror() {
+
 		let _self = this;
 
-		let go = function() {
+		let ctx = _self.createMirrorCanvas('city', _self.ctxW, _self.ctxH);
+		
+		ctx.clearRect(0, 0, _self.ctxW, _self.ctxH);
 
-			_self.ctx.clearRect(0, 0, _self.ctxW, _self.ctxH);
 
-			// _self.drawCityArea();
+		for (let i = 0, l = _self.areas.length; i < l; i++) {
+			let n = _self.areas[i];
+			let __style = n.style;
+			__style.globalCompositeOperation = 'destination-over';
 
-			for (let i = 0, l = _self.areas.length; i < l; i++) {
-				let n = _self.areas[i];
-				let __style = n.style;
-				__style.globalCompositeOperation = 'destination-over';
+			if (_self.minScale > 1 && /-/g.test(n.data.toString()) ) {
+				if (! ('drawLine' in n.warn)) {
 
-				if (_self.minScale > 1 && /-/g.test(n.data.toString()) ) {
-					if (! ('drawLine' in n.warn)) {
+					let warnMeg = 'SVG Path 数据在缩放情况下不绘制';
+					n.warn.drawLine = warnMeg;
+					console.warn( warnMeg );
+				}
+			
+			} else {
 
-						let warnMeg = 'SVG Path 数据在缩放情况下不绘制';
-						n.warn.drawLine = warnMeg;
-						console.warn( warnMeg );
-					}
-				
-				} else {
+				for (let x = 0, y = n.data.length; x < y; x++) {
 
-					for (let x = 0, y = n.data.length; x < y; x++) {
-
-						_self.drawLine({
-							line: n.data[x],
-							style: __style,
-							index: i
-						})
-
-					}
-
-					_self.drawPoint( n );
-
-					_self.drawCityName( n, i )				
+					ctx = _self.drawLine({
+						line: n.data[x],
+						style: __style,
+						index: i
+					}, ctx, true)
 
 				}
 
 			}
 
-			_self.drawCityArea();
+		}
 
+
+	}
+
+	cityMessageLineMirror( point, ctx ) {
+		if (this.clear && this.clear.line) {
+
+			ctx.clearRect(0, 0, this.ctxW, this.ctxH);
+			this.clear.line = false;
+		}
+
+		this.drawMessage( point, ctx )
+	}
+
+	cityPointMirror(point, ctx, pointSet) {
+
+
+		if (this.clear && this.clear.point) {
+			// 如果不要绘制波纹,我们就不再绘制点的镜像
+			if (!this.options.city.point.pop) return;
+
+			ctx.clearRect(0, 0, this.ctxW, this.ctxH);
+			this.clear.point = false;
+		}
+
+		if (pointSet.pop) 
+			this.drawPointPop(point, ctx);
+
+		this.drawArc({
+			fillStyle: point.color
+		}, {
+			x: point.x,
+			y: point.y,
+			r: point.r,
+			s: 0,
+			e: 2 * Math.PI,
+			d: false
+		}, ctx)
+	}
+
+
+	animate() {
+		let _self = this;
+		
+		// 绘制背景
+		_self.cityAreaMirror();
+		// 绘制区块下辖
+		_self.cityMirror();
+
+		_self.cityNameMirror();
+
+		this.createMirrorCanvas('cityMsgLine', this.ctxW, this.ctxH);
+		this.createMirrorCanvas('points', this.ctxW, this.ctxH);
+
+		let go = function() {
+
+			_self.ctx.clearRect(0, 0, _self.ctxW, _self.ctxH);
+
+			// 重置地区索引
+			_self.inAreaCtx = -1
+
+			_self.drawPoint();
+
+			// 下辖
+			_self.ctx.drawImage(_self.Mirror.ele.city, 0,0)
 			
+			// 背景
+			_self.ctx.drawImage(_self.Mirror.ele.cityArea, 0,0)
+
+			if (_self.message)
+				_self.ctx.drawImage(_self.Mirror.ele.cityMsgLine, 0,0)
+
+			_self.ctx.drawImage(_self.Mirror.ele.points, 0,0)
+
+			_self.ctx.drawImage(_self.Mirror.ele.cityName, 0,0)
+
+			_self.clear = {
+				line: true,
+				point: true
+			}
+					
 			requestAnimationFrame( go );
 		}
 
 		go()
+
 
 	}
 
@@ -641,17 +803,30 @@ class CMap {
 	    
 	    let sixSignedArea = 3 * twoTimesSignedArea;
 
-	    return [ cxTimes6SignedArea / sixSignedArea, cyTimes6SignedArea / sixSignedArea]; 
+	    return [ ~~(cxTimes6SignedArea / sixSignedArea), ~~(cyTimes6SignedArea / sixSignedArea)]; 
 	}
 
 	event() {
 
 		let _self = this;
+		let mousemoveTime = 0;
 
 		//地图鼠标移上去的事件
 		this.ele.addEventListener("mousemove", function(event){
 			_self.currentX = event.offsetX * window.devicePixelRatio;
 			_self.currentY = event.offsetY * window.devicePixelRatio;
+
+			// 减少绘制,提高性能
+			if (new Date() - mousemoveTime > 30) {
+				
+				mousemoveTime = new Date();
+
+				// 更新地图,绘制区块下辖
+				_self.cityMirror();
+
+				// 更新地图名称
+				_self.cityNameMirror();
+			}
 
 			// 在地图区域内
 			if (_self.inAreaCtx > -1) {
@@ -707,12 +882,12 @@ class CMap {
 					if (typeof data[i] == 'object') {
 						data[i] = setData( data[i] )
 					} else {
-						data[i] = _self.xStart + (data[i] - minX) * _self.minScale;
+						data[i] = ~~(_self.xStart + (data[i] - minX) * _self.minScale);
 						// 地图居中显示
 						if (_self.cityArea.earthLine)
-							data[i+1] = _self.yStart + (minY - data[i+1]) * _self.minScale;
+							data[i+1] = ~~(_self.yStart + (minY - data[i+1]) * _self.minScale);
 						else 
-							data[i+1] = _self.yStart + (data[i+1] - minY) * _self.minScale;
+							data[i+1] = ~~(_self.yStart + (data[i+1] - minY) * _self.minScale);
 							
 					}
 				}
@@ -797,8 +972,8 @@ class CMap {
 				if (_data.map) {
 					// 计算宽高
 					_computedData = {
-						centroidX: _data.x + (_data.w / 2),
-						centroidY: _data.y + (_data.h / 2)
+						centroidX: ~~(_data.x + (_data.w / 2)),
+						centroidY: ~~(_data.y + (_data.h / 2))
 					}
 				}
 			} 
