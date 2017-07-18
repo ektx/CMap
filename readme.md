@@ -12,9 +12,9 @@
 
 <!-- 2. 引入js -->
 <!-- 现代浏览器使用以下 js -->
-<script src="./js/mapAera.js"></script>
+<script src="./js/cmap.js"></script>
 <!-- 老版本浏览器使用以下 js -->
-<script src="./js/mapAeraES5.js"></script>
+<script src="./js/cmap.es5.js"></script>
 
 <!-- 3. 使用 -->
 <script>

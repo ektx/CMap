@@ -10,6 +10,7 @@
 			}
 			body {
 				background:#040714; 
+				position: absolute;
 			}
 
 			#city-information-network {
@@ -25,8 +26,8 @@
 	</body>
 
 	<!-- 组件代码 -->
-	<script src="../js/cmap.js"></script>
-	<script src="data/longyou.js"></script>
+    <script src="../js/cmap.js"></script>
+	<script src="Data/yuhang.js"></script>
 	<!-- 示例代码 -->
 	<script>
 	
@@ -38,35 +39,38 @@
 				data: citysArr,
 				point: {
 					size: 1, 
-					// notUseCentroidPoint: true, //是否使用质量中心点,默认 true,只有size时可用
 					message: 'all', // 点上信息, all 都有, auto 随机
 					r: [3, 5],
 					pop: 3, // 加点动画
 					color: ['#fff', '#4fff5f'],
-					fun: function(ponitInfo, areaInfo) {
-						// console.log(ponitInfo, areaInfo);
+					fun: function(index, points) {
 
-						var color = '#fff';
-						var r = 6;
-						var data = areaInfo.origin.value;
+						points.forEach(function(val, i) {
+							if (val.color !== color && val.r !== r) {
 
-						switch (true) {
-							case data < 60:
-								color = '#09f';
-								r = 3;
-								break;
+								var color = '#fff';
+								var r = 6;
+								var data = citysArr[index].value;
 
-							case data > 80:
-								color = '#4fff5f';
-								r = 10;
-								break;
-						}
+								switch (true) {
+									case data < 60:
+										color = '#09f';
+										r = 3;
+										break;
+
+									case data > 80:
+										color = '#4fff5f';
+										r = 10;
+										break;
+								}
+
+								val.color = color;
+								val.r = r
+							}
+						})
 
 						// 重置半径与大小
-						return {
-							color: color,
-							r: r
-						}
+						return points
 					}
 				},
 				cityName: {
@@ -78,7 +82,7 @@
 						fillStyle: '#4fff5f',
 						font: "15px Microsoft Yahei"
 					},
-					// align: 'start', // 居中方式
+					align: 'start', // 居中方式
 					move: {
 						y: -15
 					}
@@ -92,6 +96,7 @@
 			},
 			cityArea: {
 				data: areaData,
+				earthLine: true,
 				style: {
 					lineWidth: 3,
 					strokeStyle: '#538df7'
@@ -106,9 +111,9 @@
 				}
 			}
 		})
-		
-		myMap.init()
 
+
+		myMap.init()
 
 
 	</script>

@@ -23,15 +23,14 @@
         <div id="city-information-network"></div>
 
     </body>
-    <script src="../js/mapArea.js"></script>
+    <script src="../js/cmap.es5.js"></script>
     <script src="data/huaian.js"></script>
+    
     <script>
     
-    // window.addEventListener('DOMContentLoaded', function() {
-        //定义地图内部区域线条路径
-        
-    
-        let myMap = new MapAreaChart({
+    window.addEventListener('DOMContentLoaded', function() {
+
+        var myMap = new CMap({
             el: '#city-information-network',
             city: {
                 data: citysArr,
@@ -39,11 +38,7 @@
                     size: 5, 
                     message: 'auto', // 点上信息, all 都有, auto 随机
                     r: [2, 3],
-                    pop: 3,
                     color: ['#fff', '#4fff5f'],
-                    fun: (index, ponits)=> {
-                        // console.log(index, ponits)
-                    }
                 },
                 cityName: {
                     normal: {
@@ -51,26 +46,22 @@
                         font: "10px Microsoft Yahei"
                     },
                     hover: {
-                        fillStyle: '#4fff5f',
+                        fillStyle: 'red',
                         font: "15px Microsoft Yahei"
                     }
                 },
                 style: {
                     lineWidth: 1,
-                    strokeStyle: '#514DCF',
-                    fillStyle: '#0C1D50',
-                    hoveColor: '#514DCF'
+                    strokeStyle: '#243e6a',
+                    fillStyle: 'rgba(0, 0, 0, .4)',
+                    hoveColor: 'rgba(255, 250, 0, .4)'
                 }
             },
             cityArea: {
                 data: araeData,
                 style: {
                     lineWidth: 3,
-                    strokeStyle: '#538df7',
-                    shadowBlur: 0,
-                    shadowColor: '#0C1D50',
-                    shadowOffsetX: 5,
-                    shadowOffsetY: 10
+                    strokeStyle: '#538df7'
                 }
             },
             message: {
@@ -101,9 +92,9 @@
                 }
             }
         })
-
+        
         myMap.init()
 
-    // })
+    })
     </script>
 </html>
