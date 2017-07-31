@@ -100,6 +100,8 @@ class CMap {
 		ctx = ctx || this.ctx;
 		this.setCtxState( _options.style, ctx );
 
+		if (!this.points.length) getPoint = false;
+		
 		// 没有数据不绘制
 		if (_options.line.length === 0) return;
 

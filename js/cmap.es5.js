@@ -97,6 +97,8 @@ CMap.prototype = {
 
 		ctx = ctx || this.ctx;
 		this.setCtxState( _options.style, ctx );
+		
+		if (!this.points.length) getPoint = false;
 
 		// 没有数据不绘制
 		if (_options.line.length === 0) return;
@@ -839,6 +841,29 @@ CMap.prototype = {
 				}
 			}
 
+		});
+
+		this.ele.addEventListener('mouseout', function(event) {
+			_self.currentX = event.offsetX * window.devicePixelRatio;
+			_self.currentY = event.offsetY * window.devicePixelRatio;
+
+			// 减少绘制,提高性能
+			if (new Date() - mousemoveTime > 30) {
+				
+				mousemoveTime = new Date();
+
+				// 更新地图,绘制区块下辖
+				_self.cityMirror();
+
+				// 更新地图名称
+				_self.cityNameMirror();
+			}
+
+			// 返回用户 -1
+			if (_self.callback && _self.callback.mousemove) {
+				_self.callback.mousemove( event );
+			}
+						
 		});
 
 		// 地图上点击事件
