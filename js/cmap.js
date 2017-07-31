@@ -98,9 +98,12 @@ class CMap {
 	drawLine(_options, ctx, getPoint) {
 
 		ctx = ctx || this.ctx;
+
 		this.setCtxState( _options.style, ctx );
 
-		if (!this.points.length) getPoint = false;
+		if (!(this.options.city.point && this.options.city.point.size > 0) ) {
+			getPoint = false;
+		}
 		
 		// 没有数据不绘制
 		if (_options.line.length === 0) return;
@@ -581,7 +584,7 @@ class CMap {
 			let __style = n.style;
 			__style.globalCompositeOperation = 'destination-over';
 
-			if (_self.minScale > 1 && /-/g.test(n.data.toString()) ) {
+			if (_self.minScale > 1 && /-|C/g.test(n.data.toString()) ) {
 				if (! ('drawLine' in n.warn)) {
 
 					let warnMeg = 'SVG Path 数据在缩放情况下不绘制';
@@ -897,7 +900,7 @@ class CMap {
 			}
 
 			let doWithArr = (data) => {
-				if ( /-/g.test( data.toString()) ) {
+				if ( /-|C/g.test( data.toString()) ) {
 					console.warn('data 要是数组或SVG无法放大!');
 					return data;
 				}
@@ -918,7 +921,7 @@ class CMap {
 		}
 
 		// SVG 不进行数据的优化处理
-		if (/-/g.test( this.options.cityArea.data.toString() ) ) return;
+		if (/-|C/g.test( this.options.cityArea.data.toString() ) ) return;
 
 		_self.options.cityArea.data = _self.claerMultiPolygon(_self.options.cityArea.data)
 		mapSizeInfo = _self.computedData( _self.options.cityArea.data )
@@ -970,7 +973,7 @@ class CMap {
 			let _computedData = {};
 
 			// 对 svg 的处理
-			if ( /-/g.test(_data.map.toString()) ) {
+			if ( /-|C/g.test(_data.map.toString()) ) {
 				if (_data.map) {
 					// 计算宽高
 					_computedData = {

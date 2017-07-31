@@ -98,7 +98,9 @@ CMap.prototype = {
 		ctx = ctx || this.ctx;
 		this.setCtxState( _options.style, ctx );
 		
-		if (!this.points.length) getPoint = false;
+		if (!(this.options.city.point && this.options.city.point.size > 0) ) {
+			getPoint = false;
+		}
 
 		// 没有数据不绘制
 		if (_options.line.length === 0) return;
@@ -528,6 +530,8 @@ CMap.prototype = {
 			_M.ele[mirrorName].height = height;
 
 			ctx = _M.canvas[mirrorName] = _M.ele[mirrorName].getContext('2d')
+
+			document.body.appendChild( _M.ele[mirrorName] )
 		} else {
 			ctx = _M.ele[mirrorName].getContext('2d')
 		}
@@ -573,13 +577,13 @@ CMap.prototype = {
 		
 		ctx.clearRect(0, 0, _self.ctxW, _self.ctxH);
 
-
 		for (var i = 0, l = _self.areas.length; i < l; i++) {
 			var n = _self.areas[i];
 			var __style = n.style;
+
 			__style.globalCompositeOperation = 'destination-over';
 
-			if (_self.minScale > 1 && /-/g.test(n.data.toString()) ) {
+			if (_self.minScale > 1 && /-|C/g.test(n.data.toString()) ) {
 				if (! ('drawLine' in n.warn)) {
 
 					var warnMeg = 'SVG Path 数据在缩放情况下不绘制';
@@ -843,29 +847,6 @@ CMap.prototype = {
 
 		});
 
-		this.ele.addEventListener('mouseout', function(event) {
-			_self.currentX = event.offsetX * window.devicePixelRatio;
-			_self.currentY = event.offsetY * window.devicePixelRatio;
-
-			// 减少绘制,提高性能
-			if (new Date() - mousemoveTime > 30) {
-				
-				mousemoveTime = new Date();
-
-				// 更新地图,绘制区块下辖
-				_self.cityMirror();
-
-				// 更新地图名称
-				_self.cityNameMirror();
-			}
-
-			// 返回用户 -1
-			if (_self.callback && _self.callback.mousemove) {
-				_self.callback.mousemove( event );
-			}
-						
-		});
-
 		// 地图上点击事件
 		this.ele.addEventListener('click', function(e) {
 			// 在地图区域内
@@ -918,7 +899,7 @@ CMap.prototype = {
 			}
 
 			var doWithArr = (data) => {
-				if ( /-/g.test( data.toString()) ) {
+				if ( /-|C/g.test( data.toString()) ) {
 					console.warn('data 要是数组或SVG无法放大!');
 					return data;
 				}
@@ -939,7 +920,7 @@ CMap.prototype = {
 		}
 
 		// SVG 不进行数据的优化处理
-		if (/-/g.test( this.options.cityArea.data.toString() ) ) return;
+		if (/-|C/g.test( this.options.cityArea.data.toString() ) ) return;
 
 		_self.options.cityArea.data = _self.claerMultiPolygon(_self.options.cityArea.data)
 		mapSizeInfo = _self.computedData( _self.options.cityArea.data )
@@ -991,7 +972,7 @@ CMap.prototype = {
 			var _computedData = {};
 
 			// 对 svg 的处理
-			if ( /-/g.test(_data.map.toString()) ) {
+			if ( /-|C/g.test(_data.map.toString()) ) {
 				if (_data.map) {
 					// 计算宽高
 					_computedData = {
