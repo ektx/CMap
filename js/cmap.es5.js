@@ -2,7 +2,7 @@
 	cmap
 	地图信息流向图
 	-----------------------------------
-	@version: 0.5.0
+	@version: 0.5.1
 	@author: ektx
 	@date: 2017-5-13
 
@@ -190,8 +190,7 @@ CMap.prototype = {
 				var x = 0;
 				var y = 0;
 
-				if (typeof _obj.data === 'string') {
-
+				if ( /-|C/g.test( _obj.data.toString()) ) {
 					do {
 						x = parseFloat((_obj.x[0] + _obj.width * Math.random()).toFixed(2));
 						y = parseFloat((_obj.y[0] + _obj.height * Math.random()).toFixed(2));

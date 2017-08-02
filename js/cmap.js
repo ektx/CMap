@@ -2,7 +2,7 @@
 	cmap
 	地图信息流向图
 	-----------------------------------
-	@version: 0.5.0
+	@version: 0.5.1
 	@author: ektx
 	@date: 2017-5-13
 
@@ -193,8 +193,7 @@ class CMap {
 				let x = 0;
 				let y = 0;
 
-				if (typeof _obj.data === 'string') {
-
+				if ( /-|C/g.test( _obj.data.toString()) ) {
 					do {
 						x = parseFloat((_obj.x[0] + _obj.width * Math.random()).toFixed(2));
 						y = parseFloat((_obj.y[0] + _obj.height * Math.random()).toFixed(2));
@@ -650,7 +649,6 @@ class CMap {
 
 	animate() {
 		let _self = this;
-		
 		// 绘制背景
 		_self.cityAreaMirror();
 		// 绘制区块下辖

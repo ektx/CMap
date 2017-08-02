@@ -27,7 +27,7 @@
 
 	<!-- 组件代码 -->
     <script src="../js/cmap.js"></script>
-	<script src="Data/zhejiangSVG.js"></script>
+	<script src="Data/suizhong.js"></script>
 	<!-- 示例代码 -->
 	<script>
 	
@@ -96,12 +96,31 @@
 			},
 			cityArea: {
 				data: areaData,
-				earthLine: true,
+				// earthLine: true,
 				style: {
 					lineWidth: 3,
 					strokeStyle: '#538df7'
 				}
 			},
+			message: {
+                direction: 'send', // 流向 [send|get]
+                speed: 200, // 速度
+                light: {
+                    length: 15, // 信息条的长度比
+                    style: {
+                        lineWidth: 2, // 信息条的宽
+                        strokeStyle: '#408cff' // 信息条的颜色
+                    }
+                },
+                center: {
+                    x: 475,
+                    y: 254
+                },
+                line: {
+                    lineWidth: 1,
+                    strokeStyle: 'rgba(83, 141, 247, .4)'
+                }
+            },
 			callback: {
 				click: function(index, data) {
 					console.log( index, data )
