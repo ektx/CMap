@@ -994,9 +994,11 @@ class CMap {
 		}
 
 		// 针对屏幕进行设置
-		this.message.line.lineWidth *= this.DPI;
-		this.message.light.length *= this.DPI;
-		this.message.light.style.lineWidth *= this.DPI;
+		if (this.message) {
+			this.message.line.lineWidth *= this.DPI;
+			this.message.light.length *= this.DPI;
+			this.message.light.style.lineWidth *= this.DPI;
+		}
 	}
 
 	// OK
