@@ -96,3 +96,8 @@
     - mousemover `function` 鼠标移动事件
 
 
+
+
+### S.T.O
+
+你可以使用 [S.T.O](https://github.com/ektx/STO) 来快速导出你要的 SVG 地图数据.
