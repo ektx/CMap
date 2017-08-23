@@ -16,11 +16,28 @@
                 width: 100vw;
                 height: 100vh;
             }
+
+            .mes-box {
+                position: absolute;
+                z-index: 100;
+                width: 100px;
+                height: 100px;
+                border: 2px solid #538df7;
+                border-radius: 5px;
+                background: rgba(0, 0, 0, .6);
+                pointer-events: none;
+                transition: left .3s ease, top .3s ease, transform .4s ease;
+                transform: scale(0);
+            }
         </style>
     </head>
     <body>
         <!-- 存放你的地图位置信息区域 -->
         <div id="city-information-network"></div>
+        <div id="my-mes-box" class="mes-box">
+            <h1></h1>
+            <p></p>
+        </div>
 
     </body>
 
@@ -34,6 +51,7 @@
     // window.addEventListener('DOMContentLoaded', function() {
         //定义地图内部区域线条路径
         
+        let myTtp = document.getElementById('my-mes-box');
     
         let myMap = new CMap({
             el: '#city-information-network',
@@ -42,23 +60,23 @@
                 point: {
                     size: 5, 
                     message: 'all', // 点上信息, all 都有, auto 随机
-                    r: [2, 3],
-                    pop: true,
+                    r: [3, 5],
+                    pop: 3,
                     color: ['#fff', '#4fff5f'],
                     fun: function(p, a) {
                         // console.log(p, a)
                     }
                 },
-                cityName: {
-                    normal: {
-                        fillStyle: '#fff',
-                        font: "1em 'Microsoft Yahei'"
-                    },
-                    hover: {
-                        fillStyle: 'red',
-                        font: "1.5em 'Microsoft Yahei'"
-                    }
-                },
+                // cityName: {
+                //     normal: {
+                //         fillStyle: '#fff',
+                //         font: "1em 'Microsoft Yahei'"
+                //     },
+                //     hover: {
+                //         fillStyle: 'red',
+                //         font: "1.5em 'Microsoft Yahei'"
+                //     }
+                // },
                 style: {
                     lineWidth: 1,
                     strokeStyle: '#243e6a',
@@ -98,8 +116,15 @@
                 click: function(index, data) {
                     console.log( index, data )
                 },
-                mousemove: function(index, data){
-                    // console.log(index, data)
+                mousemove: function(index, data, event){
+
+                    if (index > -1) {
+                        myTtp.style.top = (event.clientY + 10) + 'px';
+                        myTtp.style.left = (event.clientX + 10) + 'px';
+                        myTtp.style.transform = 'scale(1)'
+                    } else {
+                        myTtp.style.transform = 'scale(0)'
+                    }
                 }
             }
         })
