@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>China - 综合示例</title>
+        <title></title>
         <style type="text/css">
             body, canvas, div {
                 margin: 0;
@@ -23,12 +23,8 @@
         <div id="city-information-network"></div>
 
     </body>
-
-    <!-- 组件代码 -->
     <script src="../js/cmap.js"></script>
-    <script src="data/china.js"></script>
-
-    <!-- 示例代码 -->
+    <script src="data/huaian.js"></script>
     <script>
     
     // window.addEventListener('DOMContentLoaded', function() {
@@ -41,42 +37,45 @@
                 data: citysArr,
                 point: {
                     size: 5, 
-                    message: 'all', // 点上信息, all 都有, auto 随机
-                    r: [2, 3],
-                    pop: true,
+                    message: 'auto', // 点上信息, all 都有, auto 随机
+                    r: [4, 9],
+                    pop: 3,
+                    popSpeed: 500,
                     color: ['#fff', '#4fff5f'],
-                    fun: function(p, a) {
-                        // console.log(p, a)
+                    fun: (index, ponits)=> {
+                        // console.log(index, ponits)
                     }
                 },
                 cityName: {
                     normal: {
                         fillStyle: '#fff',
-                        font: "1em 'Microsoft Yahei'"
+                        font: "10px Microsoft Yahei"
                     },
                     hover: {
-                        fillStyle: 'red',
-                        font: "1.5em 'Microsoft Yahei'"
+                        fillStyle: '#4fff5f',
+                        font: "15px Microsoft Yahei"
                     }
                 },
                 style: {
                     lineWidth: 1,
-                    strokeStyle: '#243e6a',
-                    fillStyle: 'rgba(0, 0, 0, .4)',
-                    hoveColor: '#243e6a'
+                    strokeStyle: '#514DCF',
+                    fillStyle: '#0C1D50',
+                    hoveColor: '#514DCF'
                 }
             },
             cityArea: {
                 data: araeData,
                 style: {
                     lineWidth: 3,
-                    strokeStyle: '#538df7'
+                    strokeStyle: '#538df7',
+                    shadowBlur: 0,
+                    shadowColor: '#0C1D50',
+                    shadowOffsetX: 5,
+                    shadowOffsetY: 10
                 }
             },
             message: {
-                direction: 'get', // 流向 [send|get]
-                willback: true,    // 是否返回
-                backColor: '#f90', // 返回时颜色
+                direction: 'send', // 流向 [send|get]
                 speed: 200, // 速度
                 light: {
                     length: 15, // 信息条的长度比
@@ -86,8 +85,8 @@
                     }
                 },
                 center: {
-                    x: 370,
-                    y: 170
+                    x: 300,
+                    y: 280
                 },
                 line: {
                     lineWidth: 1,
