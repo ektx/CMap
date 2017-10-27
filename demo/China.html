@@ -39,6 +39,7 @@
             el: '#city-information-network',
             city: {
                 data: citysArr,
+                selectedMode: 'multiple',
                 point: {
                     size: 5, 
                     message: 'all', // 点上信息, all 都有, auto 随机
@@ -55,7 +56,7 @@
                         font: "1em 'Microsoft Yahei'"
                     },
                     hover: {
-                        fillStyle: 'red',
+                        fillStyle: '#4fff5f',
                         font: "1.5em 'Microsoft Yahei'"
                     }
                 },
@@ -63,7 +64,8 @@
                     lineWidth: 1,
                     strokeStyle: '#243e6a',
                     fillStyle: 'rgba(0, 0, 0, .4)',
-                    hoveColor: '#243e6a'
+                    hoverColor: 'rgba(83, 141, 247, .2)',
+                    holdColor: 'rgba(83, 141, 247, .4)'
                 }
             },
             cityArea: {

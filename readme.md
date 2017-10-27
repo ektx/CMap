@@ -45,6 +45,7 @@
 
 - el 地图存放Dom
 - city 地图中的各区块配置信息 
+    - selectedMode `false(默认) | single(单选) multiple(多选)` `New` 地区选择模式
     - data 所有区块信息,具体格式可以查看demo示例
         - name 下辖名称(非必填)
         - map  下辖路径
@@ -69,6 +70,8 @@
         - lineWidth   `number`      区块的分隔线粗细 
         - strokeStyle `color`       指定分隔线的颜色
         - fillStyle        `color`       区块的背景色
+        - hoverColor       `color`       鼠标放上时颜色 `Fixed`
+        - holdColor        `color`       选中颜色效果`New`                
 - cityArea      地图外边框绘制信息  
     - data      地图边界点集合            
     - style     样式,具体参考 canvas 的参数 

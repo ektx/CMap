@@ -35,6 +35,7 @@
             el: '#city-information-network',
             city: {
                 data: citysArr,
+                selectedMode: 'single',
                 point: {
                     size: 5, 
                     message: 'auto', // 点上信息, all 都有, auto 随机
@@ -60,7 +61,8 @@
                     lineWidth: 1,
                     strokeStyle: '#514DCF',
                     fillStyle: '#0C1D50',
-                    hoveColor: '#514DCF'
+                    hoverColor: '#514DCF',
+                    holdColor: '#514DCF'
                 }
             },
             cityArea: {

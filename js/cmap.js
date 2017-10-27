@@ -2,9 +2,9 @@
 	cmap
 	地图信息流向图
 	-----------------------------------
-	@version: 0.6.0
+	@version: 0.7.0
 	@author: ektx
-	@date: 2017-5-13
+	@date: 2017-10-27
 
 	------------------------------------
 	API
@@ -54,7 +54,11 @@ class CMap {
 		this.Mirror = {
 			ele : {},
 			canvas: {}
-		}
+		},
+
+		// 选择模式 single(单选) multiple(多选) false(默认,不可选择)
+		this.selectedMode = false,
+		this.selectedArr = []
 	}
 
 
@@ -119,9 +123,21 @@ class CMap {
 			}
 		}
 
-		if( ctx.isPointInPath( this.currentX, this.currentY)){
-			ctx.fillStyle = _options.style.hoveColor;
+		if( ctx.isPointInPath( this.currentX, this.currentY) ){
+
+			ctx.fillStyle = _options.style.hoverColor;
+			
+			if (_options.style.hold && _options.style.holdColor) {
+				ctx.fillStyle = _options.style.holdColor;
+			}
+
 			this.inAreaCtx = _options.index;
+		}
+
+		if (_options.style.hold) {
+			if (_options.style.holdColor) {
+				ctx.fillStyle = _options.style.holdColor;
+			}
 		}
 
 		// 取随机点
@@ -171,17 +187,10 @@ class CMap {
 				let x = 0;
 				let y = 0;
 
-				if ( /-|C/g.test( _obj.data.toString()) ) {
-					do {
-						x = parseFloat((_obj.x[0] + _obj.width * Math.random()).toFixed(2));
-						y = parseFloat((_obj.y[0] + _obj.height * Math.random()).toFixed(2));
-					} while (!ctx.isPointInPath(new Path2D(_obj.data), x, y));
-				} else {
-					do {
-						x = parseFloat((_obj.x[0] + _obj.width * Math.random()).toFixed(2));
-						y = parseFloat((_obj.y[0] + _obj.height * Math.random()).toFixed(2));
-					} while (!ctx.isPointInPath(x, y));
-				}
+				do {
+					x = parseFloat((_obj.x[0] + _obj.width * Math.random()).toFixed(2));
+					y = parseFloat((_obj.y[0] + _obj.height * Math.random()).toFixed(2));
+				} while (!ctx.isPointInPath(x, y));
 
 				result.push({
 					x: x,
@@ -444,7 +453,7 @@ class CMap {
 
 			let _ = this.areas[i];
 
-			if( this.inAreaCtx == i ){
+			if( this.inAreaCtx == i  || this.areas[i].style.hold){
 				let _style = _.cityName.hover ? _.cityName.hover : _.cityName.normal;
 
 				_style.globalCompositeOperation = 'source-over';
@@ -540,34 +549,16 @@ class CMap {
 			
 			__style.globalCompositeOperation = 'destination-over';
 
-			// SVG
-			if (this.minScale > 1 && /-|C/g.test(n.data.toString()) ) {
-				if (! ('drawLine' in n.warn)) {
+			for (let x = 0, y = n.data.length; x < y; x++) {
 
-					let warnMeg = 'SVG Path 数据在缩放情况下不绘制';
-					n.warn.drawLine = warnMeg;
-					console.warn( warnMeg );
-				}
-			
-			} 
-			// point
-			else {
-
-				for (let x = 0, y = n.data.length; x < y; x++) {
-
-					ctx = this.drawLine({
-						line: n.data[x],
-						style: __style,
-						index: i
-					}, ctx, true)
-
-				}
+				ctx = this.drawLine({
+					line: n.data[x],
+					style: __style,
+					index: i
+				}, ctx, true)
 
 			}
-
 		}
-
-
 	}
 
 	cityMessageLineMirror( point, ctx ) {
@@ -811,11 +802,37 @@ class CMap {
 
 		// 地图上点击事件
 		this.ele.addEventListener('click', function(e) {
+			let _index = _self.inAreaCtx;
+			
+			_self.lazyAnimate()
 			// 在地图区域内
-			if (_self.inAreaCtx > -1) {
+			if (_index > -1) {
+
+				// 是否有选择功能判断
+				if (_self.selectedMode) {
+
+					if (_self.selectedMode === 'single' || _self.selectedMode === 'multiple') {
+
+						if (_self.selectedMode === 'single') {
+
+							// 删除之前的选择
+							if (_self.selectedArr.length)
+								_self.areas[_self.selectedArr.pop()].style.hold = false;
+
+							// 添加当前地区索引
+							_self.selectedArr.push(_index)
+						} 
+						// 切换选中效果
+						_self.areas[_index].style.hold = !_self.areas[_index].style.hold
+						_self.ctx[0].clearRect(0, 0, _self.ctxW, _self.ctxH);
+						_self.lazyAnimate()
+					} else {
+						console.warn(`模式输入错误!正确的为: 'single' 或 'multiple'`)
+					}
+				}
 
 				if (_self.callback && _self.callback.click) 
-					_self.callback.click( _self.inAreaCtx , _self.areas[_self.inAreaCtx], e );
+					_self.callback.click( _index , _self.areas[_index], e );
 			}
 		})
 	}
@@ -918,12 +935,20 @@ class CMap {
 
 			this.point = cityInfo.point;
 			this.pointArr = [];
-			this.style = cityInfo.style;
+			this.style = Object.assign({}, cityInfo.style);
 			this.warn = {};  // 保存错误信息
-			this.origin = obj
+			this.origin = obj;
+
+			// 添加是否选中状态
+			if (!('hold' in this.style)) {
+				this.style.hold = false
+			}
 		};
 
 		if (this.canScale) this.autoSize();
+
+		// 设置地区选择模式
+		this.selectedMode = this.options.city.selectedMode;
 
 		for (let i = 0, l = this.options.city.data.length; i < l; i++) {
 			let _data = this.options.city.data[i];
