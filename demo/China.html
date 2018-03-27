@@ -16,12 +16,20 @@
                 width: 100vw;
                 height: 100vh;
             }
+
+            input {
+                position: absolute;
+                top: 0;
+                left: 0;
+                z-index: 10000;
+            }
         </style>
     </head>
     <body>
         <!-- 存放你的地图位置信息区域 -->
         <div id="city-information-network"></div>
 
+        <input type="range" max="10" min="1" value="1" step=".1">
     </body>
 
     <!-- 组件代码 -->
@@ -32,68 +40,95 @@
     <script>
     
     // window.addEventListener('DOMContentLoaded', function() {
-        //定义地图内部区域线条路径
-        
-    
         let myMap = new CMap({
             el: '#city-information-network',
-            city: {
-                data: citysArr,
-                selectedMode: 'multiple',
-                point: {
-                    size: 5, 
-                    message: 'all', // 点上信息, all 都有, auto 随机
-                    r: [2, 3],
-                    pop: true,
-                    color: ['#fff', '#4fff5f'],
-                    fun: function(p, a) {
-                        // console.log(p, a)
+            map: {
+                // 边界
+                boundary: {
+                    // 边界数据
+                    data: araeData,
+                    // 样式
+                    style: {
+                        lineWidth: 5,
+                        strokeStyle: '#538df7',
+                        fillStyle: 'transparent'
                     }
                 },
-                cityName: {
-                    normal: {
-                        fillStyle: '#fff',
-                        font: "1em 'Microsoft Yahei'"
+                // 块
+                blocks: {
+                    // 块数据
+                    data: citysArr,
+                    // 是否可以选择 [multiple|single|false(默认)]
+                    selectedMode: 'multiple',
+                    point: {
+                        // 设置是否在区块上显示点 [false(默认)|true]
+                        status: true,
+                        // 是否要有迁徙效果, all 都有, auto 随机
+                        // * 设置了此，则默认会有点
+                        migration: 'all', 
                     },
-                    hover: {
-                        fillStyle: '#4fff5f',
-                        font: "1.5em 'Microsoft Yahei'"
+                    cityName: {
+                        normal: {
+                            fillStyle: '#fff',
+                            font: "1em 'Microsoft Yahei'"
+                        },
+                        hover: {
+                            fillStyle: '#4fff5f',
+                            font: "1.5em 'Microsoft Yahei'"
+                        }
+                    },
+                    style: {
+                        lineWidth: 1,
+                        strokeStyle: '#243e6a',
+                        fillStyle: 'rgba(0, 0, 0, .4)',
+                        hoverColor: 'rgba(83, 141, 247, .2)',
+                        holdColor: 'rgba(83, 141, 247, .4)'
                     }
-                },
-                style: {
-                    lineWidth: 1,
-                    strokeStyle: '#243e6a',
-                    fillStyle: 'rgba(0, 0, 0, .4)',
-                    hoverColor: 'rgba(83, 141, 247, .2)',
-                    holdColor: 'rgba(83, 141, 247, .4)'
                 }
             },
-            cityArea: {
-                data: araeData,
-                style: {
-                    lineWidth: 3,
-                    strokeStyle: '#538df7'
-                }
-            },
-            message: {
+            // 迁徙设置
+            migration: {
                 direction: 'get', // 流向 [send|get]
-                willback: true,    // 是否返回
-                backColor: '#f90', // 返回时颜色
-                speed: 200, // 速度
-                light: {
+                willback: {
+                    status: true,     // 是否返回
+                    backColor: '#f90' // 返回时颜色
+                },
+                // 中心
+                center: {
+                    x: 370,
+                    y: 170
+                },
+                // 轨道
+                track: {
+                    lineWidth: 1,
+                    strokeStyle: 'rgba(83, 141, 247, .4)'
+                },
+                // 移动点
+                point: {
+                    speed: 200, // 速度
                     length: 15, // 信息条的长度比
                     style: {
                         lineWidth: 2, // 信息条的宽
                         strokeStyle: '#408cff' // 信息条的颜色
                     }
-                },
-                center: {
-                    x: 370,
-                    y: 170
-                },
-                line: {
-                    lineWidth: 1,
-                    strokeStyle: 'rgba(83, 141, 247, .4)'
+                }
+            },
+            // 区块上点统一设置
+            blocksPoint: {
+                // 个数
+                size: {
+                    min: 1,
+                    max: 5
+                }, 
+                // 大小，半径
+                r: [2, 3],
+                // 是否要有波纹
+                pop: true,
+                // 点的颜色
+                color: ['#fff', '#4fff5f'],
+                // 处理函数
+                fun: function(p, a) {
+                    // console.log(p, a)
                 }
             },
             callback: {
@@ -107,6 +142,21 @@
         })
 
         myMap.init()
+
+        let rng = document.querySelector('input')
+        rng.addEventListener('mousedown', ()=> {
+            rng.addEventListener('mousemove', rngEvt)
+        }, false)
+        rng.addEventListener('mouseup', () => {
+            rng.removeEventListener('mousemove', rngEvt)
+        }, false)
+
+        function rngEvt () {
+            myMap.scaleMap(rng.value)
+        }
+
+        // 取生成的值
+        rng.value = myMap.mapScale
 
     // })
     </script>
