@@ -27,7 +27,7 @@ class CMap {
 		// hash ID
 		this.colorsHash = {}
 
-		this.mouseDownEvt = false
+		this.animatePause = false
 	}
 
 	/**
@@ -445,7 +445,7 @@ class CMap {
 		})
 
 		this.ele.addEventListener('mousedown', evt => {
-			this.mouseDownEvt = true
+			this.animatePause = true
 			mouseMove.hold = true
 			mouseMove.x = evt.offsetX * this.DPI
 			mouseMove.y = evt.offsetY * this.DPI
@@ -458,7 +458,7 @@ class CMap {
 		})
 
 		this.ele.addEventListener('mouseup', evt => {
-			this.mouseDownEvt = false
+			this.animatePause = false
 			this.mapTranslateX = mapX //this.DPI
 			this.mapTranslateY = mapY //this.DPI
 
@@ -475,12 +475,12 @@ class CMap {
 	}
 
 	animate () {
-		if (!this.mouseDownEvt) {
-			this.clearCanvasCtx()
-			this.drawAllBoundary() 
-			window.requestAnimationFrame(() => {
-				this.animate()
-			})
+		if (!this.animatePause) {
+			// this.clearCanvasCtx()
+			// this.drawAllBoundary() 
+			// window.requestAnimationFrame(() => {
+			// 	this.animate()
+			// })
 		}
 	}
 
