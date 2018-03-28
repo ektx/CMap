@@ -21,6 +21,11 @@ class CMap {
 		// 地图移动距离
 		this.mapTranslateX = 0
 		this.mapTranslateY = 0
+		// 缩放事件
+		this.scaleEvtStatus = false
+		this.mouseMoveStatus = false
+		// hash ID
+		this.colorsHash = {}
 	}
 
 	/**
@@ -131,7 +136,7 @@ class CMap {
 		this.ctx = this.mainCanvas.getContext('2d')
 		this.hitCtx = this.hitMainCanvas.getContext('2d')
 
-		this.ele.appendChild( this.hitMainCanvas )
+		// this.ele.appendChild( this.hitMainCanvas )
 		this.ele.appendChild( this.mainCanvas )
 	}
 
@@ -173,6 +178,8 @@ class CMap {
 			}
 		})
 
+		this.setColorsHashID(boundary)
+		
 		// 设置最小缩放
 		this.options.map.center = {
 			x: this.hitMainCanvas.width / 2,
@@ -183,11 +190,14 @@ class CMap {
 			this.hitMainCanvas.width / boundary.width, 
 			this.hitMainCanvas.height / boundary.height
 		)
-		
-		console.log(this.options)
+
+		this.setToMapCenter()
+
+		boundary.mapData = this.autoSizeData( boundary.data )
 	}
 
 	autoSizeData (arr) {
+		console.log('a')
 		let _boundary = this.options.map.boundary
 		let _toMapCenter = _boundary.toMapCenter
 		let getScaleData = (val, index) => {
@@ -218,31 +228,32 @@ class CMap {
 	}
 
 	drawBoundary () {
-		this.options.map.boundary.mapData = this.autoSizeData( this.options.map.boundary.data )
 
 		let boundary = this.options.map.boundary
 
 		for (let i = 0, l = boundary.mapData.length;i < l; i++) {
 			this.drwaLine(
+				this.ctx,
 				boundary.mapData[i],
 				boundary.style
+			)
+
+			this.drwaLine(
+				this.hitCtx,
+				boundary.mapData[i],
+				boundary.hitStyle
 			)
 		}
 	}
 
-	setCtxState (styleOption, ctx) {
-		ctx.save()
-		ctx.beginPath()
-
-		for (let i in styleOption) {
-			ctx[i] = styleOption[i]
-		}
-		
-		return ctx
-	}
-
-	drwaLine (data, style) {
-		let ctx = this.setCtxState(style, this.ctx)
+	/**
+	 * 
+	 * @param {Object} ctx - canvas 对象
+	 * @param {Array} data - 绘制的线
+	 * @param {Object} style - 绘制的样式
+	 */
+	drwaLine (ctx, data, style) {
+		ctx = this.setCtxState(style, ctx)
 
 		for (let i = 0, l = data.length; i < l; i+=2) {
 			let x = data[i]
@@ -260,24 +271,77 @@ class CMap {
 		ctx.restore()
 	}
 
+	// 中心坐标
+	drawCenterLine () {
+		this.ctx.beginPath()
+		this.ctx.strokeStyle = 'red'
+		this.ctx.moveTo(0, this.mainCanvas.height/2)
+		this.ctx.lineTo(this.mainCanvas.width, this.mainCanvas.height/2)
+		this.ctx.stroke()
+
+		this.ctx.beginPath()
+		this.ctx.strokeStyle = 'red'
+		this.ctx.moveTo(this.mainCanvas.width/2,0)
+		this.ctx.lineTo(this.mainCanvas.width/2, this.mainCanvas.height)
+		this.ctx.stroke()
+	}
+
 	clearCanvasCtx () {
 		this.ctx.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height)
 		this.hitCtx.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height)
+
+	}
+
+	setCtxState (styleOption, ctx) {
+		ctx.save()
+		ctx.beginPath()
+
+		for (let i in styleOption) {
+			ctx[i] = styleOption[i]
+		}
+		
+		return ctx
 	}
 
 	setMapScale (val) {
 		this.mapScale = val
 		this.setToMapCenter()
+		this.options.map.boundary.mapData = this.autoSizeData( this.options.map.boundary.data )
+		this.scaleEvtStatus = true
 	}
 
 	setToMapCenter () {
 		let boundary = this.options.map.boundary
-		console.log(this.mapTranslateX)
+
 		boundary.toMapCenter = {
 			x: this.mapTranslateX + (this.mainCanvas.width - boundary.width * this.mapScale) / 2,
 			y: this.mapTranslateY + (this.mainCanvas.height - boundary.height * this.mapScale) / 2
 		}
-		console.log(boundary.toMapCenter)
+	}
+
+	setColorsHashID (data) {
+		while (true) {
+			const colorKey = this.getRandomColor()
+
+			if (!this.colorsHash[colorKey]) {
+				this.colorsHash[colorKey] = data
+				data.hitStyle = {
+					fillStyle: colorKey
+				}
+				return
+			}
+		}
+	}
+
+	getRandomColor () {
+		const r = Math.round(Math.random() * 255)
+		const g = Math.round(Math.random() * 255)
+		const b = Math.round(Math.random() * 255)
+		return `rgb(${r},${g},${b})`
+	}
+
+	hasSameHashColor (color, shape) {
+		return shape.color === color
 	}
 
 	/**
@@ -285,15 +349,23 @@ class CMap {
 	 * @param {Number} val 缩放大小
 	 */
 	scaleMap (val) {
+		
+		if (Array.isArray(this.mouseMoveStatus)) {
+			this.mapTranslateX += this.mouseMoveStatus[0]
+			this.mapTranslateY += this.mouseMoveStatus[1]
+			this.mouseMoveStatus = false
+		}
+
 		this.setMapScale(val)
 		this.clearCanvasCtx()
 
-		this.drawBoundary()
+		window.requestAnimationFrame(() => this.drawBoundary() )
 	}
 
 	event () {
 		let mapX = 0
 		let mapY = 0
+		let oldArr = []
 		let mouseMove = {
 			hold: false,
 			x: 0,
@@ -309,11 +381,19 @@ class CMap {
 				mapX = x - mouseMove.x + this.mapTranslateX
 				mapY = y - mouseMove.y + this.mapTranslateY
 
-				console.log(mapX)
 				this.clearCanvasCtx()
 				this.ctx.translate(mapX, mapY)
+				this.hitCtx.translate(mapX, mapY)
 				this.drawBoundary()
 				this.ctx.setTransform(1, 0, 0, 1, 0, 0)
+				this.hitCtx.setTransform(1, 0, 0, 1, 0, 0)
+			}
+
+			const pixel = this.hitCtx.getImageData(x, y, 1, 1).data
+			const color = `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`
+			const shape = this.colorsHash[color]
+			if (shape) {
+				// console.log(shape)
 			}
 		})
 
@@ -322,13 +402,25 @@ class CMap {
 			mouseMove.hold = true
 			mouseMove.x = evt.offsetX * this.DPI
 			mouseMove.y = evt.offsetY * this.DPI
+			
+			if (this.scaleEvtStatus) {
+				oldArr = [this.mapTranslateX, this.mapTranslateY]
+				this.mapTranslateX = 0
+				this.mapTranslateY = 0
+			}
 		})
 
 		this.ele.addEventListener('mouseup', evt => {
 			this.mouseDown = false
-			this.mapTranslateX = mapX
-			this.mapTranslateY = mapY
-			console.log('End', mapX, mapY)
+			this.mapTranslateX = mapX //this.DPI
+			this.mapTranslateY = mapY //this.DPI
+
+			// 在缩放过的情况下
+			if (this.scaleEvtStatus) {
+				this.scaleEvtStatus = false
+				this.mouseMoveStatus = oldArr // 坐标发生变化前值
+			}
+			// console.log('End', mapX, mapY, this.mapTranslateX)
 		})
 	}
 
@@ -337,7 +429,7 @@ class CMap {
 		this.createMapElement()
 		
 		this.setBoundary()
-		this.setToMapCenter()
+		
 
 		this.drawBoundary()
 
