@@ -26,6 +26,8 @@ class CMap {
 		this.mouseMoveStatus = false
 		// hash ID
 		this.colorsHash = {}
+
+		this.mouseDownEvt = false
 	}
 
 	/**
@@ -145,13 +147,12 @@ class CMap {
 		this.eleBCR = this.ele.getBoundingClientRect()
 	}
 
-	setBoundary () {
-		let boundary = this.options.map.boundary
+	getMapDataInfo (data) {
 		let xArr = []
 		let yArr = []
-
-		for (let i = 0,l = boundary.data.length; i < l; i++) {
-			let _data = this.computedData(boundary.data[i])
+		
+		for (let i = 0, l = data.length; i < l; i++) {
+			let _data = this.computedData(data[i])
 			xArr.push(_data.x.start, _data.x.end)
 			yArr.push(_data.y.start, _data.y.end)
 		}
@@ -163,7 +164,7 @@ class CMap {
 		let width = xEnd - xStart
 		let height = yEnd - yStart
 
-		Object.assign(boundary, {
+		return {
 			width,
 			height,
 			x: {
@@ -176,7 +177,13 @@ class CMap {
 				end: yEnd,
 				center: yStart + height / 2
 			}
-		})
+		}
+	}
+
+	setBoundary () {
+		let boundary = this.options.map.boundary
+
+		Object.assign(boundary, this.getMapDataInfo(boundary.data))
 
 		this.setColorsHashID(boundary)
 		
@@ -196,8 +203,31 @@ class CMap {
 		boundary.mapData = this.autoSizeData( boundary.data )
 	}
 
+	
+	setBlocks (updateHash) {
+		const blocks = this.options.map.blocks
+		const areas = blocks.data
+
+		for (let i = 0, l = areas.length; i < l; i++) {
+			let _data = areas[i]
+
+			if (!updateHash) {
+				Object.assign(_data, this.getMapDataInfo(_data.map), {
+					style: blocks.style,
+					index: i,
+					over: false,
+					hold: false
+				})
+
+				this.setColorsHashID(_data)
+			}
+
+			_data.mapData = this.autoSizeData( _data.map )
+
+		}
+	}
+
 	autoSizeData (arr) {
-		console.log('a')
 		let _boundary = this.options.map.boundary
 		let _toMapCenter = _boundary.toMapCenter
 		let getScaleData = (val, index) => {
@@ -227,23 +257,38 @@ class CMap {
 		return loop( arr )
 	}
 
-	drawBoundary () {
+	drawBoundary (Obj) {
 
-		let boundary = this.options.map.boundary
-
-		for (let i = 0, l = boundary.mapData.length;i < l; i++) {
+		for (let i = 0, l = Obj.mapData.length;i < l; i++) {
 			this.drwaLine(
 				this.ctx,
-				boundary.mapData[i],
-				boundary.style
+				Obj.mapData[i],
+				Obj.style
 			)
 
 			this.drwaLine(
 				this.hitCtx,
-				boundary.mapData[i],
-				boundary.hitStyle
+				Obj.mapData[i],
+				Obj.hitStyle
 			)
 		}
+	}
+
+	drawBlockBoundary () {
+		let blocks = this.options.map.blocks
+
+		for (let i = 0,l = blocks.data.length; i < l; i++) {
+			let _BD = blocks.data[i]
+
+			this.drawBoundary( _BD )
+		}
+	}
+
+	drawAllBoundary () {
+		// 边界
+		this.drawBoundary(this.options.map.boundary)
+		// 区
+		this.drawBlockBoundary()
 	}
 
 	/**
@@ -306,7 +351,9 @@ class CMap {
 	setMapScale (val) {
 		this.mapScale = val
 		this.setToMapCenter()
+		// 重新计算边界
 		this.options.map.boundary.mapData = this.autoSizeData( this.options.map.boundary.data )
+		this.setBlocks(true)
 		this.scaleEvtStatus = true
 	}
 
@@ -359,7 +406,7 @@ class CMap {
 		this.setMapScale(val)
 		this.clearCanvasCtx()
 
-		window.requestAnimationFrame(() => this.drawBoundary() )
+		window.requestAnimationFrame(() => this.drawAllBoundary() )
 	}
 
 	event () {
@@ -384,7 +431,7 @@ class CMap {
 				this.clearCanvasCtx()
 				this.ctx.translate(mapX, mapY)
 				this.hitCtx.translate(mapX, mapY)
-				this.drawBoundary()
+				this.drawAllBoundary()
 				this.ctx.setTransform(1, 0, 0, 1, 0, 0)
 				this.hitCtx.setTransform(1, 0, 0, 1, 0, 0)
 			}
@@ -393,12 +440,12 @@ class CMap {
 			const color = `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`
 			const shape = this.colorsHash[color]
 			if (shape) {
-				// console.log(shape)
+				console.log(shape)
 			}
 		})
 
 		this.ele.addEventListener('mousedown', evt => {
-			this.mouseDown = true
+			this.mouseDownEvt = true
 			mouseMove.hold = true
 			mouseMove.x = evt.offsetX * this.DPI
 			mouseMove.y = evt.offsetY * this.DPI
@@ -411,7 +458,7 @@ class CMap {
 		})
 
 		this.ele.addEventListener('mouseup', evt => {
-			this.mouseDown = false
+			this.mouseDownEvt = false
 			this.mapTranslateX = mapX //this.DPI
 			this.mapTranslateY = mapY //this.DPI
 
@@ -420,8 +467,21 @@ class CMap {
 				this.scaleEvtStatus = false
 				this.mouseMoveStatus = oldArr // 坐标发生变化前值
 			}
+			
+			this.scaleMap(this.mapScale)
+			this.animate()
 			// console.log('End', mapX, mapY, this.mapTranslateX)
 		})
+	}
+
+	animate () {
+		if (!this.mouseDownEvt) {
+			this.clearCanvasCtx()
+			this.drawAllBoundary() 
+			window.requestAnimationFrame(() => {
+				this.animate()
+			})
+		}
 	}
 
 	init () {
@@ -429,9 +489,9 @@ class CMap {
 		this.createMapElement()
 		
 		this.setBoundary()
-		
+		this.setBlocks()
 
-		this.drawBoundary()
+		this.animate()
 
 		this.event()
 	}
