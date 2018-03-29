@@ -26,8 +26,10 @@ class CMap {
 		this.mouseMoveStatus = false
 		// hash ID
 		this.colorsHash = {}
-
-		this.animatePause = false
+		// 暂停动画事件
+		this.animatePause = true
+		// 当前鼠标移入区索引
+		this.mouseMoveIndex = -1
 	}
 
 	/**
@@ -208,12 +210,19 @@ class CMap {
 		const blocks = this.options.map.blocks
 		const areas = blocks.data
 
+		const selfStyle = function (style) {
+			// this.style = style
+			for (let i in style) {
+				this[i] = style[i]
+			}
+		}
+
 		for (let i = 0, l = areas.length; i < l; i++) {
 			let _data = areas[i]
 
 			if (!updateHash) {
 				Object.assign(_data, this.getMapDataInfo(_data.map), {
-					style: blocks.style,
+					style: new selfStyle(blocks.style),
 					index: i,
 					over: false,
 					hold: false
@@ -434,14 +443,31 @@ class CMap {
 				this.drawAllBoundary()
 				this.ctx.setTransform(1, 0, 0, 1, 0, 0)
 				this.hitCtx.setTransform(1, 0, 0, 1, 0, 0)
+			} else {
+				const pixel = this.hitCtx.getImageData(x, y, 1, 1).data
+				const color = `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`
+				const shape = this.colorsHash[color]
+				const _blocks = this.options.map.blocks
+				const _callback = this.options.callback
+
+				// 恢复之前鼠标移入对象效果
+				if (this.mouseMoveIndex > -1) {
+					_blocks.data[this.mouseMoveIndex].style.fillStyle = _blocks.style.fillStyle
+					this.mouseMoveIndex = -1
+				}
+
+				if (shape) {
+					_blocks.data[shape.index].style.fillStyle = _blocks.style.hoverColor
+					this.mouseMoveIndex = shape.index
+
+					if (_callback && _callback.hasOwnProperty('mousemove'))
+						_callback.mousemove(evt, shape)
+				}
+
+				this.clearCanvasCtx()
+				this.drawAllBoundary()
 			}
 
-			const pixel = this.hitCtx.getImageData(x, y, 1, 1).data
-			const color = `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`
-			const shape = this.colorsHash[color]
-			if (shape) {
-				console.log(shape)
-			}
 		})
 
 		this.ele.addEventListener('mousedown', evt => {
@@ -458,7 +484,7 @@ class CMap {
 		})
 
 		this.ele.addEventListener('mouseup', evt => {
-			this.animatePause = false
+			// this.animatePause = false
 			this.mapTranslateX = mapX //this.DPI
 			this.mapTranslateY = mapY //this.DPI
 
@@ -470,17 +496,17 @@ class CMap {
 			
 			this.scaleMap(this.mapScale)
 			this.animate()
-			// console.log('End', mapX, mapY, this.mapTranslateX)
+			console.log('End', mapX, mapY, this.mapTranslateX)
 		})
 	}
 
 	animate () {
 		if (!this.animatePause) {
-			// this.clearCanvasCtx()
-			// this.drawAllBoundary() 
-			// window.requestAnimationFrame(() => {
-			// 	this.animate()
-			// })
+			this.clearCanvasCtx()
+			this.drawAllBoundary() 
+			window.requestAnimationFrame(() => {
+				this.animate()
+			})
 		}
 	}
 
@@ -491,7 +517,7 @@ class CMap {
 		this.setBoundary()
 		this.setBlocks()
 
-		this.animate()
+		this.drawAllBoundary()
 
 		this.event()
 	}
