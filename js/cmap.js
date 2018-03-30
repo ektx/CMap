@@ -538,6 +538,10 @@ class CMap {
 						if (_selectedMode === 'multiple') {
 							this.holdBlocks.push(shape.index)
 						} else if (_selectedMode === 'single') {
+							if (this.holdBlocks.length) {
+								_blocks.data[this.holdBlocks[0]].style.fillStyle = _blocks.style.fillStyle
+							}
+
 							this.holdBlocks = [shape.index]
 						}
 					}
@@ -546,7 +550,7 @@ class CMap {
 						_blocks.data[val].style.fillStyle = _blocks.style.holdColor
 					})
 				})
-				
+
 				this.mouseMoveStatus = oldArr 
 				this.scaleMap(this.mapScale)
 			}
