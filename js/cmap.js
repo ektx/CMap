@@ -38,7 +38,7 @@ class CMap {
 	 * 质点中心
 	 * @param {Array} arr - 数组
 	 */
-	getCentroid( arr ) {
+	getCentroid ( arr ) {
 		let twoTimesSignedArea = 0
 	    let cxTimes6SignedArea = 0
 	    let cyTimes6SignedArea = 0
@@ -154,11 +154,13 @@ class CMap {
 	getMapDataInfo (data) {
 		let xArr = []
 		let yArr = []
+		let centroid = {}
 		
 		for (let i = 0, l = data.length; i < l; i++) {
 			let _data = this.computedData(data[i])
 			xArr.push(_data.x.start, _data.x.end)
 			yArr.push(_data.y.start, _data.y.end)
+			centroid = _data.centroid
 		}
 
 		let xStart = Math.min.apply({}, xArr)
@@ -180,7 +182,8 @@ class CMap {
 				start: yStart,
 				end: yEnd,
 				center: yStart + height / 2
-			}
+			},
+			centroid
 		}
 	}
 
@@ -207,13 +210,14 @@ class CMap {
 		boundary.mapData = this.autoSizeData( boundary.data )
 	}
 
-	
+	/**
+	 * @param {Boolean} updateHash 是否要更新数据
+	 */
 	setBlocks (updateHash) {
 		const blocks = this.options.map.blocks
 		const areas = blocks.data
 
 		const selfStyle = function (style) {
-			// this.style = style
 			for (let i in style) {
 				this[i] = style[i]
 			}
@@ -227,7 +231,11 @@ class CMap {
 					style: new selfStyle(blocks.style),
 					index: i,
 					over: false,
-					hold: false
+					hold: false,
+					cityName: {
+						normal: new selfStyle(blocks.cityName.normal),
+						hover: new selfStyle(blocks.cityName.hover)
+					}
 				})
 
 				this.setColorsHashID(_data)
@@ -271,17 +279,25 @@ class CMap {
 	drawBoundary (Obj) {
 
 		for (let i = 0, l = Obj.mapData.length;i < l; i++) {
-			this.drwaLine(
+			this.drawLine(
 				this.ctx,
 				Obj.mapData[i],
 				Obj.style
 			)
 
-			this.drwaLine(
+			this.drawLine(
 				this.hitCtx,
 				Obj.mapData[i],
 				Obj.hitStyle
 			)
+
+			if (Obj.hasOwnProperty('cityName')) {
+				this.drawText(
+					this.ctx,
+					Obj,
+					Obj.cityName.normal
+				)
+			}
 		}
 	}
 
@@ -296,6 +312,7 @@ class CMap {
 	}
 
 	drawAllBoundary () {
+		this.clearCanvasCtx()
 		// 边界
 		this.drawBoundary(this.options.map.boundary)
 		// 区
@@ -308,7 +325,7 @@ class CMap {
 	 * @param {Array} data - 绘制的线
 	 * @param {Object} style - 绘制的样式
 	 */
-	drwaLine (ctx, data, style) {
+	drawLine (ctx, data, style) {
 		ctx = this.setCtxState(style, ctx)
 
 		for (let i = 0, l = data.length; i < l; i+=2) {
@@ -324,6 +341,28 @@ class CMap {
 		ctx.stroke()
 		ctx.fill()
 		ctx.closePath()
+		ctx.restore()
+	}
+
+	drawText (ctx, data, style) {
+		let toMapCenter = this.options.map.boundary.toMapCenter
+		let x = data.x.center * this.mapScale + toMapCenter.x
+		let y = data.y.center * this.mapScale + toMapCenter.y
+		let txt = data.name
+		
+		if (this.DPI > 1 && !style.reSet) {
+			let fontArr = style.font.match(/([\d\.]+)(px|em)/)
+			let szie = parseFloat(fontArr[1])
+			let unit = fontArr[2]
+			style.font = style.font.replace(fontArr[0], szie * this.DPI + unit)
+			style.reSet = true
+		}
+
+		ctx = this.setCtxState(style, ctx)
+		// ctx.textAlign = style.align || 'left'
+		ctx.textBaseline = "middle"		
+		ctx.fillText(txt, x, y)
+
 		ctx.restore()
 	}
 
@@ -415,7 +454,6 @@ class CMap {
 		}
 
 		this.setMapScale(val)
-		this.clearCanvasCtx()
 
 		window.requestAnimationFrame(() => this.drawAllBoundary() )
 	}
@@ -474,8 +512,6 @@ class CMap {
 				if (this.mouseMoveIndex > -1) {
 					_blocks.data[this.mouseMoveIndex].style.fillStyle = inHoldBlocks(this.mouseMoveIndex) ? _blocks.style.holdColor : _blocks.style.fillStyle
 					this.mouseMoveIndex = -1
-
-					this.clearCanvasCtx()
 					this.drawAllBoundary()
 				}
 
@@ -486,8 +522,6 @@ class CMap {
 					if (_callback && _callback.hasOwnProperty('mousemove')) {
 						_callback.mousemove(evt, shape)
 					}
-	
-					this.clearCanvasCtx()
 					this.drawAllBoundary()
 				})
 			}
@@ -559,7 +593,6 @@ class CMap {
 
 	animate () {
 		if (!this.animatePause) {
-			this.clearCanvasCtx()
 			this.drawAllBoundary() 
 			window.requestAnimationFrame(() => {
 				this.animate()
