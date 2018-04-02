@@ -18,6 +18,8 @@ class CMap {
 		this.ctx = null
 		this.hitCtx = null
 		this.mapScale = 1
+		// 文字与区块宽度比（文字最大可用大小）
+		this.textVsWidth = 2
 		// 地图移动距离
 		this.mapTranslateX = 0
 		this.mapTranslateY = 0
@@ -246,6 +248,44 @@ class CMap {
 		}
 	}
 
+	setDPIFontSize (font) {
+		let fontArr = font.match(/([\d\.]+)(px|em)/)
+		let szie = parseFloat(fontArr[1])
+		let unit = fontArr[2]
+		font = font.replace(fontArr[0], szie * this.DPI + unit)
+		return font
+	}
+
+	/**
+	 * 
+	 * @param {Boolean} notReSetFont 不需要重置字体
+	 */
+	setTextName (notReSetFont) {
+		let map = this.options.map
+		let blocks = map.blocks
+		let boundary = map.boundary
+		let cityName = blocks.cityName
+		let move = cityName.move || {x:0, y:0}
+		let toMapCenter = boundary.toMapCenter
+
+		// 设置文字与宽度显示比
+		this.textVsWidth = cityName ? cityName.txtVSWidth : this.textVsWidth
+
+		blocks.data.forEach(val => {
+			let _name = val.cityName
+			_name.x = (val.centroid.x - boundary.x.start) * this.mapScale + toMapCenter.x + move.x
+			_name.y = (val.centroid.y - boundary.y.start) * this.mapScale + toMapCenter.y + move.y
+
+			if (this.DPI > 1 && !notReSetFont) {
+				_name.normal.font = this.setDPIFontSize(_name.normal.font)
+
+				if (_name.hasOwnProperty('hover') && _name.hover.hasOwnProperty('font')) {
+					_name.hover.font = this.setDPIFontSize(_name.hover.font)
+				}
+			}
+		})
+	}
+
 	autoSizeData (arr) {
 		let _boundary = this.options.map.boundary
 		let _toMapCenter = _boundary.toMapCenter
@@ -277,7 +317,6 @@ class CMap {
 	}
 
 	drawBoundary (Obj) {
-
 		for (let i = 0, l = Obj.mapData.length;i < l; i++) {
 			this.drawLine(
 				this.ctx,
@@ -290,14 +329,6 @@ class CMap {
 				Obj.mapData[i],
 				Obj.hitStyle
 			)
-
-			if (Obj.hasOwnProperty('cityName')) {
-				this.drawText(
-					this.ctx,
-					Obj,
-					Obj.cityName.normal
-				)
-			}
 		}
 	}
 
@@ -317,6 +348,8 @@ class CMap {
 		this.drawBoundary(this.options.map.boundary)
 		// 区
 		this.drawBlockBoundary()
+		// 城市名
+		this.drawText()
 	}
 
 	/**
@@ -344,26 +377,31 @@ class CMap {
 		ctx.restore()
 	}
 
-	drawText (ctx, data, style) {
-		let toMapCenter = this.options.map.boundary.toMapCenter
-		let x = data.x.center * this.mapScale + toMapCenter.x
-		let y = data.y.center * this.mapScale + toMapCenter.y
-		let txt = data.name
+	drawText () {
+		let ctx = this.ctx
+		let Obj = this.options.map.blocks
 		
-		if (this.DPI > 1 && !style.reSet) {
-			let fontArr = style.font.match(/([\d\.]+)(px|em)/)
-			let szie = parseFloat(fontArr[1])
-			let unit = fontArr[2]
-			style.font = style.font.replace(fontArr[0], szie * this.DPI + unit)
-			style.reSet = true
+		for (let i = 0, l = Obj.data.length;i < l; i++) {
+			let city = Obj.data[i]
+			let style = city.cityName.normal
+			let width = city.width * this.mapScale
+			let txtWidth = ctx.measureText(city.name).width
+			
+			if (this.mouseMoveIndex === i) {
+				style = city.cityName.hover
+			}
+			
+			if (txtWidth < width / this.textVsWidth || city.index === this.mouseMoveIndex) {
+				let x = city.cityName.x
+				let y = city.cityName.y
+
+				ctx = this.setCtxState(style, this.ctx)
+				ctx.textAlign = city.cityName.align || 'center'
+				ctx.textBaseline = "middle"		
+				ctx.fillText(city.name, x, y)		
+				ctx.restore()
+			}
 		}
-
-		ctx = this.setCtxState(style, ctx)
-		// ctx.textAlign = style.align || 'left'
-		ctx.textBaseline = "middle"		
-		ctx.fillText(txt, x, y)
-
-		ctx.restore()
 	}
 
 	// 中心坐标
@@ -384,7 +422,6 @@ class CMap {
 	clearCanvasCtx () {
 		this.ctx.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height)
 		this.hitCtx.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height)
-
 	}
 
 	setCtxState (styleOption, ctx) {
@@ -393,8 +430,7 @@ class CMap {
 
 		for (let i in styleOption) {
 			ctx[i] = styleOption[i]
-		}
-		
+		}	
 		return ctx
 	}
 
@@ -404,6 +440,7 @@ class CMap {
 		// 重新计算边界
 		this.options.map.boundary.mapData = this.autoSizeData( this.options.map.boundary.data )
 		this.setBlocks(true)
+		this.setTextName(true)
 		this.scaleEvtStatus = true
 	}
 
@@ -512,7 +549,7 @@ class CMap {
 				if (this.mouseMoveIndex > -1) {
 					_blocks.data[this.mouseMoveIndex].style.fillStyle = inHoldBlocks(this.mouseMoveIndex) ? _blocks.style.holdColor : _blocks.style.fillStyle
 					this.mouseMoveIndex = -1
-					this.drawAllBoundary()
+					window.requestAnimationFrame(() => this.drawAllBoundary() )
 				}
 
 				checkInMap(x, y, shape => {
@@ -522,7 +559,7 @@ class CMap {
 					if (_callback && _callback.hasOwnProperty('mousemove')) {
 						_callback.mousemove(evt, shape)
 					}
-					this.drawAllBoundary()
+					window.requestAnimationFrame(() => this.drawAllBoundary() )
 				})
 			}
 
@@ -606,6 +643,7 @@ class CMap {
 		
 		this.setBoundary()
 		this.setBlocks()
+		this.setTextName()
 
 		this.drawAllBoundary()
 

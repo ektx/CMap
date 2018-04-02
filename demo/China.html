@@ -29,7 +29,7 @@
         <!-- 存放你的地图位置信息区域 -->
         <div id="city-information-network"></div>
 
-        <input type="range" max="10" min="1" value="1" step=".01">
+        <input type="range" max="20" min="1" value="1" step=".01">
     </body>
 
     <!-- 组件代码 -->
@@ -49,7 +49,7 @@
                     data: araeData,
                     // 样式
                     style: {
-                        lineWidth: 5,
+                        lineWidth: 8,
                         strokeStyle: '#538df7',
                         fillStyle: 'transparent'
                     }
@@ -77,13 +77,14 @@
                             font: "1.5em 'Microsoft Yahei'"
                         },
                         // 定位
-                        position: {
-                            x: 0,
-                            y: 0
-                        }
+                        move: {
+                            x: 10,
+                            y: 10
+                        },
+                        txtVSWidth: 3
                     },
                     style: {
-                        lineWidth: 1,
+                        lineWidth: 3,
                         strokeStyle: '#243e6a',
                         fillStyle: 'rgba(0, 0, 0, .4)',
                         hoverColor: 'rgba(83, 141, 247, .2)',
