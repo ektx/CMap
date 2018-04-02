@@ -61,8 +61,21 @@
                     // 是否可以选择 [multiple|single|false(默认)]
                     selectedMode: 'single',
                     point: {
-                        // 设置是否在区块上显示点 [false(默认)|true]
-                        status: true,
+                        // 个数
+                        size: {
+                            min: 1,
+                            max: 5
+                        }, 
+                        // 大小，半径
+                        r: [2, 3],
+                        // 是否要有波纹
+                        pop: true,
+                        // 点的颜色
+                        color: ['#fff', '#4fff5f'],
+                        // 处理函数
+                        fun: function(p, a) {
+                            // console.log(p, a)
+                        },
                         // 是否要有迁徙效果, all 都有, auto 随机
                         // * 设置了此，则默认会有点
                         migration: 'all', 
@@ -121,21 +134,7 @@
             },
             // 区块上点统一设置
             blocksPoint: {
-                // 个数
-                size: {
-                    min: 1,
-                    max: 5
-                }, 
-                // 大小，半径
-                r: [2, 3],
-                // 是否要有波纹
-                pop: true,
-                // 点的颜色
-                color: ['#fff', '#4fff5f'],
-                // 处理函数
-                fun: function(p, a) {
-                    // console.log(p, a)
-                }
+                
             },
             callback: {
                 click: function(index, data) {

@@ -189,6 +189,60 @@ class CMap {
 		}
 	}
 
+	// 返回2个数之间随机数
+	getBetweenRandom (min, max) {
+		return min + max * Math.random()
+	}
+
+	getLikeGeoJson (arr) {
+		let result = []
+
+		for (let i = 0, l = arr.length; i < l; i+=2) {
+			result.push([arr[i], arr[i+1]])
+		}
+		return result
+	}
+
+	// 点在多边形内算法，JS判断一个点是否在一个复杂多边形的内部
+	// https://blog.csdn.net/heyangyi_19940703/article/details/78606471
+	isInPolygon (checkPoint, polygonPoints) { 
+		let counter = 0 
+		let xinters 
+		let p1
+		let p2  
+		let pointCount = polygonPoints.length  
+		
+		p1 = polygonPoints[0] 
+
+		for (let i = 1; i <= pointCount; i++) {  
+			p2 = polygonPoints[i % pointCount]
+debugger
+			if (  
+				checkPoint[0] > Math.min(p1[0], p2[0]) &&  
+				checkPoint[0] <= Math.max(p1[0], p2[0])  
+			) {  
+				if (checkPoint[1] <= Math.max(p1[1], p2[1])) {  
+					if (p1[0] != p2[0]) {  
+						xinters =  
+							(checkPoint[0] - p1[0]) *  
+								(p2[1] - p1[1]) /  
+								(p2[0] - p1[0]) +  
+							p1[1];  
+						if (p1[1] == p2[1] || checkPoint[1] <= xinters) {  
+							counter++  
+						}  
+					}  
+				}  
+			}  
+			p1 = p2
+		}  
+		if (counter % 2 == 0) {  
+			return false 
+		} else {  
+			return true 
+		}  
+	}
+
 	setBoundary () {
 		let boundary = this.options.map.boundary
 
@@ -209,7 +263,9 @@ class CMap {
 
 		this.setToMapCenter()
 
-		boundary.mapData = this.autoSizeData( boundary.data )
+		let clearData = this.autoSizeData( boundary.data )
+		boundary.mapData = clearData.result
+		boundary.map = clearData.origin
 	}
 
 	/**
@@ -227,7 +283,8 @@ class CMap {
 
 		for (let i = 0, l = areas.length; i < l; i++) {
 			let _data = areas[i]
-
+			let clearData = {}
+			
 			if (!updateHash) {
 				Object.assign(_data, this.getMapDataInfo(_data.map), {
 					style: new selfStyle(blocks.style),
@@ -239,12 +296,16 @@ class CMap {
 						hover: new selfStyle(blocks.cityName.hover)
 					}
 				})
-
+				
 				this.setColorsHashID(_data)
+
+				clearData = this.autoSizeData( _data.map )
+			} else {
+				clearData = this.autoSizeData(_data.map, _data.map)
 			}
 
-			_data.mapData = this.autoSizeData( _data.map )
-
+			_data.mapData = clearData.result
+			_data.map = clearData.origin
 		}
 	}
 
@@ -286,39 +347,74 @@ class CMap {
 		})
 	}
 
-	autoSizeData (arr) {
+	setPoints () {
+		console.log((this.options.map.blocks.point))
+		// let blocks = this.options.map.blocks
+		// let blockData = blocks.data
+		// let point = blocks.point
+
+		// blockData.forEach(val => {
+		// 	console.log(val, point)
+		// 	if (point.size) {
+		// 		let size = point.size
+		// 		let x = -1
+		// 		let y = -1
+		// 		let pointSize = this.getBetweenRandom(size.min, size.max)
+
+		// 		val.point = []
+
+		// 		for (let i = 0; i < pointSize; i++) {
+		// 			while (true) {
+		// 				x = this.getBetweenRandom(val.x.start, val.x.end)
+		// 				y = this.getBetweenRandom(val.y.start, val.y.end)
+		// 				debugger
+		// 				if (this.isInPolygon([x,y], val.map[0]))
+		// 					return
+		// 			}
+		// 			val.point.push([x,y])
+		// 		}
+		// 	}
+		// })
+	}
+
+	autoSizeData (arr, hasGeoJson) {
 		let _boundary = this.options.map.boundary
 		let _toMapCenter = _boundary.toMapCenter
-		let getScaleData = (val, index) => {
-			// y
-			if (index % 2) {
-				val = (val - _boundary.y.start) * this.mapScale + _toMapCenter.y
-			} 
-			// x
-			else {
-				val = (val - _boundary.x.start) * this.mapScale + _toMapCenter.x
-			}
-			return val
-		}
-		
-		let loop = (data) => {
+		let getScaleData = arr => {
 			let result = []
-			for (let i = 0, l = data.length; i < l; i++) {
-				if (Array.isArray(data[i])) {
-					result[i] = []
-					result[i] = loop(data[i])
-				} else {
-					result[i] = getScaleData(data[i], i)
-				}
+			for (let i = 0, l = arr.length; i < l; i++) {
+				let x = arr[i][0]
+				let y = arr[i][1]
+
+				x = (x - _boundary.x.start) * this.mapScale + _toMapCenter.x
+				y = (y - _boundary.y.start) * this.mapScale + _toMapCenter.y
+
+				result[i] = [x, y]
 			}
 			return result
+		}
+		
+		let loop = data => {
+			let result = []
+			let origin = []
+			for (let i = 0, l = data.length; i < l; i++) {
+				if (Array.isArray(data[i])) {
+					if (hasGeoJson) {
+						origin[i] = hasGeoJson[i]
+					} else {
+						origin[i] = this.getLikeGeoJson(data[i])
+					}
+					result[i] = getScaleData(origin[i])
+				}
+			}
+			return { result, origin }
 		}
 		return loop( arr )
 	}
 
-	drawBoundary (Obj) {
+	drawBoundary (Obj, callback) {
 		for (let i = 0, l = Obj.mapData.length;i < l; i++) {
-			this.drawLine(
+			let ctx = this.drawLine(
 				this.ctx,
 				Obj.mapData[i],
 				Obj.style
@@ -332,6 +428,7 @@ class CMap {
 		}
 	}
 
+	// 绘制区块边界
 	drawBlockBoundary () {
 		let blocks = this.options.map.blocks
 
@@ -361,9 +458,9 @@ class CMap {
 	drawLine (ctx, data, style) {
 		ctx = this.setCtxState(style, ctx)
 
-		for (let i = 0, l = data.length; i < l; i+=2) {
-			let x = data[i]
-			let y = data[i + 1]
+		for (let i = 0, l = data.length; i < l; i++) {
+			let x = data[i][0]
+			let y = data[i][1]
 			if (i === 0) {
 				ctx.moveTo(x, y)
 			} else {
@@ -375,6 +472,8 @@ class CMap {
 		ctx.fill()
 		ctx.closePath()
 		ctx.restore()
+
+		return ctx
 	}
 
 	drawText () {
@@ -435,10 +534,11 @@ class CMap {
 	}
 
 	setMapScale (val) {
+		let boundary = this.options.map.boundary
 		this.mapScale = val
 		this.setToMapCenter()
 		// 重新计算边界
-		this.options.map.boundary.mapData = this.autoSizeData( this.options.map.boundary.data )
+		boundary.mapData = this.autoSizeData(boundary.data, boundary.map).result
 		this.setBlocks(true)
 		this.setTextName(true)
 		this.scaleEvtStatus = true
@@ -511,9 +611,10 @@ class CMap {
 		let checkInMap = (x, y, callback) => {
 			const pixel = this.hitCtx.getImageData(x, y, 1, 1).data
 			const color = `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`
-			const shape = this.colorsHash[color]
+			const shape = this.colorsHash[color] || {index: -1}
 
 			if (shape) callback(shape)
+			// else callback(false)
 		}
 
 		let reSetCanvas = (x, y) => {
@@ -545,21 +646,31 @@ class CMap {
 			} else {
 				const _callback = this.options.callback
 
-				// 恢复之前鼠标移入对象效果
-				if (this.mouseMoveIndex > -1) {
-					_blocks.data[this.mouseMoveIndex].style.fillStyle = inHoldBlocks(this.mouseMoveIndex) ? _blocks.style.holdColor : _blocks.style.fillStyle
-					this.mouseMoveIndex = -1
-					window.requestAnimationFrame(() => this.drawAllBoundary() )
-				}
-
+				
+				
 				checkInMap(x, y, shape => {
-					_blocks.data[shape.index].style.fillStyle = _blocks.style.hoverColor
-					this.mouseMoveIndex = shape.index
+					console.log(shape)
+					// 恢复之前鼠标移入对象效果
+					if (shape.index !== this.mouseMoveIndex) {
+						if (this.mouseMoveIndex > -1) {
+							_blocks.data[this.mouseMoveIndex].style.fillStyle = inHoldBlocks(this.mouseMoveIndex) ? _blocks.style.holdColor : _blocks.style.fillStyle
+							window.requestAnimationFrame(() => this.drawAllBoundary() )
+						}
 
-					if (_callback && _callback.hasOwnProperty('mousemove')) {
-						_callback.mousemove(evt, shape)
+						if (shape.index === -1) {
+							this.mouseMoveIndex = shape.index
+							return
+						}
+
+						_blocks.data[shape.index].style.fillStyle = _blocks.style.hoverColor
+						this.mouseMoveIndex = shape.index
+						
+						if (_callback && _callback.hasOwnProperty('mousemove')) {
+							_callback.mousemove(evt, shape)
+						}
+						window.requestAnimationFrame(() => this.drawAllBoundary() )
+					} else {
 					}
-					window.requestAnimationFrame(() => this.drawAllBoundary() )
 				})
 			}
 
@@ -644,6 +755,7 @@ class CMap {
 		this.setBoundary()
 		this.setBlocks()
 		this.setTextName()
+		this.setPoints()
 
 		this.drawAllBoundary()
 
