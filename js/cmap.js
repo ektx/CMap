@@ -216,7 +216,6 @@ class CMap {
 
 		for (let i = 1; i <= pointCount; i++) {  
 			p2 = polygonPoints[i % pointCount]
-debugger
 			if (  
 				checkPoint[0] > Math.min(p1[0], p2[0]) &&  
 				checkPoint[0] <= Math.max(p1[0], p2[0])  
@@ -347,34 +346,42 @@ debugger
 		})
 	}
 
-	setPoints () {
-		console.log((this.options.map.blocks.point))
-		// let blocks = this.options.map.blocks
-		// let blockData = blocks.data
-		// let point = blocks.point
+	getPoints () {
+		let blocks = this.options.map.blocks
+		let blockData = blocks.data
+		let point = blocks.point
+		let minR = Math.min.apply({}, point.r)
+		let maxR = Math.max.apply({}, point.r)
 
-		// blockData.forEach(val => {
-		// 	console.log(val, point)
-		// 	if (point.size) {
-		// 		let size = point.size
-		// 		let x = -1
-		// 		let y = -1
-		// 		let pointSize = this.getBetweenRandom(size.min, size.max)
+		let getPoint = val => {
+			let x = -1
+			let y = -1
+			while (true) {
+				x = ~~this.getBetweenRandom(val.x.start, val.x.end)
+				y = ~~this.getBetweenRandom(val.y.start, val.y.end)
+				if (this.isInPolygon([x,y], val.map[0])) {
+					return [x,y]
+				}
+			}
+		}
 
-		// 		val.point = []
+		blockData.forEach(val => {
+			if (point.size) {
+				let size = point.size
+				let pointSize = ~~this.getBetweenRandom(size.min, size.max)
 
-		// 		for (let i = 0; i < pointSize; i++) {
-		// 			while (true) {
-		// 				x = this.getBetweenRandom(val.x.start, val.x.end)
-		// 				y = this.getBetweenRandom(val.y.start, val.y.end)
-		// 				debugger
-		// 				if (this.isInPolygon([x,y], val.map[0]))
-		// 					return
-		// 			}
-		// 			val.point.push([x,y])
-		// 		}
-		// 	}
-		// })
+				val.point = []
+
+				for (let i = 0; i < pointSize; i++) {
+					let [x,y] = getPoint(val)
+					val.point.push({
+						r: this.getBetweenRandom(minR, maxR) * this.DPI,
+						color: point.color[~~this.getBetweenRandom(0, point.color.length)],
+						position: {x, y}
+					})
+				}
+			}
+		})
 	}
 
 	autoSizeData (arr, hasGeoJson) {
@@ -445,6 +452,8 @@ debugger
 		this.drawBoundary(this.options.map.boundary)
 		// 区
 		this.drawBlockBoundary()
+		// 点
+		this.drawBlockPoints()
 		// 城市名
 		this.drawText()
 	}
@@ -474,6 +483,27 @@ debugger
 		ctx.restore()
 
 		return ctx
+	}
+
+	/**
+	 * @description 绘制圆
+	 * @param {Object} ctx canvas 对象
+	 * @param {Object} option 设置
+	 * @param {Objetc} style 样式
+	 */
+	drawArc (ctx, option, style) {
+		ctx = this.setCtxState(style, ctx)
+		ctx.arc(
+			option.x, // x
+			option.y, // y
+			option.r, // R 半径
+			option.s, // 开始角度
+			option.e, // 结束角度
+			option.d  // 顺时针(false)
+		)
+		ctx.fill()
+		ctx.closePath()
+		ctx.restore()
 	}
 
 	drawText () {
@@ -518,6 +548,30 @@ debugger
 		this.ctx.stroke()
 	}
 
+	drawBlockPoints () {
+		const data = this.options.map.blocks.data
+		for (let i = 0, l = data.length; i < l; i++) {
+			data[i]._point.forEach(point => {
+				if (data[i].width * this.mapScale > point.r * 5) {
+					this.drawArc(
+						this.ctx,
+						{
+							x: point.x,
+							y: point.y,
+							r: point.r,
+							s: 0,
+							e: Math.PI * 2,
+							d: false
+						},
+						{
+							fillStyle: point.color
+						}
+					)
+				}
+			})
+		}
+	}
+
 	clearCanvasCtx () {
 		this.ctx.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height)
 		this.hitCtx.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height)
@@ -540,6 +594,7 @@ debugger
 		// 重新计算边界
 		boundary.mapData = this.autoSizeData(boundary.data, boundary.map).result
 		this.setBlocks(true)
+		this.setPoints()
 		this.setTextName(true)
 		this.scaleEvtStatus = true
 	}
@@ -564,6 +619,27 @@ debugger
 				}
 				return
 			}
+		}
+	}
+
+	setPoints () {
+		const map = this.options.map
+		const boundary = map.boundary
+		const toMapCenter = boundary.toMapCenter
+		const X = boundary.x.start
+		const Y = boundary.y.start
+		let data = map.blocks.data
+
+		for (let i = 0, l = data.length; i < l; i++) {
+			data[i]._point = []
+			data[i].point.forEach(point => {
+				data[i]._point.push( {
+					x: (point.position.x - X) * this.mapScale + toMapCenter.x,
+					y: (point.position.y - Y) * this.mapScale + toMapCenter.y,
+					r: point.r,
+					color: point.color
+				})
+			})
 		}
 	}
 
@@ -614,7 +690,6 @@ debugger
 			const shape = this.colorsHash[color] || {index: -1}
 
 			if (shape) callback(shape)
-			// else callback(false)
 		}
 
 		let reSetCanvas = (x, y) => {
@@ -645,11 +720,8 @@ debugger
 				reSetCanvas(x, y)
 			} else {
 				const _callback = this.options.callback
-
-				
 				
 				checkInMap(x, y, shape => {
-					console.log(shape)
 					// 恢复之前鼠标移入对象效果
 					if (shape.index !== this.mouseMoveIndex) {
 						if (this.mouseMoveIndex > -1) {
@@ -696,8 +768,8 @@ debugger
 				// this.animatePause = false
 				mouseMove.status = false
 
-				this.mapTranslateX = mapX //this.DPI
-				this.mapTranslateY = mapY //this.DPI
+				this.mapTranslateX = mapX
+				this.mapTranslateY = mapY
 
 				// 在缩放过的情况下
 				if (this.scaleEvtStatus) {
@@ -755,6 +827,8 @@ debugger
 		this.setBoundary()
 		this.setBlocks()
 		this.setTextName()
+		this.getPoints()
+
 		this.setPoints()
 
 		this.drawAllBoundary()
