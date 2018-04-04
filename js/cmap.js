@@ -784,6 +784,8 @@ class CMap {
 				let y = evt.offsetY * this.DPI
 
 				checkInMap(x, y, shape => {
+					if (shape.index === -1) return
+					
 					if (inHoldBlocks(shape.index)) {
 						let _index = this.holdBlocks.indexOf(shape.index)
 						
