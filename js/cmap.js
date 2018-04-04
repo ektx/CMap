@@ -368,12 +368,20 @@ class CMap {
 		blockData.forEach(val => {
 			if (point.size) {
 				let size = point.size
-				let pointSize = ~~this.getBetweenRandom(size.min, size.max)
+				let pointSize = 1
+				
+				if (size.min !== size.max) {
+					pointSize = ~~this.getBetweenRandom(size.min, size.max)
+				}
 
 				val.point = []
 
 				for (let i = 0; i < pointSize; i++) {
-					let [x,y] = getPoint(val)
+					let { x } = val.centroid
+					let { y } = val.centroid
+
+					if (size.min !== size.max) [x,y] = getPoint(val)
+
 					val.point.push({
 						r: this.getBetweenRandom(minR, maxR) * this.DPI,
 						color: point.color[~~this.getBetweenRandom(0, point.color.length)],
@@ -785,7 +793,7 @@ class CMap {
 
 				checkInMap(x, y, shape => {
 					if (shape.index === -1) return
-					
+
 					if (inHoldBlocks(shape.index)) {
 						let _index = this.holdBlocks.indexOf(shape.index)
 						
