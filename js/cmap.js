@@ -15,8 +15,11 @@ class CMap {
 		this.options = options
 		this.DPI = window.devicePixelRatio
 
+		this.mainCanvas = null
 		this.ctx = null
 		this.hitCtx = null
+		this.ctxW = 0
+		this.ctxH = 0
 		this.mapScale = 1
 		// 文字与区块宽度比（文字最大可用大小）
 		this.textVsWidth = 2
@@ -122,24 +125,25 @@ class CMap {
 		}
 	}
 
+	/**
+	 * @returns {Object} - 返回一个生成的canvas元素
+	 */
+	createCanvas () {
+		let canvas = document.createElement('canvas')
+		canvas.width = this.eleBCR.width * this.DPI
+		canvas.height = this.eleBCR.height * this.DPI
+
+		canvas.style.position = 'absolute'
+		canvas.style.width = this.eleBCR.width + 'px'
+		canvas.style.height = this.eleBCR.height + 'px'
+
+		return canvas
+	}
+
 	createMapElement () {
-		/**
-		 * @returns {Object} - 返回一个生成的canvas元素
-		 */
-		let createCanvas = () => {
-			let canvas = document.createElement('canvas')
-			canvas.width = this.eleBCR.width * this.DPI
-			canvas.height = this.eleBCR.height * this.DPI
 
-			canvas.style.position = 'absolute'
-			canvas.style.width = this.eleBCR.width + 'px'
-			canvas.style.height = this.eleBCR.height + 'px'
-
-			return canvas
-		}
-
-		this.mainCanvas = createCanvas()
-		this.hitMainCanvas = createCanvas()
+		this.mainCanvas = this.createCanvas()
+		this.hitMainCanvas = this.createCanvas()
 
 		this.ctx = this.mainCanvas.getContext('2d')
 		this.hitCtx = this.hitMainCanvas.getContext('2d')
@@ -427,18 +431,22 @@ class CMap {
 		return loop( arr )
 	}
 
-	drawBoundary (Obj, callback) {
-		for (let i = 0, l = Obj.mapData.length;i < l; i++) {
+	/**
+	 * 
+	 * @param {Object} obj 绘制的区块信息
+	 */
+	drawBoundary (obj) {
+		for (let i = 0, l = obj.mapData.length;i < l; i++) {
 			let ctx = this.drawLine(
 				this.ctx,
-				Obj.mapData[i],
-				Obj.style
+				obj.mapData[i],
+				obj.style
 			)
 
 			this.drawLine(
 				this.hitCtx,
-				Obj.mapData[i],
-				Obj.hitStyle
+				obj.mapData[i],
+				obj.hitStyle
 			)
 		}
 	}
@@ -484,6 +492,7 @@ class CMap {
 				ctx.lineTo(x, y)
 			}
 		}
+		ctx.lineJoin = 'round'
 
 		ctx.stroke()
 		ctx.fill()
@@ -830,6 +839,107 @@ class CMap {
 		}
 	}
 
+	/**
+	 * 
+	 * @param {Object} opts
+	 * @param {Number} delay 每帧时间 
+	 * @param {Number} duration 动画运行时间
+	 * @param {Function} delta 对进度操作
+	 * @param {Function} callback 每一帧操作
+	 */
+	stepAnimate (opts) {
+		let start = new Date
+
+		let id = setInterval(() => {
+			let timePassed = new Date - start
+			let progress = timePassed / opts.duration
+
+			if (progress > 1) progress = 1
+
+			let delta = opts.delta(progress)
+			opts.callback(delta)
+
+			if (progress == 1) clearInterval(id)
+		}, opts.delay || 1000/60)
+	}
+
+	linearAni (progress) {
+		return progress
+	}
+
+	quadAni (progress) {
+		return Math.pow(progress, 5)
+	}
+
+	backAni (progress) {
+		let x = 2
+		return Math.pow(progress, 2) * ((x+1) * progress - x)
+	}
+
+	makeEaseInOutAni (delta) {
+		return function(progress) {
+			return 1 - delta(1 - progress)
+		}
+	}
+
+	fadeIn (time = 1000) {
+		this.drawAllBoundary()
+		let _canvas = this.createTemCanvas()
+		this.clearCanvasCtx()
+		
+
+		this.stepAnimate({
+			duration: time,
+			delta: this.makeEaseInOutAni(this.quadAni),
+			callback: delta => {
+				let progress = delta * .3
+				let scaleDelta = progress + .7
+				this.ctx.save()
+				this.ctx.globalAlpha = delta
+				this.ctx.translate(
+					this.mainCanvas.width / 2 * (.3 - progress),
+					this.mainCanvas.height / 2 * (.3 - progress)
+				)
+				this.ctx.scale(scaleDelta, scaleDelta)
+				this.clearCanvasCtx()
+				this.ctx.drawImage(_canvas, 0, 0)
+				this.ctx.restore()
+			}
+		})
+	}
+
+	fadeOut (time = 600) {
+		let _canvas = this.createTemCanvas()
+
+		this.stepAnimate({
+			duration: time,
+			delta: this.backAni,
+			callback: delta => {
+				this.ctx.save()
+				let reDelta = (1 - delta) * .3 + .7 
+				this.clearCanvasCtx()
+				this.ctx.globalAlpha = 1 - delta
+				this.ctx.translate(
+					this.mainCanvas.width / 2 * .3 * delta,
+					this.mainCanvas.height / 2 * .3 * delta
+				)
+				this.ctx.scale(reDelta, reDelta)
+				this.ctx.drawImage(_canvas, 0, 0)
+				this.ctx.restore()
+			}
+		})
+	}
+
+	createTemCanvas () {
+		let ctxW = this.mainCanvas.width
+		let ctxH = this.mainCanvas.height
+		let _canvas = this.createCanvas()
+		let copyCtxImg = this.ctx.getImageData(0, 0, ctxW, ctxH)
+		
+		_canvas.getContext('2d').putImageData(copyCtxImg, 0, 0)
+		return _canvas
+	}
+
 	init () {
 		this.getEleInfo()
 		this.createMapElement()
@@ -841,7 +951,7 @@ class CMap {
 
 		this.setPoints()
 
-		this.drawAllBoundary()
+		// this.drawAllBoundary()
 
 		this.event()
 	}

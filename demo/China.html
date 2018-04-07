@@ -33,12 +33,13 @@
     </body>
 
     <!-- 组件代码 -->
+    <!-- <script src="../src/CMap.js"></script> -->
     <script src="data/china.js"></script>
 
     <!-- 示例代码 -->
     <script type="module">
-    import CMap from '../js/cmap.js'
-    
+        import CMap from '../src/index.js'
+
     // window.addEventListener('DOMContentLoaded', function() {
         let myMap = new CMap({
             el: '#city-information-network',
@@ -64,7 +65,7 @@
                         // 个数
                         size: {
                             min: 1,
-                            max: 1
+                            max: 5
                         }, 
                         // 大小，半径
                         r: [2, 3],
@@ -92,7 +93,7 @@
                         // 定位
                         move: {
                             x: 10,
-                            y: -28
+                            y: 10
                         },
                         txtVSWidth: 3
                     },
@@ -147,7 +148,11 @@
             }
         })
 
-        myMap.init()
+        myMap.init('sjka')
+
+        setTimeout(() => {
+            myMap.fadeIn()
+        }, 300)
 
         let rng = document.querySelector('input')
         rng.addEventListener('mousedown', ()=> {
