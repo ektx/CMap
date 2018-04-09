@@ -12,93 +12,21 @@
 */
 
 import event from './event/index.js'
-import {getEleInfo, init} from './init.js'
-import {fadeIn, fadeOut} from './animate/index.js'
-import {
-	appendCanvasElement, 
-	createCanvas, 
-	createTemCanvas,
-	clearCanvasCtx
-} from './canvas.js'
-import {
-	setBoundary,
-	setBlocks,
-	setTextName,
-	getPoints,
-	autoSizeData,
-	computedData,
-	setMapScale,
-	getCentroid,
-	getMapDataInfo,
-	isInPolygon,
-	getBetweenRandom,
-	getLikeGeoJson,
-	setPoints,
-	setToMapCenter,
-	setColorsHashID,
-	getRandomColor,
-	hasSameHashColor,
-	scaleMap
-} from './compute.js'
-import {
-    drawAllBoundary,
-    drawBoundary,
-    drawBlockBoundary,
-    drawArc,
-    drawText,
-    drawCenterLine,
-	drawBlockPoints,
-	drawLine
-} from './draw.js'
-import {
-	setDPIFontSize,
-	setCtxState
-} from './style.js'
+import * as init from './init.js'
+import * as animate from './animate/index.js'
+import * as canvas from './canvas.js'
+import * as compute from './compute/index.js'
+import * as draw from './draw.js'
+import * as style from './style.js'
 
 const myCmap = {
 	event,
-
-	getEleInfo,
-	init,
-
-	fadeIn,
-	fadeOut,
-
-	createCanvas,
-	createTemCanvas,
-	appendCanvasElement,
-	clearCanvasCtx,
-
-	setBoundary,
-	setBlocks,
-	setTextName,
-	getPoints,
-	autoSizeData,
-	computedData,
-	setMapScale,
-	getCentroid,
-	getMapDataInfo,
-	isInPolygon,
-	getBetweenRandom,
-	getLikeGeoJson,
-	setPoints,
-	setToMapCenter,
-	setColorsHashID,
-	getRandomColor,
-	hasSameHashColor,
-	scaleMap,
-
-    drawAllBoundary,
-    drawBoundary,
-    drawBlockBoundary,
-    drawArc,
-    drawText,
-    drawCenterLine,
-	drawBlockPoints,
-	drawLine,
-
-	setDPIFontSize,
-	setCtxState
+	...init,
+	...animate,
+	...canvas,
+	...compute,
+    ...draw,
+	...style
 }
 
 class CMap {
@@ -111,7 +39,12 @@ class CMap {
 		this.hitCtx = null
 		this.ctxW = 0
 		this.ctxH = 0
+		// 默认地图缩放大小 1
 		this.mapScale = 1
+		// 地图边界
+		this.boundary = {}
+		// 区块
+		this.blocks = []
 		// 文字与区块宽度比（文字最大可用大小）
 		this.textVsWidth = 2
 		// 地图移动距离

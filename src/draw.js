@@ -2,10 +2,10 @@
 /**
  * @name 绘制所有区块
  */
-function drawAllBoundary () {
+export function drawAllBoundary () {
     this.clearCanvasCtx()
     // 边界
-    this.drawBoundary(this.options.map.boundary)
+    this.drawMainBoundary()
     // 区
     this.drawBlockBoundary()
     // 点
@@ -18,30 +18,39 @@ function drawAllBoundary () {
  * @name 绘制内部区块
  * @param {Object} obj 绘制的区块信息
  */
-function drawBoundary (obj) {
-    for (let i = 0, l = obj.mapData.length;i < l; i++) {
+export function drawBoundary (obj) {
+    let l = obj._coordinates.length
+
+    for (let i = 0; i < l; i++) {
         let ctx = this.drawLine(
             this.ctx,
-            obj.mapData[i],
+            obj._coordinates[i],
             obj.style
         )
 
         this.drawLine(
             this.hitCtx,
-            obj.mapData[i],
+            obj._coordinates[i],
             obj.hitStyle
         )
     }
 }
 
-// 绘制区块边界
-function drawBlockBoundary () {
-    let blocks = this.options.map.blocks
+/**
+ * @name 绘制主要边界
+ */
+export function drawMainBoundary () {
+    this.drawBoundary(this.boundary)
+}
 
-    for (let i = 0,l = blocks.data.length; i < l; i++) {
-        let _BD = blocks.data[i]
+/**
+ * @name 绘制区块边界
+ */
+export function drawBlockBoundary () {
+    let l = this.blocks.length
 
-        this.drawBoundary( _BD )
+    for (let i = 0; i < l; i++) {
+        this.drawBoundary( this.blocks[i] )
     }
 }
 
@@ -51,7 +60,7 @@ function drawBlockBoundary () {
  * @param {Object} option 设置
  * @param {Objetc} style 样式
  */
-function drawArc (ctx, option, style) {
+export function drawArc (ctx, option, style) {
     ctx = this.setCtxState(style, ctx)
     ctx.arc(
         option.x, // x
@@ -66,26 +75,35 @@ function drawArc (ctx, option, style) {
     ctx.restore()
 }
 
-function drawText () {
-    let ctx = this.ctx
-    let Obj = this.options.map.blocks
+/**
+ * @name 绘制名字
+ */
+export function drawText () {
     
-    for (let i = 0, l = Obj.data.length;i < l; i++) {
-        let city = Obj.data[i]
-        let style = city.cityName.normal
+    let cityName = this.options.map.blocks.cityName
+    if (!cityName) return
+
+    let ctx = this.ctx
+    let Obj = this.blocks
+    let l = this.blocks.length
+    let move = cityName.move || {x: 0, y: 0}
+
+    for (let i = 0;i < l; i++) {
+        let city = Obj[i]
+        let style = city.nameStyle.normal
         let width = city.width * this.mapScale
         let txtWidth = ctx.measureText(city.name).width
         
         if (this.mouseMoveIndex === i) {
-            style = city.cityName.hover
+            style = city.nameStyle.hover
         }
         
         if (txtWidth < width / this.textVsWidth || city.index === this.mouseMoveIndex) {
-            let x = city.cityName.x
-            let y = city.cityName.y
+            let x = city.centroid.x * this.mapScale + move.x
+            let y = city.centroid.y * this.mapScale + move.y
 
             ctx = this.setCtxState(style, this.ctx)
-            ctx.textAlign = city.cityName.align || 'center'
+            ctx.textAlign = cityName.align || 'center'
             ctx.textBaseline = "middle"		
             ctx.fillText(city.name, x, y)		
             ctx.restore()
@@ -96,7 +114,7 @@ function drawText () {
 /**
  * @name 中心坐标 
  */
-function drawCenterLine () {
+export function drawCenterLine () {
     this.ctx.beginPath()
     this.ctx.strokeStyle = 'red'
     this.ctx.moveTo(0, this.mainCanvas.height/2)
@@ -113,11 +131,14 @@ function drawCenterLine () {
 /**
  * @name 绘制区块中随机点
  */
-function drawBlockPoints () {
+export function drawBlockPoints () {
     const data = this.options.map.blocks.data
-    for (let i = 0, l = data.length; i < l; i++) {
+    let l = this.blocks.length
+    for (let i = 0; i < l; i++) {
+        let _W = data[i].width * this.mapScale
         data[i]._point.forEach(point => {
-            if (data[i].width * this.mapScale > point.r * 5) {
+            // 当宽度大于5倍点半径时，点才显示
+            if (_W > point.r * 5) {
                 this.drawArc(
                     this.ctx,
                     {
@@ -144,7 +165,7 @@ function drawBlockPoints () {
  * @param {Array} data - 绘制的线
  * @param {Object} style - 绘制的样式
  */
-function drawLine (ctx, data, style) {
+export function drawLine (ctx, data, style) {
     ctx = this.setCtxState(style, ctx)
 
     for (let i = 0, l = data.length; i < l; i++) {
@@ -166,13 +187,16 @@ function drawLine (ctx, data, style) {
     return ctx
 }
 
-export {
-    drawAllBoundary,
-    drawBoundary,
-    drawBlockBoundary,
-    drawArc,
-    drawText,
-    drawCenterLine,
-    drawBlockPoints,
-    drawLine
+/**
+ * 
+ * @param {Number} x x轴偏移量
+ * @param {Number} y y轴偏移量
+ */
+export function translateCtx (x = 0, y = 0) {
+    let boundary = this.boundary
+    let X = (this.mainCanvas.width - boundary.width * this.mapScale)/ 2 - this.mapScale * boundary.x.start + x
+    let Y = (this.mainCanvas.height - boundary.height * this.mapScale)/ 2 - this.mapScale * boundary.y.start + y
+
+    this.ctx.translate(X, Y)
+    this.hitCtx.translate(X, Y)
 }

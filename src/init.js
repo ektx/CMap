@@ -1,11 +1,11 @@
 
 
-function getEleInfo () {
+export function getEleInfo () {
     this.ele = document.querySelector(this.options.el)
     this.eleBCR = this.ele.getBoundingClientRect()
 }
     
-function init () {
+export function init () {
     this.getEleInfo()
     this.appendCanvasElement()
     
@@ -14,14 +14,10 @@ function init () {
     this.setTextName()
     this.getPoints()
 
-    this.setPoints()
+    this.setMapScale()
 
-    // this.drawAllBoundary()
+    this.translateCtx()
+    this.drawAllBoundary()
 
-    this.event()
-}
-
-export {
-    getEleInfo,
-    init
+    // this.event()
 }
