@@ -142,6 +142,7 @@
             callback: {
                 click: function(index, data) {
                     console.log( index, data )
+                    myMap.zoomOut()
                 },
                 // 鼠标移动事件
                 mousemove: function(evt, data){
@@ -150,18 +151,20 @@
             }
         })
 
-        myMap.init('sjka')
+        myMap.init()
 
-        setTimeout(() => {
-            // myMap.scaleMap(8)
-            // myMap.fadeIn()
-        }, 300)
+        // setTimeout(() => {
+            myMap.fadeIn()
+        // }, 300)
 
         
-        setTimeout(() => {
-            // myMap.scaleMap(8)
-            // myMap.fadeIn()
-        }, 1000)
+        // setTimeout(() => {
+        //     myMap.zoomOut()
+        // }, 1000)
+
+        // setTimeout(() => {
+        //     myMap.fadeIn()
+        // }, 2000)
 
         let rng = document.querySelector('input')
         rng.addEventListener('mousedown', ()=> {

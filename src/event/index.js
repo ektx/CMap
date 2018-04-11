@@ -137,6 +137,7 @@ export default function () {
                     _blocks.data[val].style.fillStyle = _blocks.style.holdColor
                 })
 
+                draw()
                 callbackEvt('click', evt, shape)
             })
         }

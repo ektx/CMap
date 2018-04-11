@@ -16,8 +16,8 @@ export function init () {
 
     this.setMapScale()
 
-    this.translateCtx(this.mapTranslateX, this.mapTranslateY)
-    this.drawAllBoundary()
+    // this.translateCtx(this.mapTranslateX, this.mapTranslateY)
+    // this.drawAllBoundary()
     
     this.event()
 }

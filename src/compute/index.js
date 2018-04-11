@@ -1,4 +1,4 @@
-import getMapDataInfo from '../getMapBlockInfo.js'
+import getMapDataInfo from './getMapBlockInfo.js'
 import { setDPIFontSize } from '../style.js'
 import {
     selfStyle,
