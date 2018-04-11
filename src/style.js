@@ -20,7 +20,6 @@ export function setDPIFontSize (style, DPI) {
 }
 
 export function setCtxState (styleOption, ctx) {
-    ctx.save()
     ctx.beginPath()
 
     for (let i in styleOption) {

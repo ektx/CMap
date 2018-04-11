@@ -127,7 +127,6 @@ export function getPoints () {
  * @param {Number} val 缩放地图
  */
 export function setMapScale (val) {
-    let boundary = this.options.map.boundary
     this.mapScale = val || this.mapScale
 
     this.scaleBoundary()
@@ -139,6 +138,12 @@ export function setMapScale (val) {
  * @name 缩放边界
  */
 export function scaleBoundary () {
+    // debug÷≥≤æ……¬˚∆µ≤˙¥∫©˙©©ƒ√∂çger
+    if (this.mapTranslateX === 0) {
+        this.mapTranslateX =  0 - this.boundary.x.start * this.mapScale
+        this.mapTranslateY = 0 - this.boundary.y.start * this.mapScale
+    }
+    
     this.boundary._coordinates = scaleCoordinates(this.boundary.coordinates, this.mapScale)
 }
 
@@ -211,14 +216,8 @@ export function hasSameHashColor (color, shape) {
  * @param {Number} val 缩放大小
  */
 export function scaleMap (val) {
-    
-    if (Array.isArray(this.mouseMoveStatus)) {
-        this.mapTranslateX += this.mouseMoveStatus[0]
-        this.mapTranslateY += this.mouseMoveStatus[1]
-        this.mouseMoveStatus = false
-    }
-
     this.setMapScale(val)
+    this.translateCtx(this.mapTranslateX, this.mapTranslateY)
 
     window.requestAnimationFrame(() => this.drawAllBoundary() )
 }

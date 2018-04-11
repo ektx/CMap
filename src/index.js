@@ -33,7 +33,6 @@ class CMap {
 	constructor (options) {
 		this.options = options
 		this.DPI = window.devicePixelRatio
-
 		this.mainCanvas = null
 		this.ctx = null
 		this.hitCtx = null
@@ -50,29 +49,13 @@ class CMap {
 		// 地图移动距离
 		this.mapTranslateX = 0
 		this.mapTranslateY = 0
-		// 缩放事件
-		this.scaleEvtStatus = false
-		this.mouseMoveStatus = false
 		// hash ID
 		this.colorsHash = {}
-		// 暂停动画事件
-		this.animatePause = true
 		// 当前鼠标移入区索引
 		this.mouseMoveIndex = -1
 		// 选择区域
 		this.holdBlocks = []
 	}
-
-	animate () {
-		if (!this.animatePause) {
-			this.drawAllBoundary() 
-			window.requestAnimationFrame(() => {
-				this.animate()
-			})
-		}
-	}
-
-
 }
 
 Object.keys(myCmap).forEach(name => {
