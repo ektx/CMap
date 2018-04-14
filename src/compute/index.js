@@ -9,18 +9,21 @@ import {
 
 export function setBoundary () {
     let boundary = this.options.map.boundary
+    let currentMap = this.history.map[this.history.index]
 
     Object.assign(boundary, getMapDataInfo(boundary.data))
 
-    this.setColorsHashID(boundary)
+    this.setColorsHashID(currentMap, boundary)
 
     // 设置最小缩放
-    this.mapScale = Math.min(
+    currentMap.mapScale = Math.min(
         this.hitMainCanvas.width / boundary.width, 
         this.hitMainCanvas.height / boundary.height
     )
 
-    this.boundary = boundary
+    currentMap.boundary = boundary
+    currentMap.mapTranslateX = 0
+    currentMap.mapTranslateY = 0
 }
 
 /**
@@ -29,6 +32,8 @@ export function setBoundary () {
 export function setBlocks (updateHash) {
     const blocks = this.options.map.blocks
     const areas = blocks.data
+
+    this.blocks = []
 
     for (let i = 0, l = areas.length; i < l; i++) {
         let _data = areas[i]
@@ -55,12 +60,14 @@ export function setBlocks (updateHash) {
 export function setTextName () {
     let cityName = this.options.map.blocks.cityName
 
-    Object.keys(cityName).forEach(name => {
-        Object.assign(
-            cityName[name], 
-            setDPIFontSize(cityName[name], this.DPI)
-        )
-    })
+    if (!cityName.fixed) {
+        Object.keys(cityName).forEach(name => {
+            Object.assign(
+                cityName[name], 
+                setDPIFontSize(cityName[name], this.DPI)
+            )
+        })
+    }
 
     if (!cityName.hasOwnProperty('normal')) {
         return console.warn(`Don't find cityName has 'normal'`)
@@ -72,6 +79,8 @@ export function setTextName () {
             hover: new selfStyle(cityName.hover ? cityName.hover : cityName.normal)
         }
     })
+
+    cityName.fixed = true
 }
 
 /**
@@ -138,7 +147,6 @@ export function setMapScale (val) {
  * @name 缩放边界
  */
 export function scaleBoundary () {
-    // debug÷≥≤æ……¬˚∆µ≤˙¥∫©˙©©ƒ√∂çger
     if (this.mapTranslateX === 0) {
         this.mapTranslateX =  0 - this.boundary.x.start * this.mapScale
         this.mapTranslateY = 0 - this.boundary.y.start * this.mapScale
@@ -184,12 +192,19 @@ export function scalePoints () {
 }
 
 
-export function setColorsHashID (data) {
+/**
+ * 备案区块信息
+ * @param {object} map 当前地图
+ * @param {object} data 区块信息
+ */
+export function setColorsHashID (map, data) {
+    let hash = map.colorsHash
+
     while (true) {
         const colorKey = this.getRandomColor()
 
-        if (!this.colorsHash[colorKey]) {
-            this.colorsHash[colorKey] = data
+        if (!hash[colorKey]) {
+            hash[colorKey] = data
             data.hitStyle = {
                 fillStyle: colorKey
             }

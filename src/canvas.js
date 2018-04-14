@@ -25,7 +25,7 @@ export function appendCanvasElement () {
     this.ctx = this.mainCanvas.getContext('2d')
     this.hitCtx = this.hitMainCanvas.getContext('2d')
 
-    // this.ele.appendChild( this.hitMainCanvas )
+    this.ele.appendChild( this.hitMainCanvas )
     this.ele.appendChild( this.mainCanvas )
 }
 

@@ -134,7 +134,7 @@ export function drawCenterLine () {
  * @name 绘制区块中随机点
  */
 export function drawBlockPoints (ctx = this.ctx) {
-    const data = this.options.map.blocks.data
+    const data = this.blocks
     let l = this.blocks.length
     for (let i = 0; i < l; i++) {
         let _W = data[i].width * this.mapScale

@@ -7,22 +7,24 @@
  * @date 2017-10-27
  */
 
-import event from './event/index.js'
+import * as event from './event/index.js'
 import * as init from './init.js'
 import * as animate from './animate/index.js'
 import * as canvas from './canvas.js'
 import * as compute from './compute/index.js'
 import * as draw from './draw.js'
 import * as style from './style.js'
+import * as history from './history.js'
 
 const myCmap = {
-	event,
+	...event,
 	...init,
 	...animate,
 	...canvas,
 	...compute,
     ...draw,
-	...style
+	...style,
+	...history
 }
 
 class CMap {

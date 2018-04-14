@@ -35,19 +35,19 @@
     <!-- 组件代码 -->
     <!-- <script src="../src/CMap.js"></script> -->
     <script src="data/china.js"></script>
+    <script src="data/huaian.js"></script>
 
     <!-- 示例代码 -->
     <script type="module">
         import CMap from '../src/index.js'
 
-    // window.addEventListener('DOMContentLoaded', function() {
-        let myMap = new CMap({
+        let options = {
             el: '#city-information-network',
             map: {
                 // 边界
                 boundary: {
                     // 边界数据
-                    data: araeData,
+                    // data: china.araeData,
                     // 样式
                     style: {
                         lineWidth: 8,
@@ -58,7 +58,7 @@
                 // 块
                 blocks: {
                     // 块数据
-                    data: citysArr,
+                    // data: china.citysArr,
                     // 是否可以选择 [multiple|single|false(默认)]
                     selectedMode: 'single',
                     point: {
@@ -135,21 +135,28 @@
                     }
                 }
             },
-            // 区块上点统一设置
-            blocksPoint: {
-                
-            },
             callback: {
                 click: function(index, data) {
-                    console.log( index, data )
-                    myMap.zoomOut()
+                    // console.log( index, data )
+
+                    
+
+                    myMap.history.push({
+                        boundary: huaian.araeData, 
+                        blocks: huaian.citysArr,
+                        that: myMap
+                    })
                 },
                 // 鼠标移动事件
                 mousemove: function(evt, data){
                     // console.log(evt, data)
                 }
             }
-        })
+        }
+        
+        options.map.boundary.data = china.araeData
+        options.map.blocks.data = china.citysArr
+        window.myMap = new CMap(options)
 
         myMap.init()
 
@@ -160,11 +167,11 @@
         
         // setTimeout(() => {
         //     myMap.zoomOut()
-        // }, 1000)
+        // }, 1100)
 
         // setTimeout(() => {
-        //     myMap.fadeIn()
-        // }, 2000)
+        //     myMap.fadeOut(600, 1)
+        // }, 1500)
 
         let rng = document.querySelector('input')
         rng.addEventListener('mousedown', ()=> {
@@ -181,6 +188,5 @@
         // 取生成的值
         rng.value = myMap.mapScale
 
-    // })
     </script>
 </html>
