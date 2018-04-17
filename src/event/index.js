@@ -61,6 +61,8 @@ export function mouseEvt () {
         let x = evt.offsetX * this.DPI
         let y = evt.offsetY * this.DPI
 
+        if (this.inAnimate) return
+
         // 更新内容
         if (historyIndex !== this.history.index) {
             historyIndex = this.history.index

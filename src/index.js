@@ -36,6 +36,7 @@ class CMap {
 		this.hitCtx = null
 		this.ctxW = 0
 		this.ctxH = 0
+		this.inAnimate = false
 		// 文字与区块宽度比（文字最大可用大小）
 		this.textVsWidth = 2
 	}

@@ -17,6 +17,7 @@ export function fadeIn (time = 1000, coe = .3) {
     this.drawAllBoundary()
     let _canvas = this.createTemCanvas()
     this.clearCanvasCtx(true)
+    this.inAnimate = true
     
     stepAnimate({
         duration: time,
@@ -34,8 +35,12 @@ export function fadeIn (time = 1000, coe = .3) {
             this.clearCanvasCtx(true)
             this.ctx.drawImage(_canvas, 0, 0)
             this.ctx.restore()
+        },
+        doneback: () => {
+            this.inAnimate = false
         }
     })
+
 }
 
 /**
@@ -46,6 +51,7 @@ export function fadeIn (time = 1000, coe = .3) {
 export function fadeOut (time = 600, coe = .3) {
     let _canvas = this.createTemCanvas()
     let _coe = 1 - coe
+    this.inAnimate = true
 
     stepAnimate({
         duration: time,
@@ -62,6 +68,9 @@ export function fadeOut (time = 600, coe = .3) {
             this.ctx.scale(reDelta, reDelta)
             this.ctx.drawImage(_canvas, 0, 0)
             this.ctx.restore()
+        },
+        doneback: () => {
+            this.inAnimate = false
         }
     })
 }
@@ -73,6 +82,7 @@ export function fadeOut (time = 600, coe = .3) {
  */
 export function zoomOut (time = 600, coe = .3) {
     let _canvas = this.createTemCanvas()
+    this.inAnimate = true
 
     stepAnimate({
         duration: time,
@@ -89,6 +99,9 @@ export function zoomOut (time = 600, coe = .3) {
             this.ctx.scale(reDelta, reDelta)
             this.ctx.drawImage(_canvas, 0, 0)
             this.ctx.restore()
+        },
+        doneback: () => {
+            this.inAnimate = false
         }
     })
 }

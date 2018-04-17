@@ -5,7 +5,8 @@
  * @param {Number} delay 每帧时间 
  * @param {Number} duration 动画运行时间
  * @param {Function} delta 对进度操作
- * @param {Function} callback 每一帧操作
+ * @callback callback 每一帧操作
+ * @callback doneback 每一帧操作
  */
 export function stepAnimate (opts) {
     let start = new Date
@@ -19,7 +20,10 @@ export function stepAnimate (opts) {
         let delta = opts.delta(progress)
         opts.callback(delta)
 
-        if (progress == 1) clearInterval(id)
+        if (progress == 1) {
+            clearInterval(id)
+            if (opts.doneback) opts.doneback()
+        }
     }, opts.delay || 1000/60)
 }
 
