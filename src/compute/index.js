@@ -7,33 +7,30 @@ import {
     scaleCoordinates
 } from './methods.js'
 
-export function setBoundary () {
+export function setBoundary (opt) {
     let boundary = this.options.map.boundary
-    let currentMap = this.history.map[this.history.index]
 
     Object.assign(boundary, getMapDataInfo(boundary.data))
 
-    this.setColorsHashID(currentMap, boundary)
+    this.setColorsHashID(opt, boundary)
 
     // 设置最小缩放
-    currentMap.mapScale = Math.min(
+    opt.mapScale = Math.min(
         this.hitMainCanvas.width / boundary.width, 
         this.hitMainCanvas.height / boundary.height
     )
 
-    currentMap.boundary = boundary
-    currentMap.mapTranslateX = 0
-    currentMap.mapTranslateY = 0
+    opt.boundary = Object.assign({}, boundary)
+    opt.mapTranslateX = 0
+    opt.mapTranslateY = 0
+
+    return opt
 }
 
-/**
- * @param {Boolean} updateHash 是否要更新数据
- */
-export function setBlocks (updateHash) {
+
+export function setBlocks (opt) {
     const blocks = this.options.map.blocks
     const areas = blocks.data
-
-    this.blocks = []
 
     for (let i = 0, l = areas.length; i < l; i++) {
         let _data = areas[i]
@@ -46,20 +43,24 @@ export function setBlocks (updateHash) {
             hold: false
         })
         
-        this.setColorsHashID(_data)
+        this.setColorsHashID(opt, _data)
 
-        this.blocks.push(_data)
+        opt.blocks.push(_data)
     }
+
+    return opt
 }
 
 
 /**
- * @name 设置文字
+ * 设置文字
  * @description 对文字的大小按屏幕地 devicePixelRatio 缩放
  */
-export function setTextName () {
+export function setTextName (map) {
+    // 获取区块名称用户设置
     let cityName = this.options.map.blocks.cityName
 
+    // 判断是否已经处理过高清屏文字
     if (!cityName.fixed) {
         Object.keys(cityName).forEach(name => {
             Object.assign(
@@ -69,11 +70,12 @@ export function setTextName () {
         })
     }
 
+    // 检查是否有默认的属性
     if (!cityName.hasOwnProperty('normal')) {
         return console.warn(`Don't find cityName has 'normal'`)
     }
 
-    this.blocks.forEach(val => {
+    map.blocks.forEach(val => {
         val.nameStyle = {
             normal: new selfStyle(cityName.normal),
             hover: new selfStyle(cityName.hover ? cityName.hover : cityName.normal)
@@ -81,12 +83,14 @@ export function setTextName () {
     })
 
     cityName.fixed = true
+
+    return map
 }
 
 /**
- * @name 设置区块内的点
+ * 设置区块内的点
  */
-export function getPoints () {
+export function getPoints (map) {
     let blocks = this.options.map.blocks
     let point = blocks.point
     let minR = Math.min.apply({}, point.r)
@@ -104,7 +108,7 @@ export function getPoints () {
         }
     }
 
-    this.blocks.forEach(val => {
+    map.blocks.forEach(val => {
         if (point.size) {
             let size = point.size
             let pointSize = 1
@@ -129,52 +133,55 @@ export function getPoints () {
             }
         }
     })
+
+    return map
 }
 
 /**
- * @name 缩放地图
- * @param {Number} val 缩放地图
+ * 缩放地图
+ * @param {number} val 缩放地图
  */
 export function setMapScale (val) {
-    this.mapScale = val || this.mapScale
+    let history = this.history
+    let currentMap = history.map[history.index]
+    let defVal = currentMap.mapScale
 
-    this.scaleBoundary()
-    this.scaleBlocks()
-    this.scalePoints()
+    history.map[history.index].mapScale = val || defVal
+
+    this.scaleBoundary(currentMap)
+    this.scaleBlocks(currentMap)
+    this.scalePoints(currentMap)
 }
 
 /**
- * @name 缩放边界
+ * 缩放边界
  */
-export function scaleBoundary () {
-    if (this.mapTranslateX === 0) {
-        this.mapTranslateX =  0 - this.boundary.x.start * this.mapScale
-        this.mapTranslateY = 0 - this.boundary.y.start * this.mapScale
+export function scaleBoundary (map) {
+    if (map.mapTranslateX === 0) {
+        map.mapTranslateX =  0 - map.boundary.x.start * map.mapScale
+        map.mapTranslateY = 0 - map.boundary.y.start * map.mapScale
     }
     
-    this.boundary._coordinates = scaleCoordinates(this.boundary.coordinates, this.mapScale)
+    map.boundary._coordinates = scaleCoordinates(map.boundary.coordinates, map.mapScale)
 }
 
 /**
- * @name 缩放块
+ * 缩放块
  */
-export function scaleBlocks () {
-    let l = this.blocks.length
-    for (let i = 0; i < l; i++) {
-        let inner = this.blocks[i]
-        inner._coordinates = scaleCoordinates(inner.coordinates, this.mapScale)
+export function scaleBlocks (map) {
+    for (let i = 0, l = map.blocks.length; i < l; i++) {
+        let inner = map.blocks[i]
+        inner._coordinates = scaleCoordinates(inner.coordinates, map.mapScale)
     }
 }
 
 /**
- * @name 缩放点
+ * 缩放点
  */
-export function scalePoints () {
-    const map = this.options.map
-    let blocks = this.blocks
-    let l = blocks.length
+export function scalePoints (map) {
+    let blocks = map.blocks
 
-    for (let i = 0; i < l; i++) {
+    for (let i = 0, l = blocks.length; i < l; i++) {
         blocks[i]._point = []
         let pointL = blocks[i].point.length
 
@@ -182,8 +189,8 @@ export function scalePoints () {
             let point = blocks[i].point[p]
 
             blocks[i]._point.push( {
-                x: point.position.x * this.mapScale,
-                y: point.position.y * this.mapScale,
+                x: point.position.x * map.mapScale,
+                y: point.position.y * map.mapScale,
                 r: point.r,
                 color: point.color
             })
@@ -228,11 +235,13 @@ export function hasSameHashColor (color, shape) {
 
 /**
  * 缩放地图
- * @param {Number} val 缩放大小
+ * @param {number} val 缩放大小
  */
 export function scaleMap (val) {
+    let currentMap = this.history.map[this.history.index]
+
     this.setMapScale(val)
-    this.translateCtx(this.mapTranslateX, this.mapTranslateY)
+    this.translateCtx(currentMap, currentMap.mapTranslateX, currentMap.mapTranslateY)
 
     window.requestAnimationFrame(() => this.drawAllBoundary() )
 }

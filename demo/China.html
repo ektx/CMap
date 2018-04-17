@@ -136,15 +136,13 @@
                 }
             },
             callback: {
-                click: function(index, data) {
+                click: function(evt, data) {
                     // console.log( index, data )
 
-                    
-
                     myMap.history.push({
+                        key: data.index,
                         boundary: huaian.araeData, 
-                        blocks: huaian.citysArr,
-                        that: myMap
+                        blocks: huaian.citysArr
                     })
                 },
                 // 鼠标移动事件
@@ -186,7 +184,7 @@
         }
 
         // 取生成的值
-        rng.value = myMap.mapScale
+        rng.value = myMap.history.map[0].mapScale
 
     </script>
 </html>

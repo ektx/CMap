@@ -36,23 +36,8 @@ class CMap {
 		this.hitCtx = null
 		this.ctxW = 0
 		this.ctxH = 0
-		// 默认地图缩放大小 1
-		this.mapScale = 1
-		// 地图边界
-		this.boundary = {}
-		// 区块
-		this.blocks = []
 		// 文字与区块宽度比（文字最大可用大小）
 		this.textVsWidth = 2
-		// 地图移动距离
-		this.mapTranslateX = 0
-		this.mapTranslateY = 0
-		// hash ID
-		this.colorsHash = {}
-		// 当前鼠标移入区索引
-		this.mouseMoveIndex = -1
-		// 选择区域
-		this.holdBlocks = []
 	}
 }
 

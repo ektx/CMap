@@ -12,7 +12,8 @@ import {
  * @param {number} coe 系数
  */
 export function fadeIn (time = 1000, coe = .3) {
-    this.translateCtx(this.mapTranslateX, this.mapTranslateY)
+    let currentMap = this.history.map[this.history.index]
+    this.translateCtx(currentMap, currentMap.mapTranslateX, currentMap.mapTranslateY)
     this.drawAllBoundary()
     let _canvas = this.createTemCanvas()
     this.clearCanvasCtx(true)

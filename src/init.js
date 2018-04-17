@@ -7,7 +7,6 @@ export function getEleInfo () {
     
 export function init () {
     this.setHistory()
-debugger
     this.getEleInfo()
     this.appendCanvasElement()
 
@@ -16,7 +15,7 @@ debugger
 }
 
 export function setMapData () {
-    this.history.map.push({
+    let opt = {
         // 默认地图缩放大小 1
 		mapScale: 1,
 		// 地图边界
@@ -32,12 +31,14 @@ export function setMapData () {
 		mouseMoveIndex: -1,
 		// 选择区域
 		holdBlocks: []
-    })
+    }
 
-    this.setBoundary()
-    this.setBlocks()
-    this.setTextName()
-    this.getPoints()
+    opt = this.setBoundary(opt)
+    opt = this.setBlocks(opt)
+    opt = this.setTextName(opt)
+    opt = this.getPoints(opt)
+// debugger
+    this.history.map[this.history.index] = opt
 
     this.setMapScale()
 }

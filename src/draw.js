@@ -3,15 +3,17 @@
  * @name 绘制所有区块
  */
 export function drawAllBoundary () {
+    let currentMap = this.history.map[this.history.index]
+
     this.clearCanvasCtx()
     // 边界
-    this.drawMainBoundary()
+    this.drawMainBoundary(currentMap)
     // 区
-    this.drawBlockBoundary()
+    this.drawBlockBoundary(currentMap)
     // 点
-    this.drawBlockPoints()
+    this.drawBlockPoints(currentMap)
     // 城市名
-    this.drawText()
+    this.drawText(currentMap)
     
     this.ctx.setTransform(1, 0, 0, 1, 0, 0)
     this.hitCtx.setTransform(1, 0, 0, 1, 0, 0)
@@ -40,20 +42,20 @@ export function drawBoundary (obj, ctxs, style) {
 }
 
 /**
- * @name 绘制主要边界
+ * 绘制主要边界
  */
-export function drawMainBoundary () {
-    this.drawBoundary(this.boundary)
+export function drawMainBoundary (map) {
+    this.drawBoundary(map.boundary)
 }
 
 /**
- * @name 绘制区块边界
+ * 绘制区块边界
  */
-export function drawBlockBoundary () {
-    let l = this.blocks.length
+export function drawBlockBoundary (map) {
+    let l = map.blocks.length
 
     for (let i = 0; i < l; i++) {
-        this.drawBoundary( this.blocks[i] )
+        this.drawBoundary( map.blocks[i] )
     }
 }
 
@@ -81,40 +83,42 @@ export function drawArc (ctx, option, style) {
 /**
  * @name 绘制名字
  */
-export function drawText (ctx = this.ctx) {
+export function drawText (map, ctx = this.ctx) {
     
     let cityName = this.options.map.blocks.cityName
     if (!cityName) return
 
-    let Obj = this.blocks
-    let l = this.blocks.length
+    let Obj = map.blocks
     let move = cityName.move || {x: 0, y: 0}
 
-    for (let i = 0;i < l; i++) {
+    for (let i = 0, l = map.blocks.length;i < l; i++) {
         let city = Obj[i]
         let style = city.nameStyle.normal
-        let width = city.width * this.mapScale
+        let width = city.width * map.mapScale
         let txtWidth = ctx.measureText(city.name).width
-        
-        if (this.mouseMoveIndex === i) {
-            style = city.nameStyle.hover
-        }
-        
-        if (txtWidth < width / this.textVsWidth || city.index === this.mouseMoveIndex) {
-            let x = city.centroid.x * this.mapScale + move.x
-            let y = city.centroid.y * this.mapScale + move.y
 
-            ctx = this.setCtxState(style, ctx)
-            ctx.textAlign = cityName.align || 'center'
-            ctx.textBaseline = "middle"		
-            ctx.fillText(city.name, x, y)		
-            ctx.restore()
+        if (city.name) {
+            if (map.mouseMoveIndex === i) {
+                style = city.nameStyle.hover
+            }
+            
+            if (txtWidth < width / this.textVsWidth || city.index === map.mouseMoveIndex) {
+                let x = city.centroid.x * map.mapScale + move.x
+                let y = city.centroid.y * map.mapScale + move.y
+                
+                ctx.save()
+                ctx = this.setCtxState(style, ctx)
+                ctx.textAlign = cityName.align || 'center'
+                ctx.textBaseline = "middle"		
+                ctx.fillText(city.name, x, y)		
+                ctx.restore()
+            }
         }
     }
 }
 
 /**
- * @name 中心坐标 
+ * 中心坐标 
  */
 export function drawCenterLine () {
     this.ctx.beginPath()
@@ -131,18 +135,19 @@ export function drawCenterLine () {
 }
 
 /**
- * @name 绘制区块中随机点
+ * 绘制区块中随机点
  */
-export function drawBlockPoints (ctx = this.ctx) {
-    const data = this.blocks
-    let l = this.blocks.length
-    for (let i = 0; i < l; i++) {
-        let _W = data[i].width * this.mapScale
+export function drawBlockPoints (map) {
+    const data = map.blocks
+
+    for (let i = 0, l = data.length; i < l; i++) {
+        let _W = data[i].width * map.mapScale
+
         data[i]._point.forEach(point => {
             // 当宽度大于5倍点半径时，点才显示
             if (_W > point.r * 5) {
                 this.drawArc(
-                    ctx,
+                    this.ctx,
                     {
                         x: point.x,
                         y: point.y,
@@ -190,13 +195,13 @@ export function drawLine (ctx, data, style) {
 
 /**
  * 
- * @param {Number} x x轴偏移量
- * @param {Number} y y轴偏移量
+ * @param {object} map 地图
+ * @param {number} x x轴偏移量
+ * @param {number} y y轴偏移量
  */
-export function translateCtx (x = 0, y = 0) {
-    let boundary = this.boundary
-    let X = (this.ctxW - boundary.width * this.mapScale)/ 2 + x
-    let Y = (this.ctxH - boundary.height * this.mapScale)/ 2 + y
+export function translateCtx (map, x = 0, y = 0) {
+    let X = (this.ctxW - map.boundary.width * map.mapScale)/ 2 + x
+    let Y = (this.ctxH - map.boundary.height * map.mapScale)/ 2 + y
 
     this.clearCanvasCtx()
     this.ctx.translate(X, Y)

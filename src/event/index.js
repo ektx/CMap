@@ -1,14 +1,11 @@
 export function mouseEvt () {
-    this.mouseEvtData = {
-        mapX: this.mapTranslateX,
-        mapY: this.mapTranslateY,
-    }
-
-    let oldArr = []
-    let _blocks = this.blocks
-    let _callback = this.options.callback
-    let _selectedMode = this.options.map.blocks.selectedMode
-    let _blocksStyle = this.options.map.blocks.style
+    let historyIndex = -1
+    let currentMap = null
+    let _blocks = null
+    let _opt = this.options
+    let _callback = _opt.callback
+    let { selectedMode: _selectedMode, 
+        style: _BStyle} = _opt.map.blocks
     let mouseMove = {
         hold: false,
         x: 0,
@@ -17,7 +14,7 @@ export function mouseEvt () {
     }
 
     /**
-     * @deprecated 判断是否在区块中
+     * 判断是否在区块中
      * @param {number} x x轴移动    
      * @param {number} y y轴移动
      * @callback 回调函数
@@ -25,20 +22,24 @@ export function mouseEvt () {
     let checkInMap = (x, y, callback) => {
         const pixel = this.hitCtx.getImageData(x, y, 1, 1).data
         const color = `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`
-        const shape = this.colorsHash[color] || {index: -1}
+        const shape = currentMap.colorsHash[color] || {index: -1}
 
         if (shape) callback(shape)
     }
 
     // 绘制
     let draw = () => {
-        this.translateCtx(this.mouseEvtData.mapX, this.mouseEvtData.mapY)
+        this.translateCtx(
+            currentMap,
+            this.mouseEvtData.mapX, 
+            this.mouseEvtData.mapY
+        )
         this.drawAllBoundary()
     }
 
     // 判断是否在选择区块中
     let inHoldBlocks = index => {
-        return this.holdBlocks.includes(this.mouseMoveIndex)
+        return currentMap.holdBlocks.includes(currentMap.mouseMoveIndex)
     }
 
     /**
@@ -47,7 +48,7 @@ export function mouseEvt () {
      * @param {object} data 当前对象
      * @param {event} evt 鼠标事件 
      */
-    let callbackEvt = (type, data, evt) => {
+    let callbackEvt = (type, evt, data) => {
         if (
             _callback && 
             _callback.hasOwnProperty(type)
@@ -60,31 +61,45 @@ export function mouseEvt () {
         let x = evt.offsetX * this.DPI
         let y = evt.offsetY * this.DPI
 
+        // 更新内容
+        if (historyIndex !== this.history.index) {
+            historyIndex = this.history.index
+            currentMap = this.history.map[historyIndex]
+            _blocks = currentMap.blocks
+
+            this.mouseEvtData = {
+                mapX: currentMap.mapTranslateX,
+                mapY: currentMap.mapTranslateY,
+            }
+        }
+
         // 按住地图时
         if (evt.buttons && mouseMove.hold) {
             mouseMove.status = true
 
-            this.mouseEvtData.mapX = x - mouseMove.x + this.mapTranslateX
-            this.mouseEvtData.mapY = y - mouseMove.y + this.mapTranslateY
+            this.mouseEvtData.mapX = x - mouseMove.x + currentMap.mapTranslateX
+            this.mouseEvtData.mapY = y - mouseMove.y + currentMap.mapTranslateY
 
             draw()
         } else {
             checkInMap(x, y, shape => {
+                let moveIndex = currentMap.mouseMoveIndex
+
                 // 恢复之前鼠标移入对象效果
-                if (shape.index !== this.mouseMoveIndex) {
-                    if (this.mouseMoveIndex > -1) {
-                        _blocks[this.mouseMoveIndex].style.fillStyle = inHoldBlocks(this.mouseMoveIndex) ? _blocksStyle.holdColor : _blocksStyle.fillStyle
+                if (shape.index !== moveIndex) {
+                    if (moveIndex > -1) {
+                        _blocks[moveIndex].style.fillStyle = inHoldBlocks(moveIndex) ? _BStyle.holdColor : _BStyle.fillStyle
                         draw()
                     }
 
                     if (shape.index === -1) {
-                        this.mouseMoveIndex = shape.index
+                        currentMap.mouseMoveIndex = shape.index
                         return
                     }
 
                     if (_blocks[shape.index]) {
-                        _blocks[shape.index].style.fillStyle = _blocksStyle.hoverColor
-                        this.mouseMoveIndex = shape.index
+                        _blocks[shape.index].style.fillStyle = _BStyle.hoverColor
+                        currentMap.mouseMoveIndex = shape.index
                     }
                     
                     callbackEvt('mousemove', evt, shape)
@@ -109,8 +124,8 @@ export function mouseEvt () {
             mouseMove.status = false
 
             // 记录已经移动过的位置
-            this.mapTranslateX = this.mouseEvtData.mapX
-            this.mapTranslateY = this.mouseEvtData.mapY
+            currentMap.mapTranslateX = this.mouseEvtData.mapX
+            currentMap.mapTranslateY = this.mouseEvtData.mapY
 
         } else {
             let x = evt.offsetX * this.DPI
@@ -121,26 +136,27 @@ export function mouseEvt () {
 
                 // 存在时，我们移除
                 if (inHoldBlocks(shape.index)) {
-                    let _index = this.holdBlocks.indexOf(shape.index)
+                    let _index = currentMap.holdBlocks.indexOf(shape.index)
                     
-                    this.holdBlocks.splice(_index, 1)
+                    currentMap.holdBlocks.splice(_index, 1)
                 } 
                 // 如果不存在，我们添加到存放区
                 else {
                     if (_selectedMode === 'multiple') {
-                        this.holdBlocks.push(shape.index)
-                    } else if (_selectedMode === 'single') {
-                        if (this.holdBlocks.length) {
-                            _blocks[this.holdBlocks[0]].style.fillStyle = _blocksStyle.fillStyle
+                        currentMap.holdBlocks.push(shape.index)
+                    } 
+                    else if (_selectedMode === 'single') {
+                        if (currentMap.holdBlocks.length) {
+                            _blocks[currentMap.holdBlocks[0]].style.fillStyle = _BStyle.fillStyle
                         }
 
-                        this.holdBlocks = [shape.index]
+                        currentMap.holdBlocks = [shape.index]
                     }
                 }
 
                 // 处理存放区内的区块效果
-                this.holdBlocks.forEach(val => {
-                    _blocks[val].style.fillStyle = _blocksStyle.holdColor
+                currentMap.holdBlocks.forEach(val => {
+                    _blocks[val].style.fillStyle = _BStyle.holdColor
                 })
 
                 draw()
