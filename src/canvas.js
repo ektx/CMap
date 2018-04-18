@@ -18,14 +18,12 @@ export function createCanvas () {
 }
 
 export function appendCanvasElement () {
-
     this.mainCanvas = this.createCanvas()
     this.hitMainCanvas = this.createCanvas()
 
     this.ctx = this.mainCanvas.getContext('2d')
     this.hitCtx = this.hitMainCanvas.getContext('2d')
 
-    // this.ele.appendChild( this.hitMainCanvas )
     this.ele.appendChild( this.mainCanvas )
 }
 

@@ -17,17 +17,63 @@
                 height: 100vh;
             }
 
-            input {
+            input[type=range] {
                 position: absolute;
                 top: 0;
                 left: 0;
+                width: 400px;
+                border-radius: 5px;
                 z-index: 10000;
+                outline: none;
+                background: transparent;
+                -webkit-appearance: none;
+            }
+            /* 轨道 */
+            input[type=range]::-webkit-slider-runnable-track {
+                height: 3px;
+                margin: 10px 0;
+                border-radius: 10px;
+                background: #f5f5f5;
+            }
+            /* 滑块 */
+            input[type=range]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                width: 14px;
+                height: 14px;
+                transform: translateY(-40%);
+                border-radius: 10px;
+                background: #f5f5f5;
+                border: 1px solid #eee;
+            }
+
+            #history-box {
+                position: fixed;
+                top: 0;
+                right: 0;
+                z-index: 9999;
+            }
+            #history-box > button {
+                width: 2em;
+                height: 2em;
+                font-size: 14px;
+                color: #333;
+                border-radius: 100%;
+                cursor: pointer;
+            }
+            #history-box > button:hover {
+                background: #eee;
             }
         </style>
     </head>
     <body>
         <!-- 存放你的地图位置信息区域 -->
         <div id="city-information-network"></div>
+
+        <div id="history-box">
+            <button id="back"><</button>
+            <button id="forward">></button>
+            <input type="number" id="go">
+        </div>
 
         <input type="range" max="20" min="1" value="1" step=".01">
     </body>
@@ -157,21 +203,10 @@
         window.myMap = new CMap(options)
 
         myMap.init()
+        myMap.fadeIn()
+   
 
-        // setTimeout(() => {
-            myMap.fadeIn()
-        // }, 300)
-
-        
-        // setTimeout(() => {
-        //     myMap.zoomOut()
-        // }, 1100)
-
-        // setTimeout(() => {
-        //     myMap.fadeOut(600, 1)
-        // }, 1500)
-
-        let rng = document.querySelector('input')
+        let rng = document.querySelector('input[type=range]')
         rng.addEventListener('mousedown', ()=> {
             rng.addEventListener('mousemove', rngEvt)
         }, false)
@@ -185,6 +220,22 @@
 
         // 取生成的值
         rng.value = myMap.history.map[0].mapScale
+
+        let go = document.getElementById('go')
+        let forward = document.getElementById('forward')
+        let back = document.getElementById('back')
+
+        back.addEventListener('click', ()=> {
+            myMap.history.back()
+        }, false)
+        forward.addEventListener('click', () => {
+            myMap.history.forward()
+        })
+        go.addEventListener('keyup', evt => {
+            if (evt.keyCode == 13|| evt.which == 13) {
+                myMap.history.go( evt.target.value )
+            }
+        })
 
     </script>
 </html>

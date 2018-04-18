@@ -37,7 +37,7 @@ export function setMapData () {
     opt = this.setBlocks(opt)
     opt = this.setTextName(opt)
     opt = this.getPoints(opt)
-// debugger
+
     this.history.map[this.history.index] = opt
 
     this.setMapScale()

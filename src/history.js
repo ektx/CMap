@@ -7,24 +7,28 @@ export class History {
 
     go (val) {
         console.log(`go ${val}`)
+        let history = this.constructor.history
+        let mapSize = history.map.length
         
         if (isNaN(val)) {
-            return console.warn(`val 不是数字`)
+            return console.warn(`val is not a Number`)
         }
 
-        this.constructor.zoomOut()
-        
-        // 重置新的地图状态
-        let i = this.constructor.history.index
-        let max = this.constructor.history.map.length -1
-        i += val
+        val = parseInt(val)
+        if (!val) return
 
+        // 重置新的地图状态
+        let i = history.index
+        let max = mapSize -1
+        i += val
+        
         if (val > 0) {
             i = i >  max ? i = max : i
         } else {
             i = i < 0 ? 0 : i
         }
-
+        
+        this.constructor.zoomOut()
         this.constructor.history.index = i
 
         setTimeout(() => {
@@ -33,23 +37,31 @@ export class History {
     }
 
     back () {
-        this.constructor.zoomOut()
-
         // 重置新的地图状态
         let i = this.constructor.history.index
+
+        if (!i) return
+
+        this.constructor.fadeOut()
 
         this.constructor.history.index = i -1 > 0 ? i -1 : 0
 
         setTimeout(() => {
-            this.constructor.fadeIn()
+            this.constructor.zoomIn()
         }, 1000)
     }
 
     forward () {
-        this.constructor.zoomOut()
-
+        let history = this.constructor.history
+        let i = history.index
         // 重置新的地图状态
-        this.constructor.history.index += 1
+        i += 1
+
+        if (i >= history.map.length) return
+
+        this.constructor.history.index = i
+
+        this.constructor.zoomOut()
 
         setTimeout(() => {
             this.constructor.fadeIn()

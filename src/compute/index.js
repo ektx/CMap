@@ -34,9 +34,8 @@ export function setBlocks (opt) {
 
     for (let i = 0, l = areas.length; i < l; i++) {
         let _data = areas[i]
-        let clearData = {}
         
-        Object.assign(_data, getMapDataInfo(_data.map), {
+        _data = Object.assign({}, _data, getMapDataInfo(_data.map), {
             style: new selfStyle(blocks.style),
             index: i,
             over: false,
@@ -212,9 +211,9 @@ export function setColorsHashID (map, data) {
 
         if (!hash[colorKey]) {
             hash[colorKey] = data
-            data.hitStyle = {
+            data.hitStyle = new selfStyle({
                 fillStyle: colorKey
-            }
+            })
             return
         }
     }

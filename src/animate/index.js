@@ -7,7 +7,7 @@ import {
 } from './swing.js'
 
 /**
- * 缓入
+ * 缓入 从小到1进入
  * @param {number} time 动画时长
  * @param {number} coe 系数
  */
@@ -44,7 +44,7 @@ export function fadeIn (time = 1000, coe = .3) {
 }
 
 /**
- * 缓出
+ * 缓出 从1到系数缩小淡出
  * @param {number} time 动画时长
  * @param {number} coe 缩放系数
  */
@@ -97,6 +97,41 @@ export function zoomOut (time = 600, coe = .3) {
                 - this.ctxH / 2 * delta * coe
             )
             this.ctx.scale(reDelta, reDelta)
+            this.ctx.drawImage(_canvas, 0, 0)
+            this.ctx.restore()
+        },
+        doneback: () => {
+            this.inAnimate = false
+        }
+    })
+}
+
+/**
+ * 缩小缓入
+ * @param {number} time 动画时长
+ * @param {number} coe 缩放系数
+ */
+export function zoomIn (time = 1000, coe = .3) {
+    let currentMap = this.history.map[this.history.index]
+    this.translateCtx(currentMap, currentMap.mapTranslateX, currentMap.mapTranslateY)
+    this.drawAllBoundary()
+    let _canvas = this.createTemCanvas()
+    this.clearCanvasCtx(true)
+    this.inAnimate = true
+
+    stepAnimate({
+        duration: time,
+        delta: makeEaseInOutAni(quadAni),
+        callback: delta => {
+            this.ctx.save()
+            let reDelta = .3 - delta * coe + 1 
+            this.ctx.globalAlpha = delta
+            this.ctx.translate(
+                -this.ctxW / 2 * coe * (1 - delta),
+                -this.ctxH / 2 * coe * (1 - delta)
+            )
+            this.ctx.scale(reDelta, reDelta)
+            this.clearCanvasCtx(true)
             this.ctx.drawImage(_canvas, 0, 0)
             this.ctx.restore()
         },
