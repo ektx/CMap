@@ -2,7 +2,9 @@
 
 使用 canvas 绘制简单的地图功能
 
-
+- 增加手动缩放功能
+- 添加下钻功能
+- 添加 history 功能
 
 ## 使用
 
@@ -10,38 +12,81 @@
 <!-- 1. 添加显示区域 -->
 <div id="my-city"></div>
 
-<!-- 2. 引入js -->
-<!-- 现代浏览器使用以下 js -->
-<script src="./js/cmap.js"></script>
+<!-- 2. 使用 -->
+<script type="module">
+import CMap from '../src/index.js'
 
-<!-- 3. 使用 -->
-<script>
-    let option = {
-        el: '#my-city',
-        city: {
-            data: [ ... ] // 下辖地区
+let options = {
+    el: '#city-information-network',
+    map: {
+        boundary: {
+            style: {
+                lineWidth: 8,
+                strokeStyle: '#538df7',
+                fillStyle: 'transparent'
+            }
         },
-        cityArea: {
-            data: [ ... ] // 边界
-        },
-        callback: {
-            click: (index, data) => {
-                // 点击事件
+        blocks: {
+            point: {
+                size: {
+                    min: 1,
+                    max: 5
+                }, 
+                r: [2, 3],
+                color: ['#fff', '#4fff5f'],
             },
-            mousemove: (index, data) => {
-                // 鼠标移动事件
+            cityName: {
+                normal: {
+                    fillStyle: '#fff',
+                    font: "1em 'Microsoft Yahei'"
+                },
+                hover: {
+                    fillStyle: '#4fff5f',
+                    font: "1.5em 'Microsoft Yahei'"
+                },
+                // 定位
+                move: {
+                    x: 10,
+                    y: 10
+                },
+                // 文字与宽度比例
+                txtVSWidth: 3
+            },
+            style: {
+                lineWidth: 3,
+                strokeStyle: '#243e6a',
+                fillStyle: 'rgba(0, 0, 0, .4)',
+                hoverColor: 'rgba(83, 141, 247, .2)',
+                holdColor: 'rgba(83, 141, 247, .4)'
             }
         }
-    };
+    },
+    callback: {
+        click: function(evt, data) {
+            myMap.history.push({
+                key: data.index,
+                boundary: huaian.araeData, 
+                blocks: huaian.citysArr
+            })
+        },
+        mousemove: function(evt, data){
+            console.log(evt, data)
+        }
+    }
+}
 
-    let myMap = new CMap(option);
-    myMap.init();
+options.map.boundary.data = china.araeData
+options.map.blocks.data = china.citysArr
+let myMap = new CMap(options)
+
+myMap.init()
+myMap.fadeIn()
 </script>
 ```
 
 
 
-## 配置手册
+## Options 配置手册
 
 - **el** [string] 地图存放Dom
 - **map** [object] 地图信息配置
@@ -74,6 +119,55 @@
     - **click**  [function] 点击事件,返回内容 (evt, data)=>{...}
     - **mousemover** [function] 鼠标移动事件,返回内容 (evt, data)=>{...}
 
+
+
+
+## API
+
+cmap api 接口
+
+```javascript
+let myMap = new CMap(options)
+```
+
+- myMap.**init(options)** 
+
+  初始化地图
+
+- myMap.**fadeIn(time, coe)** 
+
+   [animate] 在指定时间内，从指定系数大小放大进入
+
+- myMap.**fadeOut(time, coe)**  
+
+  [animate] 在指定时间内，从当前大小到指定缩放系数放大淡出
+
+- myMap.**zoomIn(time, coe)** 
+
+  [animate] 在指定时间内，从指定放大系数到原始大小缩小进入
+
+- myMap.**zoomOut(time, coe)**  
+
+  [animate] 在指定时间内，从当前大小到指定系数放大消失
+
+- myMap.**history** 地图历史记录
+
+  - data [array] 地图信息组数
+  - index [number] 地图指针
+  - forward [function] 前进到下一个地图
+  - back [function] 返回到上一个地图
+  - go [number] 前进或后退number个地图
+
+```javascript
+// 前进到下一个地图
+myMap.history.forward()
+
+// 返回到上一个地图
+myMap.history.back()
+
+// 前进3个地图
+myMap.history.go(3)
+```
 
 
 
