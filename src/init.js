@@ -22,6 +22,8 @@ export function setMapData () {
 		boundary: {},
 		// 区块
         blocks: [],
+        // 是否有点
+        hasPoint: false,
         // 地图移动距离
 		mapTranslateX: 0,
 		mapTranslateY: 0,

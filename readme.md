@@ -1,4 +1,4 @@
-# CMap
+# CMap v2
 
 使用 canvas 绘制简单的地图功能
 
@@ -43,58 +43,36 @@
 
 ## 配置手册
 
-- el 地图存放Dom
-- city 地图中的各区块配置信息 
-    - selectedMode `false(默认) | single(单选) multiple(多选)` `New` 地区选择模式
-    - data 所有区块信息,具体格式可以查看demo示例
-        - name 下辖名称(非必填)
-        - map  下辖路径
-    - point 每个区块的点的效果设置     
-        - size `number` 区块出现的点数总和
-        - message 指定点上信息生成方式
-            - all           每个点都会有信息交互
-            - auto       随机给点添加信息交互
-        - r  `array`  指定点的半径大小,例如:半径为2-4 [2, 4]
-        - pop    `number`  点上扩展波纹个数,0为无
-        - popSpeed `number` 波纹数度
-        - color  `array`  点的颜色取值, 例如:color: ['#fff', 'rgba(0,0,0,)']
-        - fun    `function`  每个点的回调函数,默认返回值有以下(index, points) 值, 
-            - index   当前区域索引
-            - points  区域中所有点
-    - cityName      区块的名称显示效果            
-        - normal    定义文字显示效果,配置按Canvas对文字的配置规则 
-        - hover     定义文字鼠标放上时显示效果,配置按Canvas对文字的配置规则
-        - align     `center | start | end | left | right`  文字对齐
-        - move      对文字进行细节调整,支持 x,y的移动
-    - style  所有区块的样式配置            
-        - lineWidth   `number`      区块的分隔线粗细 
-        - strokeStyle `color`       指定分隔线的颜色
-        - fillStyle        `color`       区块的背景色
-        - hoverColor       `color`       鼠标放上时颜色 `Fixed`
-        - holdColor        `color`       选中颜色效果`New`                
-- cityArea      地图外边框绘制信息  
-    - data      地图边界点集合            
-    - style     样式,具体参考 canvas 的参数 
-    - earthLine `boolean` 使用地理坐标,可以让地图上下反转,在地图上下不对时使用           
-- message  迁徙信息配置      
-    - direction `get(从中心到点)|send(从心到中心)`   开始反向
-    - speed      `number`  速度                    
-    - willback   `true| false`  是否返回
-    - backColor `color` 返回时颜色 
-    - light  迁徙光标
-        - length  信息条的长度比
-        - style 光标的样式,具体使用canvas的样式设置
-            - lineWidth   `number` 信息条的宽
-            - strokeStyle `color` 信息条的颜色
-        - eneter 中心点
-            - x `number` x 坐标
-            - y `number` y 坐标
-        - line  光标轨道,具体使用canvas的样式设置
-            - lineWidth `number` 宽度
-            - strokeStyle 颜色
-- callback  回调函数功能,返回值有(index, data, event), index 是索引, data是当前区域的信息, event是事件信息      
-    - click  `function` 点击事件
-    - mousemover `function` 鼠标移动事件
+- **el** [string] 地图存放Dom
+- **map** [object] 地图信息配置
+    - **boundary** [object] 地图主边界
+        - **data** [array] 地图点位信息
+        - **style** [canvas style] 样式效果
+    - **blocks** [object] 区块信息
+        - **data** [array] 区块地图信息
+        - **selectedMode** [false(默认) | single(单选) multiple(多选)] 地区选择模式
+        - **point** [object] 每个区块的点的效果设置 
+            - **size** [object] 区块出现的点数总和
+                - **min** [number] 点最少个数
+                - **max** [number] 点最多个数
+            - **r** [ **min**([number] 最小半径), **max**([number] 最大半径) ]
+            - **color** [array] 点的颜色取值
+        - **cityName** [object] 区块名字效果设置
+            - **normal** [canvas style] 正常显现效果
+            - **hover** [canvas style] 鼠标移入效果
+            - **move** [object] 偏移
+                - **x** [number] x轴偏移
+                - **y** [number] y轴偏移
+            - **txtVSWidth** [number] 文字与宽度比例,宽度在大于此倍数的情况下显示文字
+        - **style** [object] 区块样式设置
+            - **lineWidth** [number] 区块边框宽度
+            - **strokeStyle** [color] 区块边框颜色
+            - **fillStyle** [color] 区块背景颜色
+            - **hoverColor** [color] 鼠标移入区块背景颜色
+            - **holdColor** [color] 选中背景颜色
+- **callback** [function]  回调函数功能
+    - **click**  [function] 点击事件,返回内容 (evt, data)=>{...}
+    - **mousemover** [function] 鼠标移动事件,返回内容 (evt, data)=>{...}
 
 
 

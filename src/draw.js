@@ -140,6 +140,8 @@ export function drawCenterLine () {
 export function drawBlockPoints (map) {
     const data = map.blocks
 
+    if (!map.hasPoint) return map
+
     for (let i = 0, l = data.length; i < l; i++) {
         let _W = data[i].width * map.mapScale
 

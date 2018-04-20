@@ -115,16 +115,16 @@
                         }, 
                         // 大小，半径
                         r: [2, 3],
-                        // 是否要有波纹
+                        // 是否要有波纹（todo）
                         pop: true,
                         // 点的颜色
                         color: ['#fff', '#4fff5f'],
-                        // 处理函数
+                        // 处理函数（todo）
                         fun: function(p, a) {
                             // console.log(p, a)
                         },
                         // 是否要有迁徙效果, all 都有, auto 随机
-                        // * 设置了此，则默认会有点
+                        // * 设置了此，则默认会有点 (todo)
                         migration: 'all', 
                     },
                     // 区块名字效果设置
@@ -154,33 +154,33 @@
                     }
                 }
             },
-            // 迁徙设置
-            migration: {
-                direction: 'get', // 流向 [send|get]
-                willback: {
-                    status: true,     // 是否返回
-                    backColor: '#f90' // 返回时颜色
-                },
-                // 中心
-                center: {
-                    x: 370,
-                    y: 170
-                },
-                // 轨道
-                track: {
-                    lineWidth: 1,
-                    strokeStyle: 'rgba(83, 141, 247, .4)'
-                },
-                // 移动点
-                point: {
-                    speed: 200, // 速度
-                    length: 15, // 信息条的长度比
-                    style: {
-                        lineWidth: 2, // 信息条的宽
-                        strokeStyle: '#408cff' // 信息条的颜色
-                    }
-                }
-            },
+            // 迁徙设置（todo）
+            // migration: {
+            //     direction: 'get', // 流向 [send|get]
+            //     willback: {
+            //         status: true,     // 是否返回
+            //         backColor: '#f90' // 返回时颜色
+            //     },
+            //     // 中心
+            //     center: {
+            //         x: 370,
+            //         y: 170
+            //     },
+            //     // 轨道
+            //     track: {
+            //         lineWidth: 1,
+            //         strokeStyle: 'rgba(83, 141, 247, .4)'
+            //     },
+            //     // 移动点
+            //     point: {
+            //         speed: 200, // 速度
+            //         length: 15, // 信息条的长度比
+            //         style: {
+            //             lineWidth: 2, // 信息条的宽
+            //             strokeStyle: '#408cff' // 信息条的颜色
+            //         }
+            //     }
+            // },
             callback: {
                 click: function(evt, data) {
                     // console.log( index, data )

@@ -59,6 +59,8 @@ export function setTextName (map) {
     // 获取区块名称用户设置
     let cityName = this.options.map.blocks.cityName
 
+    if (!cityName) return map
+
     // 判断是否已经处理过高清屏文字
     if (!cityName.fixed) {
         Object.keys(cityName).forEach(name => {
@@ -92,6 +94,11 @@ export function setTextName (map) {
 export function getPoints (map) {
     let blocks = this.options.map.blocks
     let point = blocks.point
+
+    if (!point) return map
+
+    map.hasPoint = true
+
     let minR = Math.min.apply({}, point.r)
     let maxR = Math.max.apply({}, point.r)
 
@@ -179,6 +186,8 @@ export function scaleBlocks (map) {
  */
 export function scalePoints (map) {
     let blocks = map.blocks
+
+    if (!map.hasPoint) return
 
     for (let i = 0, l = blocks.length; i < l; i++) {
         blocks[i]._point = []
