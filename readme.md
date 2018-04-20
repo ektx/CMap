@@ -17,7 +17,7 @@
 import CMap from '../src/index.js'
 
 let options = {
-    el: '#city-information-network',
+    el: '#my-city',
     map: {
         boundary: {
             style: {
