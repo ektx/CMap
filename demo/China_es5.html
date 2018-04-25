@@ -1,0 +1,240 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>China - 综合示例</title>
+        <style type="text/css">
+            body, canvas, div {
+                margin: 0;
+                padding: 0;
+            }
+            body {
+                background:#040714; 
+            }
+
+            #city-information-network {
+                width: 100vw;
+                height: 100vh;
+            }
+
+            input[type=range] {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 400px;
+                border-radius: 5px;
+                z-index: 10000;
+                outline: none;
+                background: transparent;
+                -webkit-appearance: none;
+            }
+            /* 轨道 */
+            input[type=range]::-webkit-slider-runnable-track {
+                height: 3px;
+                margin: 10px 0;
+                border-radius: 10px;
+                background: #f5f5f5;
+            }
+            /* 滑块 */
+            input[type=range]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                width: 14px;
+                height: 14px;
+                transform: translateY(-40%);
+                border-radius: 10px;
+                background: #f5f5f5;
+                border: 1px solid #eee;
+            }
+
+            #history-box {
+                position: fixed;
+                top: 0;
+                right: 0;
+                z-index: 9999;
+            }
+            #history-box > button {
+                width: 2em;
+                height: 2em;
+                font-size: 14px;
+                color: #333;
+                border-radius: 100%;
+                cursor: pointer;
+            }
+            #history-box > button:hover {
+                background: #eee;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- 存放你的地图位置信息区域 -->
+        <div id="city-information-network"></div>
+
+        <div id="history-box">
+            <button id="back"><</button>
+            <button id="forward">></button>
+            <input type="number" id="go">
+        </div>
+
+        <input type="range" max="20" min="1" value="1" step=".01">
+    </body>
+
+    <!-- 组件代码 -->
+    <script src="data/china.js"></script>
+    <script src="data/huaian.js"></script>
+    <script src="../dist/CMap.es5.min.js"></script>
+
+    <!-- 示例代码 -->
+    <script type="module">
+        let options = {
+            el: '#city-information-network',
+            map: {
+                // 边界
+                boundary: {
+                    // 边界数据
+                    // data: china.araeData,
+                    // 样式
+                    style: {
+                        lineWidth: 8,
+                        strokeStyle: '#538df7',
+                        fillStyle: 'transparent'
+                    }
+                },
+                // 块
+                blocks: {
+                    // 块数据
+                    // data: china.citysArr,
+                    // 是否可以选择 [multiple|single|false(默认)]
+                    selectedMode: 'single',
+                    point: {
+                        // 个数
+                        size: {
+                            min: 1,
+                            max: 5
+                        }, 
+                        // 大小，半径
+                        r: [2, 3],
+                        // 是否要有波纹（todo）
+                        pop: true,
+                        // 点的颜色
+                        color: ['#fff', '#4fff5f'],
+                        // 处理函数（todo）
+                        fun: function(p, a) {
+                            // console.log(p, a)
+                        },
+                        // 是否要有迁徙效果, all 都有, auto 随机
+                        // * 设置了此，则默认会有点 (todo)
+                        migration: 'all', 
+                    },
+                    // 区块名字效果设置
+                    cityName: {
+                        normal: {
+                            fillStyle: '#fff',
+                            font: "1em 'Microsoft Yahei'"
+                        },
+                        hover: {
+                            fillStyle: '#4fff5f',
+                            font: "1.5em 'Microsoft Yahei'"
+                        },
+                        // 定位
+                        move: {
+                            x: 10,
+                            y: 10
+                        },
+                        // 文字与宽度比例
+                        txtVSWidth: 3
+                    },
+                    style: {
+                        lineWidth: 3,
+                        strokeStyle: '#243e6a',
+                        fillStyle: 'rgba(0, 0, 0, .4)',
+                        hoverColor: 'rgba(83, 141, 247, .2)',
+                        holdColor: 'rgba(83, 141, 247, .4)'
+                    }
+                }
+            },
+            // 迁徙设置（todo）
+            // migration: {
+            //     direction: 'get', // 流向 [send|get]
+            //     willback: {
+            //         status: true,     // 是否返回
+            //         backColor: '#f90' // 返回时颜色
+            //     },
+            //     // 中心
+            //     center: {
+            //         x: 370,
+            //         y: 170
+            //     },
+            //     // 轨道
+            //     track: {
+            //         lineWidth: 1,
+            //         strokeStyle: 'rgba(83, 141, 247, .4)'
+            //     },
+            //     // 移动点
+            //     point: {
+            //         speed: 200, // 速度
+            //         length: 15, // 信息条的长度比
+            //         style: {
+            //             lineWidth: 2, // 信息条的宽
+            //             strokeStyle: '#408cff' // 信息条的颜色
+            //         }
+            //     }
+            // },
+            callback: {
+                click: function(evt, data) {
+                    // console.log( index, data )
+
+                    myMap.history.push({
+                        key: data.index,
+                        boundary: huaian.araeData, 
+                        blocks: huaian.citysArr
+                    })
+                },
+                // 鼠标移动事件
+                mousemove: function(evt, data){
+                    // console.log(evt, data)
+                }
+            }
+        }
+        
+        options.map.boundary.data = china.araeData
+        options.map.blocks.data = china.citysArr
+        window.myMap = new CMap(options)
+
+        myMap.init()
+        myMap.fadeIn()
+   
+
+        let rng = document.querySelector('input[type=range]')
+        rng.addEventListener('mousedown', ()=> {
+            rng.addEventListener('mousemove', rngEvt)
+        }, false)
+        rng.addEventListener('mouseup', () => {
+            rng.removeEventListener('mousemove', rngEvt)
+        }, false)
+
+        function rngEvt () {
+            myMap.scaleMap(rng.value)
+        }
+
+        // 取生成的值
+        rng.value = myMap.history.map[0].mapScale
+
+        let go = document.getElementById('go')
+        let forward = document.getElementById('forward')
+        let back = document.getElementById('back')
+
+        back.addEventListener('click', ()=> {
+            myMap.history.back()
+        }, false)
+        forward.addEventListener('click', () => {
+            myMap.history.forward()
+        })
+        go.addEventListener('keyup', evt => {
+            if (evt.keyCode == 13|| evt.which == 13) {
+                myMap.history.go( evt.target.value )
+            }
+        })
+
+    </script>
+</html>

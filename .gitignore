@@ -1,6 +1,59 @@
+#忽略常用文件
+
+# node project
+*node_modules
+
+# yarn
+yarn-debug.log*
+yarn-error.log*
+
+
+# npm
+npm-debug.log*
+
+
+# 编辑器文件
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.project
+*.vscode
 
 # Mac
 *.DS_Store
 
 # windows
 Thumbs.db
+
+# Xcode
+#
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+project.xcworkspace
+
+# Android/IntelliJ
+#
+build/
+.idea
+.gradle
+local.properties
+*.iml
+
+# 添加你自己要忽略的文件
+dist/
