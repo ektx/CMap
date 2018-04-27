@@ -88,6 +88,10 @@
     <script type="module">
         let options = {
             el: '#city-information-network',
+            usrData: {
+                mapName: 'china',
+                id: 1
+            },
             map: {
                 // 边界
                 boundary: {
@@ -186,8 +190,15 @@
 
                     myMap.history.push({
                         key: data.index,
+                        // 新边界
                         boundary: huaian.araeData, 
-                        blocks: huaian.citysArr
+                        // 新区块
+                        blocks: huaian.citysArr,
+                        // 新的地图专有信息
+                        usrData: {
+                            mapName: Math.random().toString(16).slice(2),
+                            id: + new Date
+                        }
                     })
                 },
                 // 鼠标移动事件

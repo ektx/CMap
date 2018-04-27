@@ -20,6 +20,8 @@ export function mouseEvt () {
      * @callback 回调函数
      */
     let checkInMap = (x, y, callback) => {
+        if (!currentMap) return {index: -1}
+        
         const pixel = this.hitCtx.getImageData(x, y, 1, 1).data
         const color = `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`
         const shape = currentMap.colorsHash[color] || {index: -1}

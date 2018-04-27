@@ -32,8 +32,10 @@ export function setMapData () {
 		// 当前鼠标移入区索引
 		mouseMoveIndex: -1,
 		// 选择区域
-		holdBlocks: []
+        holdBlocks: []
     }
+
+    opt.usrData = this.options.usrData
 
     opt = this.setBoundary(opt)
     opt = this.setBlocks(opt)

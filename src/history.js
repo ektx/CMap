@@ -69,7 +69,7 @@ export class History {
     }
 
     // key 用于区分渲染
-    push ({boundary, blocks, key} = opt) {
+    push ({boundary, blocks, key, usrData} = opt) {
         let _ = this.constructor
         let _H = _.history
         let setNewMap = () => {
@@ -77,6 +77,7 @@ export class History {
     
             optMap.boundary.data = boundary
             optMap.blocks.data = blocks
+            _.options.usrData = usrData || {}
             // 重置地图数据
             _.setMapData()
     
