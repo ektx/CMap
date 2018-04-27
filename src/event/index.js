@@ -108,6 +108,8 @@ export function mouseEvt () {
                     
                     callbackEvt('mousemove', evt, shape)
                     draw()
+                } else {
+                    callbackEvt('mousemove', evt, shape)
                 }
             })
         }
