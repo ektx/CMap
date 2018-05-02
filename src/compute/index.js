@@ -12,7 +12,7 @@ export function setBoundary (opt) {
 
     Object.assign(boundary, getMapDataInfo(boundary.data))
 
-    this.setColorsHashID(opt, boundary)
+    this.setColorsHashID(opt, boundary, true)
 
     // 设置最小缩放
     opt.mapScale = Math.min(
@@ -211,8 +211,9 @@ export function scalePoints (map) {
  * 备案区块信息
  * @param {object} map 当前地图
  * @param {object} data 区块信息
+ * @param {boolean} transparentBg 背景透明化
  */
-export function setColorsHashID (map, data) {
+export function setColorsHashID (map, data, transparentBg = false) {
     let hash = map.colorsHash
 
     while (true) {
@@ -221,7 +222,7 @@ export function setColorsHashID (map, data) {
         if (!hash[colorKey]) {
             hash[colorKey] = data
             data.hitStyle = new selfStyle({
-                fillStyle: colorKey
+                fillStyle: transparentBg ? 'rgba(0,0,0,0)' :  colorKey
             })
             return
         }

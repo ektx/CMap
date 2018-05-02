@@ -6,10 +6,10 @@ export function drawAllBoundary () {
     let currentMap = this.history.map[this.history.index]
 
     this.clearCanvasCtx()
-    // 边界
-    this.drawMainBoundary(currentMap)
     // 区
     this.drawBlockBoundary(currentMap)
+    // 边界
+    this.drawMainBoundary(currentMap)
     // 点
     this.drawBlockPoints(currentMap)
     // 城市名
