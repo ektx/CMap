@@ -114,7 +114,7 @@ export function getPoints (map) {
         }
     }
 
-    map.blocks.forEach(val => {
+    map.blocks.forEach((val, index) => {
         if (point.size) {
             let size = point.size
             let pointSize = 1
@@ -126,16 +126,25 @@ export function getPoints (map) {
             val.point = []
 
             for (let i = 0; i < pointSize; i++) {
-                let { x } = val.centroid
-                let { y } = val.centroid
+                let { x, y } = val.centroid
+                let usrSet = {}
 
-                if (size.min !== size.max) [x,y] = getPoint(val)
+                if (point.fun) {
+                    usrSet = point.fun( index, val, this.options.usrData )
+                }
 
-                val.point.push({
-                    r: getBetweenRandom(minR, maxR) * this.DPI,
+                if (size.min !== size.max) 
+                    [x,y] = getPoint(val)
+
+                usrSet = Object.assign({}, {
+                    r: getBetweenRandom(minR, maxR),
                     color: point.color[~~getBetweenRandom(0, point.color.length)],
                     position: {x, y}
-                })
+                }, usrSet)
+
+                usrSet.r *= this.DPI
+
+                val.point.push(usrSet)
             }
         }
     })
@@ -173,6 +182,7 @@ export function scaleBoundary (map) {
 
 /**
  * 缩放块
+ * @param {object} map 当前地图
  */
 export function scaleBlocks (map) {
     for (let i = 0, l = map.blocks.length; i < l; i++) {
@@ -182,7 +192,8 @@ export function scaleBlocks (map) {
 }
 
 /**
- * 缩放点
+ * 缩放点的位置
+ * @param {object} map 当前地图
  */
 export function scalePoints (map) {
     let blocks = map.blocks

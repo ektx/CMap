@@ -103,6 +103,16 @@ myMap.fadeIn()
                 - **max** `[number]` 点最多个数
             - **r** [ **min**(`[number]` 最小半径), **max**(`[number]` 最大半径) ]
             - **color** `[array]` 点的颜色取值
+            - **fun** `[function]` 对单个点进行处理，接受3个值:
+                - **index** `[number]` 当前索引
+                - **block** `[block]` 当前区块
+                - **usrData** `[object]` 当前地图自定义数据
+                可以通过 `return` 返回一个如下对象对点的设置
+                - **color** `[color]` 自定义点的颜色
+                - **r** `[number]` 半径大小
+                - **position** `[object]` 自定义点的位置
+                    - **x** `[number]` x轴位置
+                    - **y** `[number]` y轴位置
         - **cityName** `[object]` 区块名字效果设置
             - **normal** `[canvas style]` 正常显现效果
             - **hover** `[canvas style]` 鼠标移入效果
