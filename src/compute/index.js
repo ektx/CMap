@@ -31,12 +31,31 @@ export function setBoundary (opt) {
 export function setBlocks (opt) {
     const blocks = this.options.map.blocks
     const areas = blocks.data
+    let _BC = blocks.color
+    let colorIsArr = Array.isArray(_BC)
+    let colorLen = colorIsArr ? _BC.length : 0
 
     for (let i = 0, l = areas.length; i < l; i++) {
         let _data = areas[i]
-        
+        let _style = blocks.style
+
+        // 1.优先使用块内样式
+        if (_data.style && _data.style.hasOwnProperty('block')) {
+            _style = _data.style.block
+        }
+        // 随机色或自定颜色
+        if (!_data.style && blocks.color) {
+
+            if (colorIsArr) {
+                _style.fillStyle = _BC[ i % colorLen ]
+            } 
+            else if (typeof _BC === 'boolean') {
+                _style.fillStyle = this.getRandomColor()
+            }
+        }
+
         _data = Object.assign({}, _data, getMapDataInfo(_data.map), {
-            style: new selfStyle(blocks.style),
+            style: new selfStyle( _style ),
             index: i,
             over: false,
             hold: false
@@ -240,7 +259,9 @@ export function setColorsHashID (map, data, transparentBg = false) {
     }
 }
 
-
+/**
+ * 随机生成 RGB 颜色
+ */
 export function getRandomColor () {
     const r = Math.round(Math.random() * 255)
     const g = Math.round(Math.random() * 255)

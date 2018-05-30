@@ -76,7 +76,16 @@ let options = {
                 fillStyle: 'rgba(0, 0, 0, .4)',
                 hoverColor: 'rgba(83, 141, 247, .2)',
                 holdColor: 'rgba(83, 141, 247, .4)'
-            }
+            },
+            // 自定义颜色
+            // color: [
+            //     '#8BC34A',
+            //     '#FFC107',
+            //     '#3F51B5',
+            //     '#2196F3'
+            // ],
+            // 随机颜色
+            color: true
         }
     },
     // 迁徙设置（todo）

@@ -2,9 +2,12 @@
 
 使用 canvas 绘制简单的地图功能
 
+![Camp](http://wx3.sinaimg.cn/large/9444af88gy1frt7dzrcnvg20m30hp4qq.gif)
+
 - 增加手动缩放功能
 - 添加下钻功能
 - 添加 history 功能
+- 添加区块颜色功能
 
 ## 使用
 
@@ -126,6 +129,9 @@ myMap.fadeIn()
             - **fillStyle** `[color]` 区块背景颜色
             - **hoverColor** `[color]` 鼠标移入区块背景颜色
             - **holdColor** `[color]` 选中背景颜色
+        - **color** `[array|boolean]` `New` 设置区块颜色，优化级为*区块内* > *color* > *style*
+            - `[array]` 数组时，区块按数组颜色内容循环生成
+            - `[boolean]` 布尔值时，当为 `true` 时，随机出现颜色
 - **callback** `[function]`  回调函数功能
     - **click**  `[function]` 点击事件,返回内容 (evt, data)=>{...}
     - **mousemover** `[function]` 鼠标移动事件,返回内容 (evt, data)=>{...}
@@ -181,7 +187,26 @@ myMap.history.back()
 myMap.history.go(3)
 ```
 
-
+### 区块内样式设置 `New`
+```js
+citysArr: [
+    {
+        "name": "新疆",
+        ...
+        "style": {
+            "block": {
+                "lineWidth": "10",
+                "strokeStyle": "#fff",
+                "fillStyle": "#8BC34A",
+                "hoverColor": "#4CAF50",
+                "holdColor": "#009688"
+            }
+        },
+        "map": ...
+    },
+    ...
+]
+```
 
 ## S.T.O
 

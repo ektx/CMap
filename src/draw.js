@@ -13,7 +13,7 @@ export function drawAllBoundary () {
     // 点
     this.drawBlockPoints(currentMap)
     // 城市名
-    this.drawText(currentMap)
+    this.drawBlockText(currentMap)
     
     this.ctx.setTransform(1, 0, 0, 1, 0, 0)
     this.hitCtx.setTransform(1, 0, 0, 1, 0, 0)
@@ -23,14 +23,28 @@ export function drawAllBoundary () {
  * @name 绘制内部区块
  * @param {Object} obj 绘制的区块信息
  */
-export function drawBoundary (obj, ctxs, style) {
-    let l = obj._coordinates.length
+export function drawBoundary (obj) {
+    let style = obj.style
+    let fillStyle = style.fillStyle
+    let styleOption = {}
 
-    for (let i = 0; i < l; i++) {
+    if (obj.hold) {
+        fillStyle = style.holdColor || fillStyle
+    } else {
+        fillStyle = obj.over ? style.hoverColor : fillStyle
+    }
+
+    styleOption = {
+        fillStyle,
+        lineWidth: style.lineWidth,
+        strokeStyle: style.strokeStyle
+    }
+
+    for (let i = 0, l = obj._coordinates.length; i < l; i++) {
         let ctx = this.drawLine(
             this.ctx,
             obj._coordinates[i],
-            obj.style
+            styleOption
         )
 
         this.drawLine(
@@ -81,40 +95,64 @@ export function drawArc (ctx, option, style) {
 }
 
 /**
- * @name 绘制名字
+ * 绘制名字
+ * @param {object} map 当前地图信息
  */
-export function drawText (map, ctx = this.ctx) {
+export function drawBlockText (map, ctx = this.ctx) {
     
     let cityName = this.options.map.blocks.cityName
     if (!cityName) return
 
-    let Obj = map.blocks
+    let blocks = map.blocks
     let move = cityName.move || {x: 0, y: 0}
 
-    for (let i = 0, l = map.blocks.length;i < l; i++) {
-        let city = Obj[i]
-        let style = city.nameStyle.normal
+    for (let i = 0, l = blocks.length; i < l; i++) {
+        let city = blocks[i]
+        let style = false
         let width = city.width * map.mapScale
         let txtWidth = ctx.measureText(city.name).width
 
         if (city.name) {
-            if (map.mouseMoveIndex === i) {
+            if (city.hold) {
+                style = city.nameStyle.hold
+            } else if (city.over) {
                 style = city.nameStyle.hover
             }
-            
+
+            if (!style) {
+                style = city.nameStyle.normal
+            }
+
             if (txtWidth < width / this.textVsWidth || city.index === map.mouseMoveIndex) {
                 let x = city.centroid.x * map.mapScale + move.x
                 let y = city.centroid.y * map.mapScale + move.y
                 
-                ctx.save()
-                ctx = this.setCtxState(style, ctx)
-                ctx.textAlign = cityName.align || 'center'
-                ctx.textBaseline = "middle"		
-                ctx.fillText(city.name, x, y)		
-                ctx.restore()
+                this.drawText({
+                    txt: city.name,
+                    x,
+                    y,
+                    align: cityName.align
+                }, style, ctx)
             }
         }
     }
+}
+
+/**
+ * 绘制文字
+ * @param {object} textObj 文字信息
+ * @param {object} style 样式
+ * @param {canvas} ctx canvas
+ */
+export function drawText (textObj, style, ctx = this.ctx) {
+    let {txt, x, y, align} = textObj
+   
+    ctx.save()
+    ctx = this.setCtxState(style, ctx)
+    ctx.textAlign = align || 'center'
+    ctx.textBaseline = "middle"	
+    ctx.fillText(txt, x, y)		
+    ctx.restore()
 }
 
 /**
@@ -188,9 +226,9 @@ export function drawLine (ctx, data, style) {
     }
     
     ctx.lineJoin = 'round'
+    ctx.closePath()
     ctx.stroke()
     ctx.fill()
-    ctx.closePath()
 
     return ctx
 }

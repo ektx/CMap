@@ -92,22 +92,17 @@ export function mouseEvt () {
                 // 恢复之前鼠标移入对象效果
                 if (shape.index !== moveIndex) {
                     if (moveIndex > -1) {
-                        _blocks[moveIndex].style.fillStyle = inHoldBlocks(moveIndex) ? _BStyle.holdColor : _BStyle.fillStyle
+                        _blocks[moveIndex].over = false
                         draw()
                     }
 
-                    if (shape.index === -1) {
-                        currentMap.mouseMoveIndex = shape.index
-                        return
-                    }
-
-                    if (_blocks[shape.index]) {
-                        _blocks[shape.index].style.fillStyle = _BStyle.hoverColor
-                        currentMap.mouseMoveIndex = shape.index
-                    }
+                    currentMap.mouseMoveIndex = shape.index
                     
-                    callbackEvt('mousemove', evt, shape)
-                    draw()
+                    if (shape.index > -1) {
+                        shape.over = true
+                        callbackEvt('mousemove', evt, shape)
+                        draw()
+                    }
                 } else {
                     callbackEvt('mousemove', evt, shape)
                 }
