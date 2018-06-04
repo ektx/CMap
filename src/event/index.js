@@ -79,12 +79,16 @@ export function mouseEvt () {
 
         // 按住地图时
         if (evt.buttons && mouseMove.hold) {
-            mouseMove.status = true
-
-            this.mouseEvtData.mapX = x - mouseMove.x + currentMap.mapTranslateX
-            this.mouseEvtData.mapY = y - mouseMove.y + currentMap.mapTranslateY
-
-            draw()
+            let _x = x - mouseMove.x + currentMap.mapTranslateX
+            let _y = y - mouseMove.y + currentMap.mapTranslateY
+            
+            if (this.mouseEvtData.mapX - _x || this.mouseEvtData.mapY - _y) {
+                this.mouseEvtData.mapX = _x
+                this.mouseEvtData.mapY = _y
+                
+                mouseMove.status = true
+                draw()
+            }
         } else {
             checkInMap(x, y, shape => {
                 let moveIndex = currentMap.mouseMoveIndex
