@@ -126,6 +126,11 @@ export function drawBlockText (map, ctx = this.ctx) {
             if (txtWidth < width / this.textVsWidth || city.index === map.mouseMoveIndex) {
                 let x = city.centroid.x * map.mapScale + move.x
                 let y = city.centroid.y * map.mapScale + move.y
+
+                ctx.save()
+                ctx.shadowColor = 'rgba(128, 128, 128, .8)'
+                ctx.shadowOffsetX = this.DPI
+                ctx.shadowOffsetY = this.DPI
                 
                 this.drawText({
                     txt: city.name,
@@ -133,6 +138,7 @@ export function drawBlockText (map, ctx = this.ctx) {
                     y,
                     align: cityName.align
                 }, style, ctx)
+                ctx.restore()
             }
         }
     }

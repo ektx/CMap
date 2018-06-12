@@ -74,7 +74,7 @@ let options = {
                 lineWidth: 3,
                 strokeStyle: '#243e6a',
                 fillStyle: 'rgba(0, 0, 0, .4)',
-                hoverColor: 'rgba(83, 141, 247, .2)',
+                hoverColor: '#FF5722',
                 holdColor: 'rgba(83, 141, 247, .4)'
             },
             // 自定义颜色
