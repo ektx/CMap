@@ -187,7 +187,20 @@ myMap.history.back()
 myMap.history.go(3)
 ```
 
-### 区块内样式设置 `New`
+## 区块数据设置
+
+### 区块内样式设置 style.block
+
+| 属性        | 类型   | 说明         | 默认值 |
+| ----------- | ------ | ------------ | ------ |
+| lineWidth   | number | 区块边框     | -      |
+| strokeStyle | color  | 边框颜色     | -      |
+| fillStyle   | color  | 填充色       | -      |
+| hoverColor  | color  | 鼠标移入颜色 | -      |
+| holdColor   | color  | 选中时颜色   | -      |
+
+如果没有设置，默认使用配置内容，如果没有配置，则无。
+
 ```js
 citysArr: [
     {
@@ -195,11 +208,35 @@ citysArr: [
         ...
         "style": {
             "block": {
-                "lineWidth": "10",
+                "lineWidth": 10,
                 "strokeStyle": "#fff",
                 "fillStyle": "#8BC34A",
                 "hoverColor": "#4CAF50",
                 "holdColor": "#009688"
+            }
+        },
+        "map": ...
+    },
+    ...
+]
+```
+
+### 区块内点自定义
+
+| 属性 | 类型         | 说明           | 默认值 |
+| ---- | ------------ | -------------- | ------ |
+| size | Number Array | 点的个数或效果 | -      |
+
+在使用数组时，可以支持2个参数，color 和 r 的使用。具体可以查看 data/china.js
+
+```js
+citysArr: [
+    {
+        "name": "新疆",
+        ...
+        "blocks": {
+            "point": {
+                "size": 10
             }
         },
         "map": ...

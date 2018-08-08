@@ -137,9 +137,23 @@ export function getPoints (map) {
         if (point.size) {
             let size = point.size
             let pointSize = 1
-            
-            if (size.min !== size.max) {
-                pointSize = ~~getBetweenRandom(size.min, size.max)
+            let hasUserSet = false
+            let _blockPointSize
+
+            if (val.blocks && val.blocks.point && val.blocks.point.size) {
+                _blockPointSize = val.blocks.point.size
+                hasUserSet = true
+
+                if (Array.isArray(_blockPointSize)) {
+                    hasUserSet = 'array'
+                    pointSize = _blockPointSize.length
+                } else if (!isNaN(_blockPointSize)) {
+                    pointSize = _blockPointSize
+                }
+            } else {
+                if (size.min !== size.max) {
+                    pointSize = ~~getBetweenRandom(size.min, size.max)
+                }
             }
 
             val.point = []
@@ -152,12 +166,28 @@ export function getPoints (map) {
                     usrSet = point.fun( index, val, this.options.usrData )
                 }
 
-                if (size.min !== size.max) 
-                    [x,y] = getPoint(val)
+                if (size.min !== size.max) [x,y] = getPoint(val)
+
+                let color = ''
+                let r = 0
+
+                if (hasUserSet && hasUserSet === 'array') {
+                    color = 'color' in _blockPointSize[i] ?
+                        _blockPointSize[i].color :
+                        point.color[~~getBetweenRandom(0, point.color.length)]
+
+                    r = 'r' in _blockPointSize[i] ?
+                        _blockPointSize[i].r :
+                        getBetweenRandom(minR, maxR)
+                } else {
+                    color = point.color[~~getBetweenRandom(0, point.color.length)]
+
+                    r = getBetweenRandom(minR, maxR)
+                }
 
                 usrSet = Object.assign({}, {
-                    r: getBetweenRandom(minR, maxR),
-                    color: point.color[~~getBetweenRandom(0, point.color.length)],
+                    r,
+                    color,
                     position: {x, y}
                 }, usrSet)
 
