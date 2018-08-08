@@ -227,7 +227,7 @@ citysArr: [
 | ---- | ------------ | -------------- | ------ |
 | size | Number Array | 点的个数或效果 | -      |
 
-在使用数组时，可以支持2个参数，color 和 r 的使用。具体可以查看 data/china.js
+在使用数组时，数组长度则为点的个数，可以支持2个参数，color 和 r 的使用。具体可以查看 **data/china.js**
 
 ```js
 citysArr: [
