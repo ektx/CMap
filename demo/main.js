@@ -14,7 +14,7 @@ let options = {
         // 边界
         boundary: {
             // 边界数据
-            // data: china.araeData,
+            // data: china.areaData,
             // 样式
             style: {
                 lineWidth: 8,
@@ -122,7 +122,7 @@ let options = {
             myMap.history.push({
                 key: data.index,
                 // 新边界
-                boundary: huaian.araeData, 
+                boundary: huaian.areaData, 
                 // 新区块
                 blocks: huaian.citysArr,
                 // 新的地图专有信息
@@ -139,7 +139,7 @@ let options = {
     }
 }
 
-options.map.boundary.data = china.araeData
+options.map.boundary.data = china.areaData
 options.map.blocks.data = china.citysArr
 window.myMap = new CMap(options)
 

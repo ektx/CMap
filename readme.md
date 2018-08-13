@@ -68,7 +68,7 @@ let options = {
         click: function(evt, data) {
             myMap.history.push({
                 key: data.index,
-                boundary: huaian.araeData, 
+                boundary: huaian.areaData, 
                 blocks: huaian.citysArr
             })
         },
@@ -78,7 +78,7 @@ let options = {
     }
 }
 
-options.map.boundary.data = china.araeData
+options.map.boundary.data = china.areaData
 options.map.blocks.data = china.citysArr
 let myMap = new CMap(options)
 
