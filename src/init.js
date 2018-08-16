@@ -36,6 +36,7 @@ export function setMapData () {
     }
 
     opt.usrData = this.options.usrData
+    opt.mirror = this.options.map.mirror || {}
 
     opt = this.setBoundary(opt)
     opt = this.setBlocks(opt)

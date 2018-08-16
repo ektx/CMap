@@ -1,6 +1,6 @@
 {
   "name": "c-map",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "简单的 Canvas 地图功能",
   "author": "ektx",
   "scripts": {

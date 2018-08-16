@@ -12,6 +12,10 @@ export function setBoundary (opt) {
 
     Object.assign(boundary, getMapDataInfo(boundary.data))
 
+    // 镜像设置
+    let { coordinates } = setMirror(opt, boundary, boundary.data)
+    boundary.coordinates = coordinates
+
     this.setColorsHashID(opt, boundary, true)
 
     // 设置最小缩放
@@ -20,7 +24,7 @@ export function setBoundary (opt) {
         this.hitMainCanvas.height / boundary.height
     )
 
-    opt.boundary = Object.assign({}, boundary)
+    opt.boundary = boundary
     opt.mapTranslateX = 0
     opt.mapTranslateY = 0
 
@@ -54,7 +58,10 @@ export function setBlocks (opt) {
             }
         }
 
-        _data = Object.assign({}, _data, getMapDataInfo(_data.map), {
+        // 镜像设置
+        Object.assign(_data.map, setMirror(opt, opt.boundary, _data.map))
+
+        _data = Object.assign({}, _data, _data.map, {
             style: new selfStyle( _style ),
             index: i,
             over: false,
@@ -324,4 +331,18 @@ export function getLikeGeoJson (arr) {
         result.push([arr[i], arr[i+1]])
     }
     return result
+}
+
+
+function setMirror (opt, boundary, arr) {
+    if (opt.mirror) {
+        let mirrorOpt = {}
+        
+        if (opt.mirror.horizontal) mirrorOpt.x = boundary.x.end + boundary.x.start
+        if (opt.mirror.vertical) mirrorOpt.y = boundary.y.end + boundary.y.start
+
+        arr = getMapDataInfo(arr, mirrorOpt)
+    }
+
+    return arr
 }

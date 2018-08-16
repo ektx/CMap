@@ -1,13 +1,14 @@
-# CMap v2
+# CMap v2.4.0
 
 使用 canvas 绘制简单的地图功能
 
 ![Camp](http://wx3.sinaimg.cn/large/9444af88gy1frt7dzrcnvg20m30hp4qq.gif)
 
-- 增加手动缩放功能
-- 添加下钻功能
-- 添加 history 功能
+- 支持缩放功能
+- 支持地图下钻功能
+- 支持地图历史记录功能
 - 添加区块颜色功能
+- 支持地图镜像功能
 
 ## 使用
 
@@ -129,9 +130,12 @@ myMap.fadeIn()
             - **fillStyle** `[color]` 区块背景颜色
             - **hoverColor** `[color]` 鼠标移入区块背景颜色
             - **holdColor** `[color]` 选中背景颜色
-        - **color** `[array|boolean]` `New` 设置区块颜色，优化级为*区块内* > *color* > *style*
+        - **color** `[array|boolean]` 设置区块颜色，优化级为*区块内* > *color* > *style*
             - `[array]` 数组时，区块按数组颜色内容循环生成
             - `[boolean]` 布尔值时，当为 `true` 时，随机出现颜色
+    - **mirror** `[object]` `NEW` 镜像配置
+        - **horizontal** `[boolean]` 水平镜像控制
+        - **vertical** `[boolean]` 垂直镜像控制
 - **callback** `[function]`  回调函数功能
     - **click**  `[function]` 点击事件,返回内容 (evt, data)=>{...}
     - **mousemover** `[function]` 鼠标移动事件,返回内容 (evt, data)=>{...}
@@ -223,9 +227,6 @@ citysArr: [
 
 ### 区块内点自定义
 
-| 属性 | 类型         | 说明           | 默认值 |
-| ---- | ------------ | -------------- | ------ |
-| size | Number Array | 点的个数或效果 | -      |
 
 在使用数组时，数组长度则为点的个数，可以支持2个参数，color 和 r 的使用。具体可以查看 **data/china.js**
 
@@ -243,6 +244,28 @@ citysArr: [
     },
     ...
 ]
+```
+
+### 地图镜像设置
+
+| 属性 | 类型         | 说明           | 默认值 |
+| ---- | ------------ | -------------- | ------ |
+| horizontal | boolean | 水平镜像 | -      |
+| vertical | boolean | 垂直镜像 | -      |
+
+```js
+// 镜像设置要放在 map 中
+{
+    ...
+    map: {
+        mirror: {
+            // 水平翻转
+            horizontal: true,
+            // 垂直翻转
+            vertical: true
+        }
+    }
+}
 ```
 
 ## S.T.O

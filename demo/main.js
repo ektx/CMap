@@ -77,6 +77,7 @@ let options = {
                 hoverColor: '#FF5722',
                 holdColor: 'rgba(83, 141, 247, .4)'
             },
+
             // 自定义颜色
             // color: [
             //     '#8BC34A',
@@ -85,7 +86,15 @@ let options = {
             //     '#2196F3'
             // ],
             // 随机颜色
-            color: true
+            color: true,
+        },
+        
+        // 镜像
+        mirror: {
+            // 水平镜像
+            horizontal: true,
+            // 垂直镜像
+            vertical: false
         }
     },
     // 迁徙设置（todo）

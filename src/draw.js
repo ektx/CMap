@@ -14,7 +14,7 @@ export function drawAllBoundary () {
     this.drawBlockPoints(currentMap)
     // 城市名
     this.drawBlockText(currentMap)
-    
+
     this.ctx.setTransform(1, 0, 0, 1, 0, 0)
     this.hitCtx.setTransform(1, 0, 0, 1, 0, 0)
 }
@@ -41,7 +41,7 @@ export function drawBoundary (obj) {
     }
 
     for (let i = 0, l = obj._coordinates.length; i < l; i++) {
-        let ctx = this.drawLine(
+        this.drawLine(
             this.ctx,
             obj._coordinates[i],
             styleOption

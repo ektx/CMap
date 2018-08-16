@@ -1,16 +1,18 @@
 
 /**
  * @name 获取区块信息
- * @param {Array} data 
+ * @param {Array} data 坐标点集合
+ * @param {Object} mirrorOpt 镜像设置
  */
-export default function getMapDataInfo (data) {
+export default function getMapDataInfo (data, mirrorOpt) {
     let xArr = []
     let yArr = []
     let centroid = {}
     let coordinates = []
-    
-    for (let i = 0, l = data.length; i < l; i++) {
-        let _data = computedData(data[i])
+    let l = data.length
+
+    for (let i = 0; i < l; i++) {
+        let _data = computedData(data[i], mirrorOpt)
         xArr.push(_data.x.start, _data.x.end)
         yArr.push(_data.y.start, _data.y.end)
         centroid = _data.centroid
@@ -46,8 +48,9 @@ export default function getMapDataInfo (data) {
 /**
  * @name 计算数组的最大值最小值
  * @param {Array} arr - 数组
+ * @param {Object} mirrorOpt 镜像设置
  */
-function computedData (arr) {
+function computedData (arr, mirrorOpt) {
     if (!Array.isArray(arr))
         return console.warn(`你需要传入数组!`)
 
@@ -59,13 +62,15 @@ function computedData (arr) {
     let yEnd = 0
     let xArr = []
     let yArr = []
-    let data = []
     let coordinates = []
 
     for (let i = 0, l = arr.length; i < l; i+=2) {
-        xArr.push(arr[i])
-        yArr.push(arr[i + 1])
-        coordinates.push([arr[i], arr[i + 1]])
+        let x = mirrorOpt && mirrorOpt.x ? mirrorOpt.x - arr[i] : arr[i]
+        let y = mirrorOpt && mirrorOpt.y ? mirrorOpt.y - arr[i + 1] : arr[i + 1]
+
+        xArr.push(x)
+        yArr.push(y)
+        coordinates.push([x, y])
     }
 
     xStart = Math.min.apply({}, xArr)
@@ -90,23 +95,24 @@ function computedData (arr) {
             start: yStart, 
             end: yEnd
         },
-        centroid: getCentroid(arr),
+        centroid: getCentroid(arr, mirrorOpt),
         coordinates
     }
 }
 
 /**
  * @name 质点中心
- * @param {Array} arr - 数组
+ * @param {Array} arr 数组
+ * @param {Object} mirrorOpt 镜像设置
  */
-function getCentroid ( arr ) {
+function getCentroid (arr, mirrorOpt) {
     let twoTimesSignedArea = 0
     let cxTimes6SignedArea = 0
     let cyTimes6SignedArea = 0
 
-    let length = arr.length
+    let l = arr.length
 
-    for ( let i = 0, l = arr.length; i < l; i+=2) {
+    for ( let i = 0; i < l; i+=2) {
         let _x = parseFloat(arr[i])
         let _y = parseFloat(arr[i+1])
         let __x = parseFloat(arr[i+2])
@@ -125,9 +131,13 @@ function getCentroid ( arr ) {
     }
     
     let sixSignedArea = 3 * twoTimesSignedArea
+    let x = ~~(cxTimes6SignedArea / sixSignedArea)
+    let y = ~~(cyTimes6SignedArea / sixSignedArea)
 
-    return {
-        x: ~~(cxTimes6SignedArea / sixSignedArea),
-        y: ~~(cyTimes6SignedArea / sixSignedArea)
+    if (mirrorOpt) {
+        x = mirrorOpt.x ? mirrorOpt.x - x : x
+        y = mirrorOpt.y ? mirrorOpt.y - y : y
     }
+
+    return {x, y}
 }
