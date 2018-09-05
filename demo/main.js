@@ -42,7 +42,7 @@ let options = {
                 color: ['#fff', '#4fff5f'],
                 // 处理函数
                 fun: function(index, block, usrData) {
-                    console.log(index, block, usrData)
+                    // console.log(index, block, usrData)
                     // 对单个点进行控制
                     if (block.name === '安徽') {
                         return usrData.points['安徽']
@@ -90,12 +90,12 @@ let options = {
         },
         
         // 镜像
-        mirror: {
-            // 水平镜像
-            horizontal: true,
-            // 垂直镜像
-            vertical: false
-        }
+        // mirror: {
+        //     // 水平镜像
+        //     horizontal: true,
+        //     // 垂直镜像
+        //     vertical: false
+        // }
     },
     // 迁徙设置（todo）
     // migration: {
@@ -143,7 +143,7 @@ let options = {
         },
         // 鼠标移动事件
         mousemove: function(evt, data){
-            console.log(evt, data)
+            // console.log(evt, data)
         }
     }
 }

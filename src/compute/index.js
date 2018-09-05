@@ -10,7 +10,7 @@ import {
 export function setBoundary (opt) {
     let boundary = this.options.map.boundary
 
-    Object.assign(boundary, getMapDataInfo(boundary.data))
+    boundary = Object.assign({}, boundary, getMapDataInfo(boundary.data))
 
     // 镜像设置
     let { coordinates } = setMirror(opt, boundary, boundary.data)

@@ -6,7 +6,6 @@ export class History {
     }
 
     go (val) {
-        console.log(`go ${val}`)
         let history = this.constructor.history
         let mapSize = history.map.length
         
