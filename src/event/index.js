@@ -4,8 +4,10 @@ export function mouseEvt () {
     let _blocks = null
     let _opt = this.options
     let _callback = _opt.callback
-    let { selectedMode: _selectedMode, 
-        style: _BStyle} = _opt.map.blocks
+    let { 
+        selectedMode: _selectedMode, 
+        style: _BStyle
+    } = _opt.map.blocks
     let mouseMove = {
         hold: false,
         x: 0,
@@ -40,9 +42,7 @@ export function mouseEvt () {
     }
 
     // 判断是否在选择区块中
-    let inHoldBlocks = index => {
-        return currentMap.holdBlocks.includes(currentMap.mouseMoveIndex)
-    }
+    let inHoldBlocks = () => currentMap.holdBlocks.includes(currentMap.mouseMoveIndex)
 
     /**
      * @description 回调事件

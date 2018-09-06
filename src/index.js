@@ -1,7 +1,6 @@
 /**
  * CMAP
  * @description Canvas 地图
- * @version 2.0.0
  * @author ekxt <https://ektx.github.io/>
  * @see https://github.com/ektx/canvas-map
  * @date 2017-10-27
