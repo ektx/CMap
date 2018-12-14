@@ -1,9 +1,10 @@
 /**
  * CMAP
- * @description Canvas 地图
+ * @description Canvas Map
  * @author ekxt <https://ektx.github.io/>
  * @see https://github.com/ektx/canvas-map
- * @date 2017-10-27
+ * @version v3
+ * @date 2018-11-11
  */
 
 import * as event from './event/index.js'
