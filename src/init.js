@@ -2,7 +2,12 @@
 
 export function getEleInfo () {
     this.ele = document.querySelector(this.options.el)
-    this.eleBCR = this.ele.getBoundingClientRect()
+    let { width, height } = window.getComputedStyle(this.ele) 
+
+    width = parseInt(width)
+    height = parseInt(height)
+    
+    this.eleBCR = { width, height } 
 }
     
 export function init () {
