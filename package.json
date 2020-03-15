@@ -1,5 +1,5 @@
 {
-  "name": "c-map",
+  "name": "@ektx/cmap",
   "version": "2.4.2",
   "description": "简单的 Canvas 地图功能",
   "author": "ektx",
@@ -19,7 +19,7 @@
     "rollup": "^0.58.2",
     "rollup-plugin-babel": "^4.0.0-beta.4",
     "rollup-plugin-uglify": "^3.0.0",
-    "webpack": "^4.6.0",
+    "webpack": "^4.42.0",
     "webpack-cli": "^2.0.15"
   }
 }
