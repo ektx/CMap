@@ -1,5 +1,10 @@
-/**
- * CMAP
+/***
+ *    ______________  ___               
+ *    __  ____/__   |/  /_____ ________ 
+ *    _  /    __  /|_/ /_  __ `/__  __ \
+ *    / /___  _  /  / / / /_/ /__  /_/ /
+ *    \____/  /_/  /_/  \__,_/ _  .___/ 
+ *                             /_/      
  * @description Canvas 地图
  * @author ekxt <https://ektx.github.io/>
  * @see https://github.com/ektx/canvas-map
